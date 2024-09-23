@@ -6,7 +6,9 @@ import { deploy } from './web3-lib'
 
 (async () => {
   try {
-    const result = await deploy('DiamondInit', [])
+    // 'upgradeInitializers/artifacts/DiamondInit'
+    // '/artifacts/T2G_root'
+    const result = await deploy('upgradeInitializers/artifacts/DiamondInit', [])
     console.log(`address: ${result.address}`)
   } catch (e) {
     console.log(e.message)

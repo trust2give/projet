@@ -152,11 +152,11 @@
 			]
 		},
 		"contracts/interfaces/IDiamondCut.sol": {
-			"keccak256": "0x9875549c8bbc63ea8fcd713805d48fa78762f7d90ba524a44b389ff4a1704ed2",
+			"keccak256": "0x505614747ed08d5ec99c8691db646e9304cb42b1c7559848be7b7638f35cfde6",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://6395cd05bdc5f64c24e90cf4fd20e93e4653ccca861f783d482081689215d05b",
-				"dweb:/ipfs/QmXkVhHjTYvbdzGnHAENxZUfXumw1rsesMDbTXiPrMixBg"
+				"bzz-raw://d71ea5d8030e3cb6c54f23cabc3c9574487d0d108f6623624609c27f054ee2d8",
+				"dweb:/ipfs/QmXAzjDW5zGrMwAUtJqhKY8iH3VX5CfuPtWzzmHC4v1PFc"
 			]
 		},
 		"contracts/libraries/LibDiamond.sol": {
