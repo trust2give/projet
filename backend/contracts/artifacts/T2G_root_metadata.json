@@ -1,0 +1,123 @@
+{
+	"compiler": {
+		"version": "0.8.19+commit.7dd6d404"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "_contractOwner",
+						"type": "address"
+					},
+					{
+						"internalType": "address",
+						"name": "_diamondCutFacet",
+						"type": "address"
+					}
+				],
+				"stateMutability": "payable",
+				"type": "constructor"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "_initializationContractAddress",
+						"type": "address"
+					},
+					{
+						"internalType": "bytes",
+						"name": "_calldata",
+						"type": "bytes"
+					}
+				],
+				"name": "InitializationFunctionReverted",
+				"type": "error"
+			},
+			{
+				"stateMutability": "payable",
+				"type": "fallback"
+			},
+			{
+				"inputs": [],
+				"name": "beacon_T2G_Root",
+				"outputs": [
+					{
+						"internalType": "string",
+						"name": "",
+						"type": "string"
+					}
+				],
+				"stateMutability": "pure",
+				"type": "function"
+			},
+			{
+				"stateMutability": "payable",
+				"type": "receive"
+			}
+		],
+		"devdoc": {
+			"kind": "dev",
+			"methods": {},
+			"version": 1
+		},
+		"userdoc": {
+			"kind": "user",
+			"methods": {},
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"contracts/T2G_root.sol": "T2G_root"
+		},
+		"evmVersion": "paris",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": true,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"contracts/Diamond.sol": {
+			"keccak256": "0x0763a44cadddd6eb7ce4d176757f496a79e524d84496effd995c796d550504c9",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://14e43b28d2f5114ecc4c565d651b0f498796a276f26040d575f074da30658def",
+				"dweb:/ipfs/QmNq3T4Jf5dzPXUJoxKduaZXPpzniR7ZQg7s7VM6BQz1qf"
+			]
+		},
+		"contracts/T2G_root.sol": {
+			"keccak256": "0x9a071f70e7394c19a7ed43359cd4bc5a4d63c38e158d1dd932042967d6f46111",
+			"license": "UNLICENCED",
+			"urls": [
+				"bzz-raw://7c75aeea49a3c02e4def6ff0ee042c9a5208f69bb18fe3c94c14ef4574c19050",
+				"dweb:/ipfs/QmT544nQcy93xeviCvgSReSzVKzoEPSo4erLmC8hD1XAQ3"
+			]
+		},
+		"contracts/interfaces/IDiamondCut.sol": {
+			"keccak256": "0x9875549c8bbc63ea8fcd713805d48fa78762f7d90ba524a44b389ff4a1704ed2",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://6395cd05bdc5f64c24e90cf4fd20e93e4653ccca861f783d482081689215d05b",
+				"dweb:/ipfs/QmXkVhHjTYvbdzGnHAENxZUfXumw1rsesMDbTXiPrMixBg"
+			]
+		},
+		"contracts/libraries/LibDiamond.sol": {
+			"keccak256": "0xcf67083445d7c9a8dba92c4c6b4e38f815e73869740fd5e93d38532e70643095",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://87463555b2292c72ecadfbf124e4a31d0ec6a94f46bdc9c533c4c349eb3a6f29",
+				"dweb:/ipfs/Qmer9P7zBuAofTm31TQ9DNy23vxczVmi9BaCVJoDHyPQrG"
+			]
+		}
+	},
+	"version": 1
+}
