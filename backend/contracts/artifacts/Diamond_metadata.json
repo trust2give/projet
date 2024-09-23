@@ -1,6 +1,6 @@
 {
 	"compiler": {
-		"version": "0.8.26+commit.8a97fa7a"
+		"version": "0.8.19+commit.7dd6d404"
 	},
 	"language": "Solidity",
 	"output": {
@@ -52,7 +52,7 @@
 						"type": "tuple"
 					}
 				],
-				"stateMutability": "nonpayable",
+				"stateMutability": "payable",
 				"type": "constructor"
 			},
 			{
@@ -220,82 +220,8 @@
 				"type": "error"
 			},
 			{
-				"anonymous": false,
-				"inputs": [
-					{
-						"components": [
-							{
-								"internalType": "address",
-								"name": "facetAddress",
-								"type": "address"
-							},
-							{
-								"internalType": "enum IDiamond.FacetCutAction",
-								"name": "action",
-								"type": "uint8"
-							},
-							{
-								"internalType": "bytes4[]",
-								"name": "functionSelectors",
-								"type": "bytes4[]"
-							}
-						],
-						"indexed": false,
-						"internalType": "struct IDiamond.FacetCut[]",
-						"name": "_diamondCut",
-						"type": "tuple[]"
-					},
-					{
-						"indexed": false,
-						"internalType": "address",
-						"name": "_init",
-						"type": "address"
-					},
-					{
-						"indexed": false,
-						"internalType": "bytes",
-						"name": "_calldata",
-						"type": "bytes"
-					}
-				],
-				"name": "DiamondCut",
-				"type": "event"
-			},
-			{
-				"anonymous": false,
-				"inputs": [
-					{
-						"indexed": true,
-						"internalType": "address",
-						"name": "previousOwner",
-						"type": "address"
-					},
-					{
-						"indexed": true,
-						"internalType": "address",
-						"name": "newOwner",
-						"type": "address"
-					}
-				],
-				"name": "OwnershipTransferred",
-				"type": "event"
-			},
-			{
 				"stateMutability": "payable",
 				"type": "fallback"
-			},
-			{
-				"inputs": [],
-				"name": "beacon_Hive",
-				"outputs": [
-					{
-						"internalType": "string",
-						"name": "",
-						"type": "string"
-					}
-				],
-				"stateMutability": "pure",
-				"type": "function"
 			},
 			{
 				"stateMutability": "payable",
@@ -315,9 +241,9 @@
 	},
 	"settings": {
 		"compilationTarget": {
-			"contracts/T2G_root.sol": "Hive"
+			"contracts/Diamond.sol": "Diamond"
 		},
-		"evmVersion": "cancun",
+		"evmVersion": "paris",
 		"libraries": {},
 		"metadata": {
 			"bytecodeHash": "ipfs"
@@ -335,14 +261,6 @@
 			"urls": [
 				"bzz-raw://824df7bd6078b7afd03fa20c37eb23832d791575545ee0913c593130a8b1feeb",
 				"dweb:/ipfs/QmPP2MAWYhtzkYmMHdaCg3MNcsRd9rbJ4N3iJLp1witoi7"
-			]
-		},
-		"contracts/T2G_root.sol": {
-			"keccak256": "0x6a4a3a330f2737674d12ee156497f8c5b395fad651f0cad82c299596a60f75f0",
-			"license": "UNLICENCED",
-			"urls": [
-				"bzz-raw://13d75d17a783cf0364dd64f8f909a8d7230e1ba29a837d5755132cb49b482a0e",
-				"dweb:/ipfs/QmRAt7AaeBBBqP5oY7ygqPJrGFzA9c395QCRNrXnetCBJJ"
 			]
 		},
 		"contracts/interfaces/IDiamond.sol": {
@@ -385,44 +303,12 @@
 				"dweb:/ipfs/QmUTuour3ykVTggjbUsdYxMqRvUdkvimR5fJNPVQix6cgk"
 			]
 		},
-		"contracts/libraries/AppStorage.sol": {
-			"keccak256": "0x5d2c16ec131ea8bca460b2f580e289483f9265aa6c8afc876ecb6206e3328bc5",
-			"license": "UNLICENCED",
-			"urls": [
-				"bzz-raw://21946e92175083ea85e2e2f30f3119bcfb5be24c2d2fe3dab85c04b2c248610b",
-				"dweb:/ipfs/QmcudUmg2bZAG2SrpBFeLAhoE5yjAPLq1x41Dh2XMXV9Kz"
-			]
-		},
 		"contracts/libraries/LibDiamond.sol": {
 			"keccak256": "0x744ce10866629747dc8d6b941b8c5cb3eb6f7a8b4149e6284548401e09ab495f",
 			"license": "MIT",
 			"urls": [
 				"bzz-raw://9a962967000a714cacfb6a75131616fa58a4c955e08d3173773734ffdd8aee26",
 				"dweb:/ipfs/QmVjz1ZvbzzfRaMqRGpsGBacMiDamrgmvtvZ2pS35XfwTJ"
-			]
-		},
-		"contracts/libraries/utils/LibDate.sol": {
-			"keccak256": "0x31d021e9f1e9234819c6017060b426a7f307c43de3cfe865245b2333de14f902",
-			"license": "UNLICENCED",
-			"urls": [
-				"bzz-raw://cc36b8fd1873a5c731edbe41315d26dd9cb9e1db1f36b934fd6012a401b21001",
-				"dweb:/ipfs/Qmdd5xfwzPKWWSLitCfHy7UUWdG1JVqrdyo3o2Z8CHLKak"
-			]
-		},
-		"https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v5.0.2/contracts/access/Ownable.sol": {
-			"keccak256": "0xff6d0bb2e285473e5311d9d3caacb525ae3538a80758c10649a4d61029b017bb",
-			"license": "MIT",
-			"urls": [
-				"bzz-raw://8ed324d3920bb545059d66ab97d43e43ee85fd3bd52e03e401f020afb0b120f6",
-				"dweb:/ipfs/QmfEckWLmZkDDcoWrkEvMWhms66xwTLff9DDhegYpvHo1a"
-			]
-		},
-		"https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v5.0.2/contracts/utils/Context.sol": {
-			"keccak256": "0x493033a8d1b176a037b2cc6a04dad01a5c157722049bbecf632ca876224dd4b2",
-			"license": "MIT",
-			"urls": [
-				"bzz-raw://6a708e8a5bdb1011c2c381c9a5cfd8a9a956d7d0a9dc1bd8bcdaf52f76ef2f12",
-				"dweb:/ipfs/Qmax9WHBnVsZP46ZxEMNRQpLQnrdE4dK8LehML1Py8FowF"
 			]
 		}
 	},

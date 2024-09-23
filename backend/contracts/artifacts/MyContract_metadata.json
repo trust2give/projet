@@ -154,22 +154,6 @@
 		"remappings": []
 	},
 	"sources": {
-		"@openzeppelin/contracts/access/Ownable.sol": {
-			"keccak256": "0xff6d0bb2e285473e5311d9d3caacb525ae3538a80758c10649a4d61029b017bb",
-			"license": "MIT",
-			"urls": [
-				"bzz-raw://8ed324d3920bb545059d66ab97d43e43ee85fd3bd52e03e401f020afb0b120f6",
-				"dweb:/ipfs/QmfEckWLmZkDDcoWrkEvMWhms66xwTLff9DDhegYpvHo1a"
-			]
-		},
-		"@openzeppelin/contracts/utils/Context.sol": {
-			"keccak256": "0x493033a8d1b176a037b2cc6a04dad01a5c157722049bbecf632ca876224dd4b2",
-			"license": "MIT",
-			"urls": [
-				"bzz-raw://6a708e8a5bdb1011c2c381c9a5cfd8a9a956d7d0a9dc1bd8bcdaf52f76ef2f12",
-				"dweb:/ipfs/Qmax9WHBnVsZP46ZxEMNRQpLQnrdE4dK8LehML1Py8FowF"
-			]
-		},
 		"contracts/Diamond.sol": {
 			"keccak256": "0xb0b24b708ea90777dbd7d5bff37af1aee388fc8135abd8259bce13ad91eae283",
 			"license": "MIT",
@@ -179,11 +163,11 @@
 			]
 		},
 		"contracts/T2G_root.sol": {
-			"keccak256": "0x49bc502d3a00cb0011a0c5755441d3374a211bc6114fffafc747802ca690ebd7",
+			"keccak256": "0x6a4a3a330f2737674d12ee156497f8c5b395fad651f0cad82c299596a60f75f0",
 			"license": "UNLICENCED",
 			"urls": [
-				"bzz-raw://e9a072e20417d81c467239cfb26f50b2cbcd0e375c27209f6fc195000b085d38",
-				"dweb:/ipfs/QmVAEpV8L9eBC8YKDqy5SNoKLTcTwmu3Ly6r1Cg4pTAjjY"
+				"bzz-raw://13d75d17a783cf0364dd64f8f909a8d7230e1ba29a837d5755132cb49b482a0e",
+				"dweb:/ipfs/QmRAt7AaeBBBqP5oY7ygqPJrGFzA9c395QCRNrXnetCBJJ"
 			]
 		},
 		"contracts/interfaces/IDiamond.sol": {
@@ -248,6 +232,22 @@
 			"urls": [
 				"bzz-raw://cc36b8fd1873a5c731edbe41315d26dd9cb9e1db1f36b934fd6012a401b21001",
 				"dweb:/ipfs/Qmdd5xfwzPKWWSLitCfHy7UUWdG1JVqrdyo3o2Z8CHLKak"
+			]
+		},
+		"https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v5.0.2/contracts/access/Ownable.sol": {
+			"keccak256": "0xff6d0bb2e285473e5311d9d3caacb525ae3538a80758c10649a4d61029b017bb",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://8ed324d3920bb545059d66ab97d43e43ee85fd3bd52e03e401f020afb0b120f6",
+				"dweb:/ipfs/QmfEckWLmZkDDcoWrkEvMWhms66xwTLff9DDhegYpvHo1a"
+			]
+		},
+		"https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v5.0.2/contracts/utils/Context.sol": {
+			"keccak256": "0x493033a8d1b176a037b2cc6a04dad01a5c157722049bbecf632ca876224dd4b2",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://6a708e8a5bdb1011c2c381c9a5cfd8a9a956d7d0a9dc1bd8bcdaf52f76ef2f12",
+				"dweb:/ipfs/Qmax9WHBnVsZP46ZxEMNRQpLQnrdE4dK8LehML1Py8FowF"
 			]
 		}
 	},
