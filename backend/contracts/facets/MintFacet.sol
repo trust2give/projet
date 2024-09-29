@@ -5,11 +5,15 @@ import {LibERC721} from "../libraries/LibERC721.sol";
 
 contract MintFacet {
 
-    function mint(address _to, uint256 _tokenId) external {
+    function mint(address _to, uint256 _tokenId) external payable {
         LibERC721._mint(_to, _tokenId);
     }
 
-    function safeMint(address _to, uint256 _tokenId) external {
+    function balanceOf() external view returns (uint) {
+        return address(this).balance;        
+    }
+
+    function safeMint(address _to, uint256 _tokenId) external payable {
         LibERC721._mint(_to, _tokenId);
     }
 
