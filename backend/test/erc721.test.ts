@@ -4,6 +4,8 @@ import { depolyDiamond } from "../scripts/deploy";
 import { shouldBehaveLikeERC721 } from "./erc721.behavior";
 
 const fixture = async () => {
+    console.log("fixture => Enter")
+
     return {
         publicClient: await hre.viem.getPublicClient(),
         walletClient: (await hre.viem.getWalletClients())[0],
@@ -13,6 +15,7 @@ const fixture = async () => {
 }
 
 describe('ERC721', () => {
+    console.log("ERC721 => Enter")
     beforeEach(async function() {
         Object.assign(this, await loadFixture(fixture));
     });

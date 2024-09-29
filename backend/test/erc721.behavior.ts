@@ -18,15 +18,27 @@ export const shouldBehaveLikeERC721 = () => {
 
     // shouldSupportInterface(["ERC721"]);
 
+    console.log("shouldBehaveLikeERC721 => Enter")
+
     describe('with mited tokens', function () {
 
         beforeEach(async function () {
+            console.log("this.contractAddress => ", this.contractAddress)
+
             this.mintContract = await hre.viem.getContractAt("MintFacet", this.contractAddress);
-            this.erc721Contract = await hre.viem.getContractAt("IERC721", this.contractAddress);
+            this.erc721Contract = await hre.viem.getContractAt("ERC721Facet", this.contractAddress);
             this.errors = await hre.viem.getContractAt("ERC721Errors", this.contractAddress);
             this.events = await hre.viem.getContractAt("ERC721Events", this.contractAddress);
 
+            console.log("this.mintContract.address => ", this.mintContract.address)
+            console.log("this.erc721Contract.address => ", this.erc721Contract.address)
+            console.log("this.errors.address => ", this.errors.address)
+            console.log("this.events.address => ", this.events.address)
+
+            //console.log(this.errors.abi)
+
             const mintToken = async (account: any, tokenId: bigint) => {
+
                 const { request } = await this.publicClient.simulateContract({
                     address: this.mintContract.address,
                     abi: this.mintContract.abi,
@@ -80,7 +92,7 @@ export const shouldBehaveLikeERC721 = () => {
                             args: [zeroAddress],
                         })
                     )
-                        .to.be.revertedWithCustomError(this.errors, 'ERC721InvalidOwner')
+                        .to.be.revertedWithCustomError(this.erc721Contract, 'ERC721InvalidOwner')
                         .withArgs(zeroAddress);
                 });
             });

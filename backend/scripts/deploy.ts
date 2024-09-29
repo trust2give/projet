@@ -1,21 +1,28 @@
 import hre from "hardhat";
 import { FacetCutAction, getSelectors } from "./utils/diamond";
 import { encodeFunctionData } from "viem";
+import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+
+//import { shouldBehaveLikeERC721 } from "./erc721.behavior";
 
 export const depolyDiamond = async () => {
+//async function main() {
     const publicClient = await hre.viem.getPublicClient();
     const [deployWallet] = await hre.viem.getWalletClients();
 
     // deploy DiamondCutFacet
     const diamondCutFacet = await hre.viem.deployContract("DiamondCutFacet");
+    console.log(`diamondCutFacet: ${diamondCutFacet.address}`);
 
     // deploy Diamond
     const diamond = await hre.viem.deployContract("Diamond", [
         deployWallet.account.address,
         diamondCutFacet.address
     ]);
+    console.log(`diamond: ${diamond.address}`);
 
     const diamondInit = await hre.viem.deployContract("DiamondInit");
+    console.log(`diamondInit: ${diamondInit.address}`);
 
     const facetNames = [
         'DiamondLoupeFacet',
@@ -27,6 +34,9 @@ export const depolyDiamond = async () => {
 
     for (const facetName of facetNames) {
         const facet = await hre.viem.deployContract(facetName);
+
+        console.log(`${facetName}: ${facet.address}`);
+
         cut.push({
             facetAddress: facet.address,
             action: FacetCutAction.Add,
@@ -34,15 +44,19 @@ export const depolyDiamond = async () => {
         });
     }
 
+    //console.log("cut structure :", cut);
+
     const diamondCut = await hre.viem.getContractAt("IDiamondCut", diamond.address);
     const initFunc = encodeFunctionData({
         abi: diamondInit.abi,
         functionName: "init",
         args: [
-            "Test NFT",
-            "TEST"
+            "Honey",
+            "HONEY"
         ]
     });
+
+    console.log("initFunc structure :", initFunc);
 
     const { request } = await publicClient.simulateContract({
         address: diamond.address,
@@ -58,5 +72,12 @@ export const depolyDiamond = async () => {
     const tx = await deployWallet.writeContract(request);
     await publicClient.waitForTransactionReceipt({ hash: tx });
 
+    console.log(`Transaction Hash : ${tx}`);
+
     return diamond.address;
 }
+
+/*main().catch((error) => {
+    console.error("Erreur", error);
+    process.exitCode = 1;
+  });*/
