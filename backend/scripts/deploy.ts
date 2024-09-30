@@ -15,7 +15,7 @@ export type contractRecord = {
   
 export type diamondCore = {
     Diamond: contractRecord,
-    diamondCutFacet: contractRecord,
+    DiamondCutFacet: contractRecord,
     DiamondInit: contractRecord,
     facetNames: contractRecord[]
     }
@@ -54,48 +54,63 @@ export async function deployDiamond( diamonds: diamondCore, token: { name: strin
 
     // deploy DiamondCutFacet
     var diamondCutFacet;
-    const CutName : string = (diamonds.diamondCutFacet.name || "diamondCutFacet");
-    if (diamonds.diamondCutFacet.address && diamonds.diamondCutFacet.address.match(regex)) {
+    const CutName : string = (diamonds.DiamondCutFacet.name || "DiamondCutFacet");
+    if ("address" in diamonds.DiamondCutFacet && String(diamonds.DiamondCutFacet.address).match(regex)) {
         diamondCutFacet = await hre.viem.getContractAt(
             CutName,
-            (<Address>diamonds.diamondCutFacet.address)
+            (<Address>diamonds.DiamondCutFacet.address)
           );        
         console.log(`Retrieve ${CutName} @: ${diamondCutFacet.address}`);    
         }
     else {
-        console.log(`test ${diamonds.diamondCutFacet.action < FacetCutAction.Remove} @: ${diamonds.diamondCutFacet.action && diamonds.diamondCutFacet.action < FacetCutAction.Remove}`);    
-        if (diamonds.diamondCutFacet.action) {
-            if (diamonds.diamondCutFacet.action < FacetCutAction.Remove) {
-                diamondCutFacet = await hre.viem.deployContract( CutName );
-                console.log(`Add/Replace ${CutName} @: ${diamondCutFacet.address}`);    
-                }
-            else throw new Error(`Incompatible Action for ${CutName} & address recorded`);
+        if ("action" in diamonds.DiamondCutFacet && diamonds.DiamondCutFacet.action < FacetCutAction.Remove) {
+            diamondCutFacet = await hre.viem.deployContract( CutName );
+            console.log(`Add/Replace ${CutName} @: ${diamondCutFacet.address}`);    
             }
         else throw new Error(`Incompatible Action for ${CutName} & address recorded`);
         }
 
     // deploy Diamond
-    const diamond = await hre.viem.deployContract("T2G_root", [
-        deployWallet.account.address,
-        diamondCutFacet.address
-    ]);
-    console.log(`T2G_root: ${diamond.address}`);
+    var diamond;
+    const diamName : string = (diamonds.Diamond.name || "Diamond");
+    if ("address" in diamonds.Diamond && String(diamonds.Diamond.address).match(regex)) {
+        diamond = await hre.viem.getContractAt(
+            diamName,
+            (<Address>diamonds.Diamond.address)
+          );        
+        console.log(`Retrieve ${diamName} @: ${diamond.address}`);    
+        }
+    else {
+        if ("action" in diamonds.Diamond && diamonds.Diamond.action < FacetCutAction.Remove) {
+            diamond = await hre.viem.deployContract( diamName, [
+                deployWallet.account.address,
+                diamondCutFacet.address
+                ]);
+            console.log(`Add/Replace ${diamName} @: ${diamond.address}`);    
+            }
+        else throw new Error(`Incompatible Action for ${diamName} & address recorded`);
+        }
+
+    // si Remove => Adresse doit être zéro
+    // si Add & Replace => Adresse doit être nouveau SC
+
+    const cut = [];
+    for (const facetName of diamonds.facetNames) {
+        if ("name" in facetName) {
+            const facet = await hre.viem.deployContract(facetName.name);
+            console.log(`${facetName.name}: ${facet.address}`);
+            cut.push({
+                facetAddress: facet.address,
+                action: facetName.action,
+                functionSelectors: getSelectors(facet)
+                });
+            }
+        }
+
+    console.log("cut structure :", cut);
 
     const diamondInit = await hre.viem.deployContract("DiamondInit");
     console.log(`diamondInit: ${diamondInit.address}`);
-
-    const cut = [];
-    for (const facetName of facets) {
-        const facet = await hre.viem.deployContract(facetName.name);
-        console.log(`${showObject(facetName)}: ${facet.address}`);
-        cut.push({
-            facetAddress: facet.address,
-            action: facetName.action,
-            functionSelectors: getSelectors(facet)
-            });
-        }
-
-    //console.log("cut structure :", cut);
 
     const diamondCut = await hre.viem.getContractAt("IDiamondCut", diamond.address);
     const initFunc = encodeFunctionData({
