@@ -1,48 +1,99 @@
 import hre from "hardhat";
 import { FacetCutAction, getSelectors } from "./utils/diamond";
-import { encodeFunctionData } from "viem";
+import { Address, encodeFunctionData } from "viem";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
 //import { shouldBehaveLikeERC721 } from "./erc721.behavior";
 
-export const depolyDiamond = async () => {
-//async function main() {
+type ETHaddress<Pattern extends string> = `${string & { __brand: Pattern }}`;
+
+export type contractRecord = { 
+    name?: string, 
+    action?: number, 
+    address?: string
+  }
+  
+export type diamondCore = {
+    Diamond: contractRecord,
+    diamondCutFacet: contractRecord,
+    DiamondInit: contractRecord,
+    facetNames: contractRecord[]
+    }
+  
+// Expression régulière pour détecter une adresse ETH 
+const regex = '^(0x)?[0-9a-fA-F]{40}$';
+
+export function showObject( data: any, eol: boolean = false ) {
+    var label: string = "";
+    if (data == null) return "Object::Null";
+    for (const [key, value] of Object.entries(data)) {
+        const t = typeof value;
+        const ret = eol ? `\n` : "";
+        switch (t) {
+            case "number":
+            case "string":
+            case "bigint": label += `${key} ${t.slice(0,1)}: ${value} ${ret}`; break;
+            case "boolean": label += `${key} : ${value ? "TRUE" : "FALSE" } ${ret}`; break;
+            case "object":
+                if (Array.isArray(value)) {
+                    const tab = value.reduce((accumulator, currentValue) => { 
+                        return `${accumulator} ${typeof(currentValue) === "object" ? showObject(currentValue, false) : currentValue} |` }, "|") 
+                    label += `${key}[Arr] : ${tab} ${ret}`;
+                    }
+                else label += showObject( value );
+                break;
+            default:
+            }
+        }
+    return label;
+    }
+
+export async function deployDiamond( diamonds: diamondCore, token: { name: string, symbol: string } ) {
     const publicClient = await hre.viem.getPublicClient();
     const [deployWallet] = await hre.viem.getWalletClients();
 
     // deploy DiamondCutFacet
-    const diamondCutFacet = await hre.viem.deployContract("DiamondCutFacet");
-    console.log(`diamondCutFacet: ${diamondCutFacet.address}`);
+    var diamondCutFacet;
+    const CutName : string = (diamonds.diamondCutFacet.name || "diamondCutFacet");
+    if (diamonds.diamondCutFacet.address && diamonds.diamondCutFacet.address.match(regex)) {
+        diamondCutFacet = await hre.viem.getContractAt(
+            CutName,
+            (<Address>diamonds.diamondCutFacet.address)
+          );        
+        console.log(`Retrieve ${CutName} @: ${diamondCutFacet.address}`);    
+        }
+    else {
+        console.log(`test ${diamonds.diamondCutFacet.action < FacetCutAction.Remove} @: ${diamonds.diamondCutFacet.action && diamonds.diamondCutFacet.action < FacetCutAction.Remove}`);    
+        if (diamonds.diamondCutFacet.action) {
+            if (diamonds.diamondCutFacet.action < FacetCutAction.Remove) {
+                diamondCutFacet = await hre.viem.deployContract( CutName );
+                console.log(`Add/Replace ${CutName} @: ${diamondCutFacet.address}`);    
+                }
+            else throw new Error(`Incompatible Action for ${CutName} & address recorded`);
+            }
+        else throw new Error(`Incompatible Action for ${CutName} & address recorded`);
+        }
 
     // deploy Diamond
-    const diamond = await hre.viem.deployContract("Diamond", [
+    const diamond = await hre.viem.deployContract("T2G_root", [
         deployWallet.account.address,
         diamondCutFacet.address
     ]);
-    console.log(`diamond: ${diamond.address}`);
+    console.log(`T2G_root: ${diamond.address}`);
 
     const diamondInit = await hre.viem.deployContract("DiamondInit");
     console.log(`diamondInit: ${diamondInit.address}`);
 
-    const facetNames = [
-        'DiamondLoupeFacet',
-        'OwnershipFacet',
-        'ERC721Facet',
-        'MintFacet'
-    ];
     const cut = [];
-
-    for (const facetName of facetNames) {
-        const facet = await hre.viem.deployContract(facetName);
-
-        console.log(`${facetName}: ${facet.address}`);
-
+    for (const facetName of facets) {
+        const facet = await hre.viem.deployContract(facetName.name);
+        console.log(`${showObject(facetName)}: ${facet.address}`);
         cut.push({
             facetAddress: facet.address,
-            action: FacetCutAction.Add,
+            action: facetName.action,
             functionSelectors: getSelectors(facet)
-        });
-    }
+            });
+        }
 
     //console.log("cut structure :", cut);
 
@@ -50,13 +101,10 @@ export const depolyDiamond = async () => {
     const initFunc = encodeFunctionData({
         abi: diamondInit.abi,
         functionName: "init",
-        args: [
-            "Honey",
-            "HONEY"
-        ]
+        args: [ token.name, token.symbol ]
     });
 
-    console.log("initFunc structure :", initFunc);
+    console.log("initFunc structure :", showObject(token));
 
     const { request } = await publicClient.simulateContract({
         address: diamond.address,

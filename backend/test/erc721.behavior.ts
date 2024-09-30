@@ -30,10 +30,10 @@ export const shouldBehaveLikeERC721 = () => {
             this.errors = await hre.viem.getContractAt("ERC721Errors", this.contractAddress);
             this.events = await hre.viem.getContractAt("ERC721Events", this.contractAddress);
 
-            console.log("this.mintContract.address => ", this.mintContract.address)
-            console.log("this.erc721Contract.address => ", this.erc721Contract.address)
-            console.log("this.errors.address => ", this.errors.address)
-            console.log("this.events.address => ", this.events.address)
+            //console.log("this.mintContract.address => ", this.mintContract.address)
+            //console.log("this.erc721Contract.address => ", this.erc721Contract.address)
+            //console.log("this.errors.address => ", this.errors.address)
+            //console.log("this.events.address => ", this.events.address)
 
             //console.log(this.errors.abi)
 
@@ -55,6 +55,32 @@ export const shouldBehaveLikeERC721 = () => {
         });
 
         describe('balanceOf', () => {
+
+            describe('name of the Token', function () {
+                it('returns the name of token owned by the given address', async function () {
+                    expect(
+                        await this.publicClient.readContract({
+                            address: this.erc721Contract.address,
+                            abi: this.erc721Contract.abi,
+                            functionName: "name",
+                            args: [],
+                        })
+                    ).to.equal("Honey");
+                });
+            });
+
+            describe('Symbol of the Token', function () {
+                it('returns the symbol of token owned by the given address', async function () {
+                    expect(
+                        await this.publicClient.readContract({
+                            address: this.erc721Contract.address,
+                            abi: this.erc721Contract.abi,
+                            functionName: "symbol",
+                            args: [],
+                        })
+                    ).to.equal("HONEY");
+                });
+            });
 
             describe('when the given address owns some tokens', function () {
                 it('returns the amount of tokens owned by the given address', async function () {
@@ -92,7 +118,7 @@ export const shouldBehaveLikeERC721 = () => {
                             args: [zeroAddress],
                         })
                     )
-                        .to.be.revertedWithCustomError(this.erc721Contract, 'ERC721InvalidOwner')
+                        .to.be.revertedWithCustomError(this.errors, 'ERC721InvalidOwner')
                         .withArgs(zeroAddress);
                 });
             });
