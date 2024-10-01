@@ -22,6 +22,8 @@ contract DiamondLoupeFacet is IDiamondLoupe, IERC165 {
     //     bytes4[] functionSelectors;
     // }
 
+    function beacon_DiamondLoupeFacet() public pure returns (string memory) { return "DiamondLoupeFacet::1.0.0"; }
+
     /// @notice Gets all facets and their selectors.
     /// @return facets_ Facet
     function facets() external override view returns (Facet[] memory facets_) {

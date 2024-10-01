@@ -5,6 +5,9 @@ import { LibDiamond } from "../libraries/LibDiamond.sol";
 import { IERC173 } from "../interfaces/IERC173.sol";
 
 contract OwnershipFacet is IERC173 {
+
+    function beacon_OwnershipFacet() public pure returns (string memory) { return "OwnershipFacet::1.0.0"; }
+
     function transferOwnership(address _newOwner) external override {
         LibDiamond.enforceIsContractOwner();
         LibDiamond.setContractOwner(_newOwner);

@@ -11,6 +11,8 @@ import {ERC721Errors} from "../libraries/Errors.sol";
 contract ERC721Facet is IERC721Metadata, IERC721Enumerable {
     using Strings for uint;
 
+    function beacon_ERC721Facet() public pure returns (string memory) { return "ERC721Facet::1.0.0"; }
+
     function name() public view returns (string memory) {
         return LibERC721.layout().name;
     }
