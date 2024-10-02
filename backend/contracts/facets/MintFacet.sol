@@ -5,7 +5,7 @@ import {LibERC721} from "../libraries/LibERC721.sol";
 
 contract MintFacet {
 
-    function beacon_MintFacet() public pure returns (string memory) { return "MintFacet::1.0.0"; }
+    function beacon_MintFacet() public pure returns (string memory) { return "MintFacet::1.0.1"; }
 
     function mint(address _to, uint256 _tokenId) external payable {
         LibERC721._mint(_to, _tokenId);

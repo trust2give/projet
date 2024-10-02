@@ -10,7 +10,8 @@ type ETHaddress<Pattern extends string> = `${string & { __brand: Pattern }}`;
 export type contractRecord = { 
     name?: string, 
     action?: number, 
-    address?: string
+    address?: string,
+    beacon?: string
   }
   
 export type diamondCore = {
@@ -94,8 +95,8 @@ export async function deployDiamond( diamonds: diamondCore, token: { name: strin
         beacon = await diamondLoupe.read.beacon_DiamondLoupeFacet();
         console.log(`Retrieve ${loupeName} @: ${diamondLoupe.address} : ${beacon}`);    
 
-        var facets = await diamondLoupe.read.facets();
-        console.log(`Retrieve ${loupeName} @: ${diamondLoupe.address} :`, facets);    
+        //var facets = await diamondLoupe.read.facets();
+        //console.log(`Retrieve ${loupeName} @: ${diamondLoupe.address} :`, facets);    
         }
     else if ("action" in diamonds.Diamond 
             && diamonds.Diamond.action == FacetCutAction.Add 
@@ -144,40 +145,25 @@ export async function deployDiamond( diamonds: diamondCore, token: { name: strin
     for (const facetName of diamonds.facetNames) {
         if ("name" in facetName && "action" in facetName) {
             if (facetName.action == FacetCutAction.Remove) {
-                if ("address" in facetName && String(facetName.address).match(regex)) {
-                    facet = await hre.viem.getContractAt(
-                        facetName.name,
-                        (<Address>facetName.address)
-                      );        
-                    console.log(`${facetName.name} - Action Remove @: ${diamond.address}`);    
-                    cut.push({
-                        facetAddress: NULL_ADDRESS,
-                        action: facetName.action,
-                        functionSelectors: getSelectors(facet)
-                        });    
-                    }
+                facet = await hre.viem.getContractAt(
+                    facetName.name,
+                    (<Address>diamonds.Diamond.address)
+                );        
+                console.log(`${facetName.name} - Action ${facetName.action} @: ${diamond.address}`);    
+                cut.push({
+                    facetAddress: NULL_ADDRESS,
+                    action: facetName.action,
+                    functionSelectors: getSelectors(facet)
+                    });    
                 }
-            else if (facetName.action == FacetCutAction.Replace) {
-                if ("address" in facetName && String(facetName.address).match(regex)) {
-                    facet = await hre.viem.deployContract(facetName.name);
-                    console.log(`${facetName.name} - Action ${facetName.action} @: ${facet.address}`);    
-                    cut.push({
-                        facetAddress: facet.address,
-                        action: facetName.action,
-                        functionSelectors: getSelectors(facet)
-                        });
-                    }
-                }
-            else if (facetName.action == FacetCutAction.Add) {
-                if ("address" in facetName && !String(facetName.address).match(regex)) {
-                    facet = await hre.viem.deployContract(facetName.name);
-                    console.log(`${facetName.name} - Action ${facetName.action} @: ${facet.address}`);    
-                    cut.push({
-                        facetAddress: facet.address,
-                        action: facetName.action,
-                        functionSelectors: getSelectors(facet)
-                        });
-                    }
+            else if (facetName.action == FacetCutAction.Add || facetName.action == FacetCutAction.Replace) {
+                facet = await hre.viem.deployContract(facetName.name);
+                console.log(`${facetName.name} - Action ${facetName.action} @: ${diamond.address}`);    
+                cut.push({
+                    facetAddress: facet.address,
+                    action: facetName.action,
+                    functionSelectors: getSelectors(facet)
+                    });
                 }
             else throw new Error(`Incompatible Action ${facetName.action} for ${facetName.name} & address recorded`);
             }
@@ -201,12 +187,24 @@ export async function deployDiamond( diamonds: diamondCore, token: { name: strin
     const tx = await deployWallet.writeContract(request);
     await publicClient.waitForTransactionReceipt({ hash: tx });
 
+    // On vérifie que les beacons de chaque facet sont bien actifs
+    for (const facetName of diamonds.facetNames) {
+        if ("name" in facetName) {
+            facet = await hre.viem.getContractAt(
+                facetName.name,
+                (<Address>diamonds.Diamond.address)
+                );        
+            // On récupère le beacon de DiamondLoupeFacet
+            if ("beacon" in facetName) {
+                if (!("action" in facetName) || ("action" in facetName && facetName.action < FacetCutAction.Remove)) {
+                    const beacon = await facet.read[facetName.beacon]();
+                    console.log(`Retrieve ${facetName.name} @: ${facet.address} : ${beacon}`);    
+                    }
+                }
+            }
+        }
+
     console.log(`Transaction Hash : ${tx}`);
 
     return diamond.address;
 }
-
-/*main().catch((error) => {
-    console.error("Erreur", error);
-    process.exitCode = 1;
-  });*/
