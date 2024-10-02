@@ -1,11 +1,6 @@
 import hre from "hardhat";
 import { FacetCutAction, getSelectors } from "./utils/diamond";
 import { Address, encodeFunctionData } from "viem";
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-
-//import { shouldBehaveLikeERC721 } from "./erc721.behavior";
-
-type ETHaddress<Pattern extends string> = `${string & { __brand: Pattern }}`;
 
 export type contractRecord = { 
     name?: string, 
