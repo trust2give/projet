@@ -191,10 +191,12 @@ export async function deployDiamond( diamonds: diamondCore, token: { name: strin
                 );        
             // On récupère le beacon de DiamondLoupeFacet
             if ("beacon" in facetName) {
-                if (!("action" in facetName) || ("action" in facetName && facetName.action < FacetCutAction.Remove)) {
-                    const beacon = await facet.read[facetName.beacon]();
-                    console.log(`Retrieve ${facetName.name} @: ${facet.address} : ${beacon}`);    
-                    }
+                if (!("action" in facetName)) {
+                    //if ("action" in facetName && facetName.action < FacetCutAction.Remove)) {
+                        const beacon = await facet.read[facetName.beacon]();
+                        console.log(`Retrieve ${facetName.name} @: ${facet.address} : ${beacon}`);    
+                        }
+                    //} 
                 }
             }
         }

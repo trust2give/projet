@@ -2,6 +2,7 @@ import hre from "hardhat";
 import { diamondNames } from "./T2G_Data";
 import { Address } from "viem";
 
+/// npx hardhat node
 /// npx hardhat run .\scripts\ReadContract.ts --network localhost
 
 // Expression régulière pour détecter une adresse ETH 

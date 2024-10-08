@@ -7,6 +7,10 @@ import { deployDiamond } from "./deploy";
 * EIP-2535 Diamonds - Deployment Script
 /******************************************************************************/
 
+/// C:\Users\franc\Documents\02_Blockchain\01_Trust2Give\00_Projet\projet\backend
+/// netstat -a -o -n
+/// taskkill /f /pid ####
+/// npx hardhat node
 /// npx hardhat run .\scripts\main.ts --network localhost
 
 async function main() {
