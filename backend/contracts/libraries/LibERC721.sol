@@ -7,8 +7,44 @@ import {ERC721Errors} from "./Errors.sol";
 import {ERC721Events} from "./Events.sol";
 
 library LibERC721 {
-    bytes32 internal constant STORAGE_SLOT =
-        keccak256("diamond.storage.erc721");
+
+    /**
+     * @dev Define the type of ERC721 Token that is stored
+     * T2G Specific enum type
+     */
+    enum Typeoftoken {
+        None,
+        Pollen,
+        Honey,
+        Nektar,
+        Cell
+    }
+
+    /**
+     * @dev Define the status of ERC721 Token that is stored
+     * T2G Specific enum type
+     */
+    enum Statusoftoken {
+        None,
+        draft,
+        active,
+        burnt,
+        canceled
+    }
+
+    /**
+     * @dev Define the data specific structure of ERC721 Token that is stored
+     * T2G Specific struct type
+     */
+    struct TokenStruct {
+        Typeoftoken token;
+        string name;
+        string symbol;
+        uint128 amount;
+        Statusoftoken state;
+        }
+
+    bytes32 internal constant STORAGE_SLOT = keccak256("diamond.storage.erc721");
 
     struct Layout {
         string name;
@@ -21,7 +57,8 @@ library LibERC721 {
         mapping(address owner => mapping(uint256 index => uint256)) ownedTokens;
         mapping(uint256 => uint256) ownedTokensIndex;
         mapping(uint256 tokenId => uint256) allTokensIndex;
-        uint256[88] _gaps;
+        mapping(uint256 tokenId => TokenStruct) token;
+        uint256[88] _gaps; // Cette variable n'est pas utilisée 
     }
 
     function layout() internal pure returns (Layout storage l) {
@@ -41,6 +78,14 @@ library LibERC721 {
      */
     function _ownerOf(uint256 tokenId) internal view returns (address) {
         return layout().owners[tokenId];
+    }
+
+    /**
+     * @dev Returns the details of the `tokenId`. Does NOT revert if token doesn't exist
+     * NEW: T2G specific
+     */
+    function _tokenFeatures(uint256 tokenId) internal view returns (TokenStruct) {
+        return layout().token[tokenId];
     }
 
     /**
@@ -221,7 +266,7 @@ library LibERC721 {
         delete layout().ownedTokens[from][lastTokenIndex];
     }
 
-        /**
+    /**
      * @dev Private function to remove a token from this extension's token tracking data structures.
      * This has O(1) time complexity, but alters the order of the _allTokens array.
      * @param tokenId uint256 ID of the token to be removed from the tokens list
@@ -283,6 +328,16 @@ library LibERC721 {
     }
 
     /**
+     * @dev additional function to parse & decode data structure 
+     * NEW : T2G specific
+     */
+
+    function parseDataBytesToTokenStruct(bytes memory _data) public pure returns (TokenStruct memory) {
+        (TokenStruct memory result) = abi.decode(_data, (TokenStruct));
+        return result;
+    }
+
+    /**
      * @dev Same as {xref-ERC721-_safeMint-address-uint256-}[`_safeMint`], with an additional `data` parameter which is
      * forwarded in {IERC721Receiver-onERC721Received} to contract recipients.
      */
@@ -293,6 +348,9 @@ library LibERC721 {
     ) internal {
         _mint(to, tokenId);
         checkOnERC721Received(msg.sender, address(0), to, tokenId, data);
+        // On ajoute la structure qui est passée pour le type de Token qui est passé par l'input _data
+        // NEW : specific to T2G 
+        layout().token[tokenId] = parseDataBytesToTokenStruct(data);
     }
 
     /**

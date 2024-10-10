@@ -19,10 +19,10 @@ import { diamondCore } from "./deploy";
 /// 
 
 export const diamondNames : diamondCore = {
-    Diamond: { name: "T2G_root", address: "0x0165878a594ca255338adfa4d48449f69242eb8f" },
+    Diamond: { name: "T2G_root", address: "0xe7f1725e7734ce288f8367e1bb143e90bb3f0512" },
     DiamondCutFacet: { },
     DiamondLoupeFacet: { },
-    DiamondInit: { address: "0x2279b7a0a67db372996a5fab50d91eaa73d2ebe6" },
+    DiamondInit: { address: "0xcf7ed3acca5a467e9e704c703e8d87f634fb0fc9" },
     facetNames: [
       { name: 'OwnershipFacet', beacon: 'beacon_OwnershipFacet' },
       { name: 'ERC721Facet', beacon: 'beacon_ERC721Facet' },

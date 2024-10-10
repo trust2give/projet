@@ -2,9 +2,10 @@ import hre from "hardhat";
 import { diamondNames } from "./T2G_Data";
 import { saveEvents } from "./evListener";
 import { Address, InvalidSerializedTransactionTypeError } from "viem";
+import { bigint } from "hardhat/internal/core/params/argumentTypes";
 
 /// npx hardhat node
-/// npx hardhat run .\scripts\WriteContract.ts --network localhost
+/// npx hardhat run .\scripts\InteractWithContracts.ts --network localhost
 
 // Expression régulière pour détecter une adresse ETH 
 const regex = '^(0x)?[0-9a-fA-F]{40}$';
@@ -29,6 +30,7 @@ export type rwRecord = {
     function: string, 
     args?: Array<any>,
     sender?: Account,
+    fees?: number | bigint,
     loopTokenId? : number[] | string, // Permet de gérer une liste d'inputs [...]de type index ou [0...Max] => Max : valeur dans storge
     loopIndex? : number[] | string, // Permet de gérer une liste d'inputs [...]de type index ou [0...Max] => Max : valeur dans storge
     loopAccount? : Account[] | string, // Permet de gérer une liste d'inputs [...]de type @Accounts ou valeur @Account stockée dans storge
@@ -45,12 +47,12 @@ const rwList : rwRecord[] = [
     { rwType: rwType.READ, contract: "ERC721Facet", function: "totalSupply", args: [], store: true, label: "Total tokens minted" },
     { rwType: rwType.READ, contract: "ERC721Facet", function: "tokenByIndex", args: [ Value.Index ], loopIndex: "totalSupply", label: "TokenId @ Index " },
     { rwType: rwType.READ, contract: "ERC721Facet", function: "balanceOf", args: [Value.Account], loopAccount: [Account.A0, Account.A1, Account.A2], label: "Token Nb per account " },
-    { rwType: rwType.WRITE, contract: "ERC721Facet", function: "approve", args: [ Account.A2, 1 ], sender: Account.A2 },
+    //{ rwType: rwType.WRITE, contract: "ERC721Facet", function: "approve", args: [ Account.A2, 1 ], sender: Account.A2 },
     { rwType: rwType.READ, contract: "ERC721Facet", function: "isApprovedForAll", args: [Account.A0, Account.A1] },
     { rwType: rwType.READ, contract: "ERC721Facet", function: "getApproved", args: [Value.TokenId], loopTokenId: [1], sender: Account.A2 },
     { rwType: rwType.READ, contract: "ERC721Facet", function: "contractURI", args: [] },
-    { rwType: rwType.WRITE, contract: "MintFacet", function: "mint", args: [ Account.A0, 1 ] },
-    { rwType: rwType.WRITE, contract: "ERC721Facet", function: "safeTransferFrom", args: [ Account.A0, Account.A2, 1 ] }
+    //{ rwType: rwType.WRITE, contract: "MintFacet", function: "mint", fees: 1000000000, args: [ Account.A1, Value.TokenId ], loopTokenId: [1, 2, 3], sender: Account.A0 },
+    //{ rwType: rwType.WRITE, contract: "ERC721Facet", function: "safeTransferFrom", args: [ Account.A0, Account.A2, 1 ] }
     ]
 
 var storage : object = {};
@@ -148,6 +150,15 @@ async function main() {
                     var log : string = "";
                     try {
                         if (rwItem.rwType == rwType.WRITE) {
+
+                            if ("fees" in rwItem) {
+                                const hash = await wallets[sender].sendTransaction({ 
+                                    to: facet.address,
+                                    value: BigInt(rwItem.fees)
+                                  })
+                                console.info("fees", hash);
+                                }
+
                             const method = await facet.write[rwItem.function](newArgs);
                             log = log.concat( "[@", facet.address.substring(0, 12), "...]:", rwItem.contract, "::");
                             log = log.concat( ("label" in rwItem) ? <string>rwItem.label : rwItem.function)
@@ -180,9 +191,3 @@ async function main() {
     }
   
   main();
-  
-  /* .catch((error) => {
-    console.error(`Error ${error.functionName}[@${error.contractAddress}] => ${error.metaMessages[0]} - Args ${error.args}`);
-    LastRankInList = LastRankInList + 1;
-    process.exitCode = 1;
-  });*/
