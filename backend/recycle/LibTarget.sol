@@ -23,13 +23,7 @@ import "./general/LibEnums.sol";
  * YEAR : Période annuelle
  */
 
-enum PeriodType {
-  NONE,
-  MONTH,
-  QUARTER,
-  SEMESTER,
-  YEAR
-  }
+
 
 /* Type TargetVersion
  * Structure qui décrit le contrat de trajectoire de base d'une entité E1

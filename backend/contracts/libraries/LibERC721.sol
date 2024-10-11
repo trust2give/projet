@@ -5,6 +5,7 @@ pragma solidity ^0.8.18;
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import {ERC721Errors} from "./Errors.sol";
 import {ERC721Events} from "./Events.sol";
+import {T2GTypes} from "./Types.sol";
 
 library LibERC721 {
 
@@ -38,18 +39,20 @@ library LibERC721 {
      */
     struct TokenStruct {
         Typeoftoken token;
+        uint256 amount;
+        Statusoftoken state;
+        }
+
+    struct TokenIdCard {
         string name;
         string symbol;
-        uint128 amount;
-        Statusoftoken state;
         }
 
     bytes32 internal constant STORAGE_SLOT = keccak256("diamond.storage.erc721");
 
     struct Layout {
-        string name;
-        string symbol;
         uint256[] allTokens;
+        mapping(uint256 typeId => TokenIdCard) idFeatures;
         mapping(uint256 tokenId => address) owners;
         mapping(address owner => uint) balances;
         mapping(uint256 tokenId => address) tokenApprovals;
@@ -58,6 +61,8 @@ library LibERC721 {
         mapping(uint256 => uint256) ownedTokensIndex;
         mapping(uint256 tokenId => uint256) allTokensIndex;
         mapping(uint256 tokenId => TokenStruct) token;
+        mapping(uint256 tokenId => mapping (uint256 => bool)) whitelist;
+        mapping(uint256 tokenId => mapping (uint256 => bool)) blacklist;
         uint256[88] _gaps; // Cette variable n'est pas utilisée 
     }
 
@@ -67,6 +72,18 @@ library LibERC721 {
             l.slot := slot
         }
     }
+
+    /**
+     * @dev checks if tokenId is a specific type of token of type Typeoftoken
+     *
+     */
+
+    function _tokenOfType(uint256 tokenId, Typeoftoken token) internal view returns (bool) {
+        if (tokenId == 0 || _ownerOf(tokenId) == address(0)) {
+            revert ERC721Errors.ERC721NonexistentToken(tokenId);
+            }
+        return (layout().token[tokenId].token == token);
+        }
 
     /**
      * @dev Returns the owner of the `tokenId`. Does NOT revert if token doesn't exist
@@ -84,7 +101,7 @@ library LibERC721 {
      * @dev Returns the details of the `tokenId`. Does NOT revert if token doesn't exist
      * NEW: T2G specific
      */
-    function _tokenFeatures(uint256 tokenId) internal view returns (TokenStruct) {
+    function _tokenFeatures(uint256 tokenId) internal view returns (TokenStruct memory) {
         return layout().token[tokenId];
     }
 

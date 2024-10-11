@@ -19,15 +19,27 @@ import { diamondCore } from "./deploy";
 /// 
 
 export const diamondNames : diamondCore = {
-    Diamond: { name: "T2G_root", address: "0xe7f1725e7734ce288f8367e1bb143e90bb3f0512" },
+    Diamond: { name: "T2G_root", address: "0x851356ae760d987e095750cceb3bc6014560891c" },
     DiamondCutFacet: { },
     DiamondLoupeFacet: { },
-    DiamondInit: { address: "0xcf7ed3acca5a467e9e704c703e8d87f634fb0fc9" },
+    DiamondInit: { address: "0x95401dc811bb5740090279ba06cfa8fcf6113778" },
     facetNames: [
       { name: 'OwnershipFacet', beacon: 'beacon_OwnershipFacet' },
       { name: 'ERC721Facet', beacon: 'beacon_ERC721Facet' },
-      { name: 'MintFacet', beacon: 'beacon_MintFacet' } 
+      { name: 'HoneyFacet', action: FacetCutAction.Remove, beacon: 'beacon_HoneyFacet' } 
       ]
     }
 
+/*export const diamondNames : diamondCore = {
+      Diamond: { name: "T2G_root", address: "0x9e545e3c0baab3e08cdfd552c960a1050f373042" },
+      DiamondCutFacet: { },
+      DiamondLoupeFacet: { },
+      DiamondInit: { address: "0x1613beb3b2c4f22ee086b2b38c1476a3ce7f78e8" },
+      facetNames: [
+        { name: 'OwnershipFacet', beacon: 'beacon_OwnershipFacet' },
+        { name: 'ERC721Facet', beacon: 'beacon_ERC721Facet' },
+        { name: 'HoneyFacet', action: FacetCutAction.Replace, beacon: 'beacon_HoneyFacet' } 
+        ]
+      }*/
+  
 export const tokenCredential = { name: "Honey", symbol: "HONEY" } 

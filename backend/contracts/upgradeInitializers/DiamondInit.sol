@@ -37,8 +37,9 @@ contract DiamondInit {
         ds.supportedInterfaces[type(IERC721Metadata).interfaceId] = true;
 
         LibERC721.Layout storage layout = LibERC721.layout();
-        layout.name = _name;
-        layout.symbol = _symbol;
+
+        layout.idFeatures[uint256(LibERC721.Typeoftoken.None)].name = _name;
+        layout.idFeatures[uint256(LibERC721.Typeoftoken.None)].symbol = _symbol;
 
         // add your own state variables 
         // EIP-2535 specifies that the `diamondCut` function takes two optional 
@@ -46,6 +47,15 @@ contract DiamondInit {
         // These arguments are used to execute an arbitrary function using delegatecall
         // in order to set state variables in the diamond during deployment or an upgrade
         // More info here: https://eips.ethereum.org/EIPS/eip-2535#diamond-interface 
+        
+        layout.idFeatures[uint256(LibERC721.Typeoftoken.Honey)].name = "HONEY";
+        layout.idFeatures[uint256(LibERC721.Typeoftoken.Honey)].symbol = "HNY";
+        layout.idFeatures[uint256(LibERC721.Typeoftoken.Pollen)].name = "POLLEN";
+        layout.idFeatures[uint256(LibERC721.Typeoftoken.Pollen)].symbol = "POL";
+        layout.idFeatures[uint256(LibERC721.Typeoftoken.Nektar)].name = "NEKTAR";
+        layout.idFeatures[uint256(LibERC721.Typeoftoken.Nektar)].symbol = "NKT";
+        layout.idFeatures[uint256(LibERC721.Typeoftoken.Cell)].name = "CELL";
+        layout.idFeatures[uint256(LibERC721.Typeoftoken.Cell)].symbol = "CEL";
     }
 
 

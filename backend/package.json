@@ -23,6 +23,8 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "^5.0.2",
+    "abi-decoder": "^2.4.0",
+    "abi-decoder-typescript": "^3.0.0",
     "dotenv": "^16.4.5"
   }
 }

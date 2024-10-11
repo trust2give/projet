@@ -2,6 +2,7 @@ import hre from "hardhat";
 import { diamondNames } from "./T2G_Data";
 import { saveEvents } from "./evListener";
 import { Address, InvalidSerializedTransactionTypeError } from "viem";
+import decodeMethod  from "abi-decoder-typescript"
 import { bigint } from "hardhat/internal/core/params/argumentTypes";
 
 /// npx hardhat node
@@ -35,23 +36,28 @@ export type rwRecord = {
     loopIndex? : number[] | string, // Permet de gérer une liste d'inputs [...]de type index ou [0...Max] => Max : valeur dans storge
     loopAccount? : Account[] | string, // Permet de gérer une liste d'inputs [...]de type @Accounts ou valeur @Account stockée dans storge
     label?: string, // Affichage alternatif au nom de la fonction dans la console de log pour les résultats des appels
+    decode?: string, // Flag pour décoder le résultat avec ABI.decode ou pas
     store?: boolean // flag store pour définir si le résultat d'un READ doit être stocké pour être réutilisé par ailleurs
   }
 
 
 const rwList : rwRecord[] = [
-    { rwType: rwType.READ, contract: "ERC721Facet", function: "name", store: true, args: [], label: "Nom du Token ERC721" },
-    { rwType: rwType.READ, contract: "ERC721Facet", function: "symbol", store: true, args: [], label: "Symbol du Token ERC721" },
+    { rwType: rwType.READ, contract: "ERC721Facet", function: "name", store: true, args: [ Value.Index ], loopIndex: [0,1,2, 3, 4], label: "Nom du Token" },
+    { rwType: rwType.READ, contract: "ERC721Facet", function: "symbol", store: true, args: [ Value.Index ], loopIndex: [0,1,2, 3, 4], label: "Symbol du Token" },
     { rwType: rwType.READ, contract: "OwnershipFacet", function: "owner", args: [], label: "@owner of T2G Diamond" },
-    { rwType: rwType.READ, contract: "MintFacet", function: "balanceOf", args: [], label: "POL/ETH of T2G Contract pool" },
+    //{ rwType: rwType.WRITE, contract: "HoneyFacet", function: "mintHoneyMint", fees: 1234, args: [ Account.A2, Value.TokenId ], loopTokenId: [4,5,6,7], sender: Account.A0 },
+    { rwType: rwType.READ, contract: "ERC721Facet", function: "balanceOf", args: [Account.A2], label: "POL/ETH of T2G Contract pool" },
+    { rwType: rwType.READ, contract: "HoneyFacet", function: "balanceOf", args: [], label: "POL/ETH of T2G Contract pool" },
     { rwType: rwType.READ, contract: "ERC721Facet", function: "totalSupply", args: [], store: true, label: "Total tokens minted" },
     { rwType: rwType.READ, contract: "ERC721Facet", function: "tokenByIndex", args: [ Value.Index ], loopIndex: "totalSupply", label: "TokenId @ Index " },
+    { rwType: rwType.READ, contract: "HoneyFacet", function: "honey", args: [ Value.Index ], loopIndex: [4,5,6, 7], label: "POL/ETH of T2G Contract pool" },
+    { rwType: rwType.WRITE, contract: "HoneyFacet", function: "setWhiteList", args: [ Value.Index, 5, false ], loopIndex: [4], label: "Set Whitelist" },
+    { rwType: rwType.READ, contract: "HoneyFacet", function: "getWhiteList", args: [ Value.Index ], loopIndex: [4], label: "Get Whitelist" },
     { rwType: rwType.READ, contract: "ERC721Facet", function: "balanceOf", args: [Value.Account], loopAccount: [Account.A0, Account.A1, Account.A2], label: "Token Nb per account " },
     //{ rwType: rwType.WRITE, contract: "ERC721Facet", function: "approve", args: [ Account.A2, 1 ], sender: Account.A2 },
     { rwType: rwType.READ, contract: "ERC721Facet", function: "isApprovedForAll", args: [Account.A0, Account.A1] },
-    { rwType: rwType.READ, contract: "ERC721Facet", function: "getApproved", args: [Value.TokenId], loopTokenId: [1], sender: Account.A2 },
-    { rwType: rwType.READ, contract: "ERC721Facet", function: "contractURI", args: [] },
-    //{ rwType: rwType.WRITE, contract: "MintFacet", function: "mint", fees: 1000000000, args: [ Account.A1, Value.TokenId ], loopTokenId: [1, 2, 3], sender: Account.A0 },
+    //{ rwType: rwType.READ, contract: "ERC721Facet", function: "getApproved", args: [Value.TokenId], loopTokenId: [1], sender: Account.A2 },
+    { rwType: rwType.READ, contract: "ERC721Facet", function: "contractURI", args: [1], decode: 'data:application/json;base64,' },
     //{ rwType: rwType.WRITE, contract: "ERC721Facet", function: "safeTransferFrom", args: [ Account.A0, Account.A2, 1 ] }
     ]
 
@@ -151,15 +157,17 @@ async function main() {
                     try {
                         if (rwItem.rwType == rwType.WRITE) {
 
-                            if ("fees" in rwItem) {
+                            /*if ("fees" in rwItem) {
                                 const hash = await wallets[sender].sendTransaction({ 
                                     to: facet.address,
                                     value: BigInt(rwItem.fees)
                                   })
                                 console.info("fees", hash);
-                                }
-
-                            const method = await facet.write[rwItem.function](newArgs);
+                                }*/
+                               const method = await facet.write[rwItem.function](newArgs, rwItem.fees ? { 
+                                   value: BigInt(rwItem.fees)
+                                }  : null );
+                            console.log("rtytrytrtyr")
                             log = log.concat( "[@", facet.address.substring(0, 12), "...]:", rwItem.contract, "::");
                             log = log.concat( ("label" in rwItem) ? <string>rwItem.label : rwItem.function)
                             log = log.concat( "[", newArgs.join("|"),"] >> " );
@@ -168,21 +176,29 @@ async function main() {
                             //saveEvents(method);
                             } 
                         else if (rwItem.rwType == rwType.READ) {
-                            const beacon = await facet.read[rwItem.function]( newArgs );
+                            var beacon = await facet.read[rwItem.function]( newArgs );
+                            if ("decode" in rwItem && typeof rwItem.decode == "string") {
+                                if (typeof beacon == "string") {
+                                    const codedstring = beacon.split(rwItem.decode);
+                                    beacon = atob(codedstring[1]);
+                                    }
+                                }
                             if ("store" in rwItem && rwItem.store) {
                                 storage[rwItem.function] = beacon;
-                                }
+                            }
                             log = log.concat( "[@", facet.address.substring(0, 12), "...]:", rwItem.contract, "::");
                             log = log.concat( ("label" in rwItem) ? <string>rwItem.label : rwItem.function)
                             log = log.concat( "[", newArgs.join("|"),"] >> " );
-                            log = log.concat( (typeof beacon === "object") ? beacon.reduce( (acc, cur) => { return cur.concat(acc)}, "|" ) : <string>beacon)
+                            if (Array.isArray(beacon)) log = log.concat( "[", beacon.join("|"),"] >> " );
+                            else log = log.concat( (typeof beacon === "object") ? beacon.reduce( (acc, cur) => { return cur.concat(acc)}, "|" ) : <string>beacon)
                             console.info(log);
                             }
                         } catch (error) {
+                            //console.log(Object.entries(error));
                             log = log.concat( "[@", error.contractAddress.substring(0, 12), "...]:", error.functionName, "::");
                             log = log.concat( "[", error.args.join("|"),"] >> " );
                             log = log.concat( <string>error.metaMessages, "\n");
-                            console.error(log); //Object.entries(error));
+                            console.error(log); 
                         }  
                     }
                 }          

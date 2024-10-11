@@ -2,20 +2,62 @@
 
 pragma solidity ^0.8.0;
 
-//import "@openzeppelin/contracts/drafts/Counters.sol";
-
-//import "./utils/LibDate.sol";
-//import "./pollen/LibPollenData.sol";
-//import "./nektar/LibNektarData.sol";
-//import "./cell/LibCellData.sol";
-//import "./company/LibUnits.sol";
-//import "./user/LibUsers.sol";
-//import "./company/LibEntities.sol";
-//import "./LibTarget.sol";
+library T2GTypes {
 
 /* Type UnitSize
  * Type utilisé pour la caractérisation la taille des unités dans la ruche
  */ 
+
+enum TextType {
+  NONE,       // Etat transitoire par défault à la création d'un objet
+  LASTNAME,
+  FIRSTNAME,
+  EMAIL,
+  IMAGE,
+  ENTITY,
+  DETAIL,
+  SIREN,
+  SIRET,
+  FILE
+  }
+
+/* Type EntityType
+ * Type utilisé pour la caractérisation des entités autour de la ruche
+ */ 
+enum EntityType {
+  NONE,     // Pas de type par défaul
+  PERSON,   // Entité de type Personne Physique individuelle
+  ENTITY,   // Entité de type Personne Morale individuelle
+  GROUP,    // Entité de type Groupe de société
+  NETWORK   // Entité de type Association / réseau de d"entités indépendantes
+}
+
+/* Type GainType
+ * Liste les axes de réduction d'émission selon le modèle SBTi
+ * et les recommandations des principes du NetZero Initiative
+ */
+enum GainType {
+  NONE,
+  REDUCTION,
+  SEQUESTRATION,
+  EVIT_PRODUIT,
+  EVIT_CHAINE,
+  EVIT_COMPENSATION
+}
+
+/* Type UnitType
+ * Type utilisé pour la caractérisation la taille des unités dans la ruche
+ */ 
+enum UnitType {
+  NONE,   // Pas de type par défaul
+  ENTREPRISE,
+  ASSOCIATION,
+  FONDATION,
+  PLATEFORME,
+  COLLECTIVITE,
+  EPICS,
+  ETAT
+  }
 
 enum UnitSize {
   NONE,   // Pas de type par défaul
@@ -67,7 +109,21 @@ enum GainSource { NONE, PROCESS, PRODUCT, SUPPLIER, PROVIDER, EQUIPMENT, CONSUMP
 /* Type BusSector
  * Type utilisé pour la caractérisation du secteur d'activité de l'unité
  */ 
-enum BusSector { NONE, TRANSPORT, AUTOMOTIVE, AEROSPACE, SERVICES, SOFTWARE, ITINDUSTRY, HIGHTECH, LUXURY, BUILDINGS, SUPPLYCHAIN, FOOD, HEALTHCARE }
+enum BusinessSector { 
+  NONE, 
+  TRANSPORT, 
+  AUTOMOTIVE, 
+  AEROSPACE, 
+  SERVICES, 
+  SOFTWARE, 
+  ITINDUSTRY, 
+  HIGHTECH, 
+  LUXURY, 
+  BUILDINGS, 
+  SUPPLYCHAIN, 
+  FOOD, 
+  HEALTHCARE 
+  }
 
 /* Type PeriodType
  * Définit les valeurs de période pour la configuration des trjectoires et des quotas
@@ -78,7 +134,15 @@ enum BusSector { NONE, TRANSPORT, AUTOMOTIVE, AEROSPACE, SERVICES, SOFTWARE, ITI
  * YEAR : Période annuelle
  */
 
-enum PeriodType { NONE, MONTH, QUARTER, SEMESTER, YEAR }
+
+enum PeriodType {
+  NONE,
+  MONTH,
+  QUARTER,
+  SEMESTER,
+  YEAR
+  }
+
 
 /* Type Currency 
  * Utilisé pour les unités monétaires pour les valorisation des tokens POLLEN, NEKTAR, CELL et HONEY
@@ -97,51 +161,5 @@ uint8 constant MAX_ADMIN = 10;
 uint8 constant MAX_MANAGER = 10;
 uint8 constant MAX_POLSTAT = 5; //uint(type(PollenStatus).max) + 1; // 5;
 uint8 constant MAX_USRROLE = 8; //uint(type(Profile).max) + 1; // 7;
-
-struct AppStorage {
-  address owner;
-  uint256 seed;   // Calcul de façon unique les identifiants
-  //TimeStamp chronos;
-
-  // =============================================
-  // DataStorage related to user & accounts rights
-  // =============================================
-
-//  EntityStorage entities;
-//  UnitStorage units;
-//  UserStorage users; 
-
-  // ===================================
-  // DataStorage related to Pollen Stocks
-  // ===================================
-
-//  PollenStorage pollens;
-
-  // ===================================
-  // DataStorage related to Nektar Stocks
-  // ===================================
-
-//  NektarStorage nektars;
-
-  // ===================================
-  // DataStorage related to Cells Stocks
-  // ===================================
-
-//  CellStorage cells;
-
-  // ===================================
-  // DataStorage related to Honey Stocks
-  // ===================================
-
-  }
-
-  library LibStorage {
-
-    function appStorage()
-      internal
-      pure
-      returns (AppStorage storage ds) {
-        assembly { ds.slot := 0 }
-      }
 
   }

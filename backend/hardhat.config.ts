@@ -33,12 +33,13 @@ const config: HardhatUserConfig = {
             }
         }
     },
-};
-
-/*
     defaultNetwork: NETWORK!,
     networks: {
-        mainnet: {
+        test: {
+            url: "http://192.168.0.76:8545",
+            accounts: "remote",
+        },
+/*        mainnet: {
             chainId: 1,
             url: MAINNET_RPC_URL!,
             accounts,
@@ -47,7 +48,7 @@ const config: HardhatUserConfig = {
             chainId: 11155111,
             url: SEPOLIA_RPC_URL!,
             accounts,
-        }
+        }*/
     },
     etherscan: {
         apiKey: {
@@ -55,6 +56,9 @@ const config: HardhatUserConfig = {
             sepolia: MAINNET_SCAN_API_KEY!,
         }
     }
+};
+
+/*
 */
 
 export default config;

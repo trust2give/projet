@@ -3,22 +3,23 @@ pragma solidity ^0.8.18;
 
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/Base64.sol";
-import {IERC721Metadata} from "../interfaces/IERC721Metadata.sol";
+//import {IERC721Metadata} from "../interfaces/IERC721Metadata.sol";
 import {IERC721Enumerable} from "../interfaces/IERC721Enumerable.sol";
 import {LibERC721} from "../libraries/LibERC721.sol";
 import {ERC721Errors} from "../libraries/Errors.sol";
 
-contract ERC721Facet is IERC721Metadata, IERC721Enumerable {
+contract ERC721Facet is IERC721Enumerable {
     using Strings for uint;
 
-    function beacon_ERC721Facet() public pure returns (string memory) { return "ERC721Facet::1.0.0"; }
+    function beacon_ERC721Facet() public pure returns (string memory) { return "ERC721Facet::1.0.2"; }
 
-    function name() public view returns (string memory) {
-        return LibERC721.layout().name;
+    //ERC721 MetaData for Honey
+    function name(LibERC721.Typeoftoken tokenSelector) public view returns (string memory) {
+        return LibERC721.layout().idFeatures[uint256(tokenSelector)].name;
     }
 
-    function symbol() public view returns (string memory) {
-        return LibERC721.layout().symbol;
+    function symbol(LibERC721.Typeoftoken tokenSelector) public view returns (string memory) {
+        return LibERC721.layout().idFeatures[uint256(tokenSelector)].symbol;
     }
 
     function totalSupply() public view returns (uint256) {
@@ -107,7 +108,7 @@ contract ERC721Facet is IERC721Metadata, IERC721Enumerable {
         return LibERC721.layout().operatorApprovals[owner][operator];
     }
 
-    function contractURI() public view returns (string memory) {
+    function contractURI(LibERC721.Typeoftoken tokenSelector) public view returns (string memory) {
         return
             string(
                 abi.encodePacked(
@@ -116,7 +117,7 @@ contract ERC721Facet is IERC721Metadata, IERC721Enumerable {
                     Base64.encode(
                         abi.encodePacked(
                             '{"name":"',
-                            name(),
+                            name(tokenSelector),
                             '","description":"',
                             _contractDescription(),
                             '","image":"',
