@@ -74,8 +74,9 @@ library LibERC721 {
     }
 
     /**
-     * @dev checks if tokenId is a specific type of token of type Typeoftoken
-     *
+     * @dev checks if tokenId is a specific type of token of type Typeoftoken and belong to the caller as owner
+     * @dev 
+     * @dev 
      */
 
     function _tokenOfType(uint256 tokenId, Typeoftoken token) internal view returns (bool) {

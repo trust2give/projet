@@ -19,14 +19,15 @@ import { diamondCore } from "./deploy";
 /// 
 
 export const diamondNames : diamondCore = {
-    Diamond: { name: "T2G_root", address: "0x851356ae760d987e095750cceb3bc6014560891c" },
+    Diamond: { name: "T2G_root", address: "0x5f3f1dbd7b74c6b46e8c44f98792a1daf8d69154" },
     DiamondCutFacet: { },
     DiamondLoupeFacet: { },
-    DiamondInit: { address: "0x95401dc811bb5740090279ba06cfa8fcf6113778" },
+    DiamondInit: { address: "0xcd8a1c3ba11cf5ecfa6267617243239504a98d90" },
     facetNames: [
       { name: 'OwnershipFacet', beacon: 'beacon_OwnershipFacet' },
       { name: 'ERC721Facet', beacon: 'beacon_ERC721Facet' },
-      { name: 'HoneyFacet', action: FacetCutAction.Remove, beacon: 'beacon_HoneyFacet' } 
+    //  { name: 'T2G_NektarFacet', action: FacetCutAction.Replace, beacon: 'beacon_NektarFacet' },
+      { name: 'T2G_HoneyFacet', beacon: 'beacon_HoneyFacet' }
       ]
     }
 
