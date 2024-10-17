@@ -82,7 +82,7 @@ contract T2G_PollenFacet {
      /// @dev the contract is inside an ERC2535 structure, so the value refers to this contract and not the diamond root
      /// @return uint amount of native token in WEI or equivalent
 
-    function balanceOf() external isT2GOwner view returns (uint) {
+    function balanceOfPollenFacet() external isT2GOwner view returns (uint) {
         return address(this).balance;        
         }
 
@@ -143,23 +143,6 @@ contract T2G_PollenFacet {
     function approvePollen( uint256 _tokenId, address _owner ) 
         external isT2GOwner isPollenOwner(_tokenId, _owner) isPollen(_tokenId) isDraft(_tokenId) {
         LibERC721.layout().token[_tokenId].state = LibERC721.Statusoftoken.active;
-        }
-
-     /// @notice Transfers the amount of native coin related to an active Pollen Token to the contract pool.
-     /// @notice Only the T2G Owner can run this function on behalf of the owner of the token, 
-     /// @notice Both TokenId and Owner address are to be given as inputs to prevent any undesired or malicious action.
-     /// @notice Emits a {PollenAmountTransfer} event when successful
-     /// @param _tokenId the Id given to the Pollen Token
-     /// @param _owner address of the owner of the token. 
-     /// @dev MODIFIER : checks first that msg.sender is T2G owner. Otherwise revert PollenInvalidSender error
-     /// @dev MODIFIER : checks then that _owner is the token owner. Otherwise revert PollenInvalidOwner error
-     /// @dev MODIFIER : checks then that tokenId refers to an already existing Pollen token. Otherwise revert PollenInvalidTokenId error
-     /// @dev MODIFIER : checks then that tokenId refers to one Active Pollen token. Otherwise revert PollenInvalidStatus error
-     /// @dev YTBD : once cheks are OK, then send a transfer call from this contract to the T2G_PoolFacet contract
-
-    function transferToPool(uint256 _tokenId, address _owner) 
-        external isT2GOwner isPollenOwner(_tokenId, _owner) isPollen(_tokenId) isActive(_tokenId) payable {
-        // Yet ot be done
         }
 
      /// @notice Burns / Cancels a draft Pollen Token. For security reasons. 

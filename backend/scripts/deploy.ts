@@ -166,7 +166,7 @@ export async function deployDiamond( diamonds: diamondCore, token: { name: strin
 
     const diamondCut = await hre.viem.getContractAt("IDiamondCut", diamond.address);
 
-    console.log("initFunc structure :", showObject(token));
+    console.log("initFunc structure :", showObject(token), cut);
 
     const { request } = await publicClient.simulateContract({
         address: diamond.address,

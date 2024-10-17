@@ -26,7 +26,8 @@ export const diamondNames : diamondCore = {
     facetNames: [
       { name: 'OwnershipFacet', beacon: 'beacon_OwnershipFacet' },
       { name: 'ERC721Facet', beacon: 'beacon_ERC721Facet' },
-    //  { name: 'T2G_NektarFacet', action: FacetCutAction.Replace, beacon: 'beacon_NektarFacet' },
+      { name: 'T2G_NektarFacet', action: FacetCutAction.Add, beacon: 'beacon_NektarFacet' },
+      { name: 'T2G_PollenFacet', action: FacetCutAction.Add, beacon: 'beacon_PollenFacet' },
       { name: 'T2G_HoneyFacet', beacon: 'beacon_HoneyFacet' }
       ]
     }

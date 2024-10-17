@@ -1,9 +1,8 @@
 import hre from "hardhat";
 import { diamondNames } from "./T2G_Data";
-import { saveEvents } from "./evListener";
 import { Address, InvalidSerializedTransactionTypeError } from "viem";
-import decodeMethod  from "abi-decoder-typescript"
-import { bigint } from "hardhat/internal/core/params/argumentTypes";
+//import decodeMethod  from "abi-decoder-typescript"
+//import { bigint } from "hardhat/internal/core/params/argumentTypes";
 
 /// npx hardhat node
 /// npx hardhat run .\scripts\InteractWithContracts.ts --network localhost
@@ -13,16 +12,16 @@ const regex = '^(0x)?[0-9a-fA-F]{40}$';
 const NULL_ADDRESS = <Address>"0x0000000000000000000000000000000000000000"
 
 /// enum type qui permet de définir si une interaction est de type READ ou WRITE
-enum rwType { READ, WRITE }
+export enum rwType { READ, WRITE }
 
 /// enum type qui permet de sélectionner les 6 premiers @Wallet du node hardhat
-enum Account { A0 = "0_", A1 = "1_", A2 = "2_", A3 = "3_", A4 = "4_", A5 = "5_", A6 = "6_" }
+export enum Account { A0 = "0_", A1 = "1_", A2 = "2_", A3 = "3_", A4 = "4_", A5 = "5_", A6 = "6_" }
 /// enum type qui permet dans le tableau args de définir une liste de valeur plutôt qu'une valeur spécifique
-enum Value { TokenId = "T__", Index = "I__", Account = "A__" }
+export enum Value { TokenId = "T__", Index = "I__", Account = "A__" }
 
-const Typeoftoken : string[] = ["None", "Pollen", "Honey", "Nektar", "Cell"]
+export const Typeoftoken : string[] = ["None", "Pollen", "Honey", "Nektar", "Cell"]
 
-const Statusoftoken : string[] =  [ "None", "Draft", "Active", "Burnt", "Canceled"]
+export const Statusoftoken : string[] =  [ "None", "Draft", "Active", "Burnt", "Canceled"]
 
 /// loopIndex: <null> | [index] | string -> [facultatif] Défini soit un ensemble de valeurs d'index dans le cas d'un appel multiple d'une fonction
 ///                                         qui a input des valeurs d'index, ou la référence à une valeur dans <storage> pour définir
@@ -46,34 +45,77 @@ export type rwRecord = {
   }
 
 
-const rwList : rwRecord[] = [
-    { rwType: rwType.READ, contract: "T2G_HoneyFacet", function: "beacon_HoneyFacet", args: [], label: "Beacon", outcome: [ "string"] },
-    { rwType: rwType.READ, contract: "ERC721Facet", function: "name", store: true, args: [ Value.Index ], loopIndex: [0,1,2, 3, 4], label: "Nom du Token", outcome: [ "string"] },
-    { rwType: rwType.READ, contract: "ERC721Facet", function: "symbol", store: true, args: [ Value.Index ], loopIndex: [0,1,2, 3, 4], label: "Symbol du Token", outcome: [ "string"] },
-    { rwType: rwType.READ, contract: "OwnershipFacet", function: "owner", args: [], label: "@owner of T2G Diamond", outcome: [ "address"] },
-    { rwType: rwType.READ, contract: "ERC721Facet", function: "ownerOf", args: [ Value.TokenId ], loopTokenId: [4,5,6,7], label: "@owner of Honey Token", outcome: [ "address"] },
-    //{ rwType: rwType.WRITE, contract: "T2G_HoneyFacet", function: "mintHoney", fees: 1234, args: [ Account.A2, Value.TokenId ], loopTokenId: [4,5,6,7], sender: Account.A0, outcome: [] },
-    { rwType: rwType.READ, contract: "ERC721Facet", function: "balanceOf", args: [Account.A2], label: "POL/ETH of T2G Contract pool", outcome: [ "bigint"] },
-    { rwType: rwType.READ, contract: "T2G_HoneyFacet", function: "balanceOf", args: [], label: "POL/ETH of T2G Contract pool", outcome: [ "bigint"] },
-    { rwType: rwType.READ, contract: "ERC721Facet", function: "totalSupply", args: [], store: true, label: "Total tokens minted", outcome: [ "bigint"] },
-    { rwType: rwType.READ, contract: "ERC721Facet", function: "tokenByIndex", args: [ Value.Index ], loopIndex: "totalSupply", label: "TokenId @ Index ", outcome: [ "bigint"] },
-    { rwType: rwType.READ, contract: "T2G_HoneyFacet", function: "honey", sender: Account.A0, args: [ Value.Index ], loopIndex: [4,5,6, 7], label: "HONEY", outcome: [ "Typeoftoken", "Statusoftoken", "bigint"] },
-    { rwType: rwType.READ, contract: "T2G_HoneyFacet", function: "honey", sender: Account.A2, args: [ Value.Index ], loopIndex: [4,5,6, 7], label: "HONEY", outcome: [ "Typeoftoken", "Statusoftoken", "bigint"] },
-    { rwType: rwType.READ, contract: "T2G_HoneyFacet", function: "honey", sender: Account.A3, args: [ Value.Index ], loopIndex: [4,5,6, 7], label: "HONEY", outcome: [ "Typeoftoken", "Statusoftoken", "bigint"] },
-    { rwType: rwType.WRITE, contract: "T2G_HoneyFacet", function: "setBlackOrWhiteList", sender: Account.A1, args: [ Value.Index, 5, false, false ], loopIndex: [4], label: "Set Whitelist", outcome: [] },
-    { rwType: rwType.READ, contract: "T2G_HoneyFacet", function: "getBlackOrWhiteList", args: [ Value.Index, false ], loopIndex: [4], label: "Get Whitelist", outcome: [ "array"]  },
-    { rwType: rwType.READ, contract: "ERC721Facet", function: "balanceOf", args: [Value.Account], loopAccount: [Account.A0, Account.A1, Account.A2], label: "Token Nb per account ", outcome: [ "bigint"] },
-    //{ rwType: rwType.WRITE, contract: "ERC721Facet", function: "approve", args: [ Account.A0, Value.Index ], loopIndex: [4,5,6, 7], sender: Account.A2, outcome: [] },
-    { rwType: rwType.READ, contract: "ERC721Facet", function: "getApproved", args: [Value.TokenId], loopTokenId: [4,5,6,7], sender: Account.A0, outcome: [ "address"] },
-    //{ rwType: rwType.WRITE, contract: "ERC721Facet", function: "setApprovalForAll", args: [Value.Account, true], loopAccount: [Account.A0, Account.A1], sender: Account.A2, outcome: [] },
-    { rwType: rwType.READ, contract: "ERC721Facet", function: "isApprovedForAll", args: [Account.A2, Value.Account], loopAccount: [Account.A0, Account.A1, Account.A2], sender: Account.A0, outcome: [ "bool"] },
-    { rwType: rwType.READ, contract: "ERC721Facet", function: "contractURI", args: [1], decode: 'data:application/json;base64,', outcome: [ "string"] },
-    //{ rwType: rwType.WRITE, contract: "ERC721Facet", function: "safeTransferFrom", args: [ Account.A0, Account.A2, 1 ], outcome: [] }
-    ]
-
 var storage : object = {};
 
-async function main() {
+/// Fonction qui parse un objet rwRecord à la recherche d'un "item" et renvoie une valeur si présent, ou une valeur par défaut defValue sinon
+/// Si l'item est trouvé, la fonction renvoyée peut dépendre de l'item, qui peut également utiliser la valeur outcome passée en entrée
+/// Renvoie une erreur si détecte la présence de item dans l'objet mais ne trouve pas sa valeur
+function parseRwRecordForSpecificItemWithDefaultValue( item: string, rwItem: rwRecord, defValue: any, outcome?: any ) : any {
+    if (item in rwItem) {
+        const element : any = rwItem[item];
+        switch (item) {
+            case "sender": {
+                if (Object.values(Account).includes(element)) return Number((<string>element).split('_')[0]);
+                throw("parseRwRecord::Inconsistant Sender Input: ".concat(<string>element));                
+                }
+            case "store": return outcome;
+            case "loopTokenId": 
+            case "loopIndex": {
+                if (typeof element === "string" && <string>element in storage) {
+                    if (Array.isArray(storage[<string>element]) && storage[<string>element].length == 1)  {
+                        if (typeof storage[<string>element][0] === "bigint") return [...Array(Number(storage[<string>element][0])).keys()];
+                        }
+                    }
+                if (Array.isArray(element)) return element;
+                throw("parseRwRecord::Inconsistant loopIndex Input: ".concat(<string>element));                
+                }
+            case "loopAccount": {
+                if (typeof element === "string" && <string>element in storage) {
+                    if (String(storage[<string>element]).match(regex)) return [storage[<string>element]];
+                    }
+                if (Array.isArray(element)) return element;
+                throw("parseRwRecord::Inconsistant loopAccount Input: ".concat(<string>element));                
+                }
+            case "decode": {
+                if (typeof element == "string") {
+                    const codedstring = outcome.split(element);
+                    return atob(codedstring[1]);
+                    }
+                } 
+            default: throw("parseRwRecord::Inconsistant Input Record : ".concat(item));                
+            } 
+        }
+    return defValue;
+}
+
+function parseOutcome( template: Array<any>, result: Array<any>, rwItem: rwRecord) : Array<any> {
+    result = Array.isArray(result) ? result : [ result ];
+
+    if (template.length != result.length && template[0] != "array") throw("Inconstant Oucome");
+
+    return result.map((res : any, i : number) => {
+        const choice = (template[0] == "array") ? "" : template[i];
+        switch (choice) {
+            case "Typeoftoken": return Typeoftoken[res];
+            case "Statusoftoken": return Statusoftoken[res];
+            case "string": return parseRwRecordForSpecificItemWithDefaultValue( "decode", rwItem, res, res);
+            case "address": {
+                return "@".concat( res.substring(0, 12), "...");
+                }
+            case "bigint": {
+                return res;
+                }
+            case "bool": {
+                return res ? "True" : "False";
+                }
+            default: {
+                return res;
+                }
+            }   
+        });
+    }
+
+export async function InteractWithContracts(rwList : rwRecord[]) {
     const accounts = await hre.ethers.getSigners();
     const wallets = await hre.viem.getWalletClients();
     const publicClient = await hre.viem.getPublicClient();
@@ -81,69 +123,27 @@ async function main() {
     //const args = process.argv.slice(2);
     //var saisie = prompt('Saisir quelque chose');
 
-    console.log("Enter InteractContract app", wallets)
+    console.log("Enter InteractWithContracts app")
 
     var facet;
     for (const rwItem of rwList) {
 
-        var sender: number = 0;
-        if ("sender" in rwItem) {
-            if (Object.values(Account).includes(rwItem.sender)) {       
-                sender = Number((<string>rwItem.sender).split('_')[0]);
-                }
-            }
+        const sender: number = parseRwRecordForSpecificItemWithDefaultValue( "sender", rwItem, 0);
+
         facet = await hre.viem.getContractAt(
             rwItem.contract,
             (<Address>diamondNames.Diamond.address),
             { client: { wallet: wallets[sender] } }
             );
 
-
             // On gère les liste de Accounts
-            var rangeAccount : Account[] | string[] = [Account.A0];
-            if ("loopAccount" in rwItem) {
-                if (typeof rwItem.loopAccount === "string") {
-                    if (<string>rwItem.loopAccount in storage) {
-                        if (String(storage[<string>rwItem.loopAccount]).match(regex)) {
-                            rangeAccount = [storage[<string>rwItem.loopAccount]];
-                        }
-                    }
-                }
-                else if (Array.isArray(rwItem.loopAccount)) {
-                    rangeAccount = rwItem.loopAccount;
-                    }                       
-                }
+            const rangeAccount : number[] = parseRwRecordForSpecificItemWithDefaultValue( "loopAccount", rwItem, [Account.A0]);
 
-            // On gère les liste de Index
-            var rangeIndex : number[] = [0];
-            if ("loopIndex" in rwItem) {
-                if (typeof rwItem.loopIndex === "string") {
-                    if (<string>rwItem.loopIndex in storage) {
-                        if (typeof storage[<string>rwItem.loopIndex] === "bigint") {
-                            rangeIndex = [...Array(Number(storage[<string>rwItem.loopIndex])).keys()];
-                        }
-                    }
-                }
-                else if (Array.isArray(rwItem.loopIndex)) {
-                    rangeIndex = rwItem.loopIndex;
-                    }                       
-                }
+            // On gère les liste des Index si elle existe dans le record
+            const rangeIndex : number[] = parseRwRecordForSpecificItemWithDefaultValue( "loopIndex", rwItem, [0]);
 
-            // On gère les liste de TokenId
-            var rangeToken : number[] = [0];
-            if ("loopTokenId" in rwItem) {
-                if (typeof rwItem.loopTokenId === "string") {
-                    if (<string>rwItem.loopTokenId in storage) {
-                        if (typeof storage[<string>rwItem.loopTokenId] === "bigint") {
-                            rangeToken = [...Array(Number(storage[<string>rwItem.loopTokenId])).keys()];
-                        }
-                    }
-                }
-                else if (Array.isArray(rwItem.loopTokenId)) {
-                    rangeToken = rwItem.loopTokenId;
-                    }                       
-                }
-
+            // On récupère les liste de TokenId si elle existe dans le record
+            const rangeToken : number[] = parseRwRecordForSpecificItemWithDefaultValue( "loopTokenId", rwItem, [0]);
 
             for ( const account of rangeAccount) {
                 for ( const token of rangeToken) {
@@ -188,7 +188,6 @@ async function main() {
                                 abi: facet.abi,
                                 address: (<Address>diamondNames.Diamond.address),
                                 })
-                            //console.log(eventLogs)
                                 
                             log = log.concat( (typeof method === "object") ? method.reduce( (acc, cur) => { return cur.concat(acc, "|")} ) : "[Tx:".concat( method.substring(0, 6), "..]"));
 
@@ -199,49 +198,13 @@ async function main() {
                                 }
                             } 
                         else if (rwItem.rwType == rwType.READ) {
-                            const result = await facet.read[rwItem.function]( newArgs, wallets[sender] );
-
-                            const eventLogs = await  publicClient.getContractEvents({
-                                abi: facet.abi,
-                                address: (<Address>diamondNames.Diamond.address),
-                                })
+                            var result : any = await facet.read[rwItem.function]( newArgs, wallets[sender] );
 
                             var beacon : any = Array.isArray(result) ? result : [ result ];
-                            if ("store" in rwItem && rwItem.store) {
-                                storage[rwItem.function] = beacon;
-                                }   
-                            if (rwItem.outcome.length == beacon.length || rwItem.outcome[0] == "array") {
-                                beacon = beacon.map((res : any, i : number) => {
-                                    const choice = (rwItem.outcome[0] == "array") ? "" : rwItem.outcome[i];
-                                    switch (choice) {
-                                        case "Typeoftoken": {
-                                            return Typeoftoken[res];
-                                            }
-                                        case "Statusoftoken": {
-                                            return Statusoftoken[res];
-                                            }
-                                        case "string": {
-                                            if ("decode" in rwItem && typeof rwItem.decode == "string") {
-                                                const codedstring = res.split(rwItem.decode);
-                                                return atob(codedstring[1]);
-                                                }
-                                            return res;
-                                            }
-                                        case "address": {
-                                            return "@".concat( res.substring(0, 12), "...");
-                                            }
-                                        case "bigint": {
-                                            return res;
-                                            }
-                                        case "bool": {
-                                            return res ? "True" : "False";
-                                            }
-                                        default: {
-                                            return res;
-                                            }
-                                        }   
-                                    });
-                                }
+
+                            storage[rwItem.function] = parseRwRecordForSpecificItemWithDefaultValue( "store", rwItem, [],  beacon);
+
+                            beacon = parseOutcome( rwItem.outcome, result, rwItem);
 
                             if (Array.isArray(beacon)) log = log.concat( "[ ", beacon.join("| ")," ]" );
                             else log = log.concat( (typeof beacon === "object") ? beacon.reduce( (acc, cur) => { return cur.concat(acc)}, "| " ) : <string>beacon)
@@ -259,6 +222,4 @@ async function main() {
             }    
         }
     }
-  
-  main();
 

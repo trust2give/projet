@@ -76,16 +76,6 @@ contract T2G_NektarFacet {
 
     function beacon_NektarFacet() public pure returns (string memory) { return "T2G_NektarFacet::1.0.1"; }
 
-     /// @notice returns the amount currently remaining on the contract balance in native coin
-     /// @dev MODIFIER : checks first that msg.sender is T2G owner. Otherwise revert NektarInvalidSender error
-     /// @dev the native coin is either ETH, POL or any other EVM compliant blockchain where the contract is deployed in
-     /// @dev the contract is inside an ERC2535 structure, so the value refers to this contract and not the diamond root
-     /// @return uint amount of native token in WEI or equivalent
-
-    function balanceOf() external isT2GOwner view returns (uint) {
-        return address(this).balance;        
-        }
-
      /// @notice returns the features of a specific Nektar, given its tokenId 
      /// @param _tokenId token Id
      /// @dev MODIFIER : checks first that msg.sender is either the T2G owner or the token owner. Otherwise revert NektarInvalidOwner error
