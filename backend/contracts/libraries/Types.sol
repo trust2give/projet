@@ -4,6 +4,34 @@ pragma solidity ^0.8.0;
 
 library T2GTypes {
 
+/* Type CoinUnit 
+ * Utilisé pour les unités monétaires pour les valorisation des tokens POLLEN, NEKTAR, CELL et HONEY
+ * et pour les autres usages en général
+ */
+
+enum CoinUnit {
+  NONE,
+  GWEI,
+  EURO,
+  DOLLAR,
+  SWISSFRANC,
+  STERLINGPOUND,
+  YEN,
+  YUAN,
+  USDC,
+  USDT,
+  EURC,
+  SUI
+}
+
+enum sizeUnit {
+  NONE,
+  KILO,
+  TON,
+  KTON,
+  MTON
+}
+
 /* Type UnitSize
  * Type utilisé pour la caractérisation la taille des unités dans la ruche
  */ 
@@ -144,12 +172,6 @@ enum PeriodType {
   }
 
 
-/* Type Currency 
- * Utilisé pour les unités monétaires pour les valorisation des tokens POLLEN, NEKTAR, CELL et HONEY
- * et pour les autres usages en général
- */
-
-enum Currency { NONE, EURO, DOLLAR, SWISSFRANC, STERLINGPOUND, YEN, YUAN }
 
 bool constant YES = true;
 bool constant NO = false;

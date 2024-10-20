@@ -39,13 +39,19 @@ library LibERC721 {
      */
     struct TokenStruct {
         Typeoftoken token;
-        uint256 amount;
         Statusoftoken state;
+        string date;
+        uint256 value;      // Either a quantity or an amoung depending on the type of token
+        uint8 valueUnit;    // Either a T2GTypes.CoinUnit or T2GTypes.sizeUnit depending on the type of Token
+        uint8 rate;         // Percentage value (optional) for Honey applicable to amount dedicated to Gift versus Project Funding
+        string[2] uri;      // Uri links to BEGES documents that certify the value for Pollen
+        T2GTypes.BusinessSector sector;
         }
 
     struct TokenIdCard {
         string name;
         string symbol;
+        string logo;
         }
 
     bytes32 internal constant STORAGE_SLOT = keccak256("diamond.storage.erc721");
@@ -60,7 +66,9 @@ library LibERC721 {
         mapping(address owner => mapping(uint256 index => uint256)) ownedTokens;
         mapping(uint256 => uint256) ownedTokensIndex;
         mapping(uint256 tokenId => uint256) allTokensIndex;
+        // Partie spécifique aux Tokens de la dApp
         mapping(uint256 tokenId => TokenStruct) token;
+        // Pour les Honay
         mapping(uint256 tokenId => mapping (uint256 => bool)) whitelist;
         mapping(uint256 tokenId => mapping (uint256 => bool)) blacklist;
         uint256[88] _gaps; // Cette variable n'est pas utilisée 

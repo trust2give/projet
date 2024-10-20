@@ -18,12 +18,15 @@ import { LibDiamond } from "../libraries/LibDiamond.sol";
 
 contract T2G_PollenFacet {
 
+    address private diamond;
+
     error PollenInvalidTokenId(uint256 tokenId);
     error PollenInvalidOwner(address owner);
     error PollenInvalidSender(address sender);
     error PollenInvalidAmount(address sender);
     error PollenInvalidStatus(uint256 tokenId);
-    
+    error PollenInvalidContractAddress();
+
     event PollenSetWhiteList(uint256 tokenId, T2GTypes.BusinessSector _sector);
     event PollenSetBlackList(uint256 tokenId, T2GTypes.BusinessSector _sector);
     event PollenActive( uint256 tokenId);
@@ -70,11 +73,24 @@ contract T2G_PollenFacet {
         _;
         }
 
+    constructor( address _root ) {
+        if (_root == address(0)) revert PollenInvalidContractAddress();
+        diamond = _root;
+        }
+
      /// @notice checks that the deployed contract is alive and returns its version
      /// @dev the returned text is to be updated whenever a change in the contract is made and new deployment is carried out
      /// @return string that recalls the contact name + its current deployed version : "contractname::version"
 
     function beacon_PollenFacet() public pure returns (string memory) { return "T2G_PollenFacet::1.0.9"; }
+
+     /// @notice returns the address of the the contract
+     /// @dev MODIFIER : checks first that msg.sender is T2G owner. Otherwise revert PollenInvalidSender error
+     /// @dev All Facet in T2G application must implement this function of type "get_<Contract Name>()
+     /// @return Address of the current instance of contract
+    function get_T2G_PollenFacet() public isT2GOwner view returns (address) {
+        return address(this);        
+        }
 
      /// @notice returns the amount currently remaining on the contract balance in native coin
      /// @dev MODIFIER : checks first that msg.sender is T2G owner. Otherwise revert PollenInvalidSender error
@@ -96,7 +112,7 @@ contract T2G_PollenFacet {
     function pollen(uint256 _tokenId) 
         external isT2GOwnerOrPollenOwner(_tokenId) isPollen(_tokenId) view returns (LibERC721.Typeoftoken , LibERC721.Statusoftoken, uint256) {
         LibERC721.TokenStruct memory data = LibERC721._tokenFeatures(_tokenId);
-        return (data.token, data.state, data.amount);
+        return (data.token, data.state, data.value);
         }
 
      /// @notice Mints a new Pollen Token for a specific owner address. Emits a {Transfer} event when successful
@@ -119,7 +135,7 @@ contract T2G_PollenFacet {
         
         _data.token = LibERC721.Typeoftoken.Pollen;
         _data.state = LibERC721.Statusoftoken.draft;
-        _data.amount = _quantity;
+        _data.value = _quantity;
 
         LibERC721._safeMint(_to, _tokenId, abi.encode(_data));
         LibERC721._approve(msg.sender, _tokenId, _to);

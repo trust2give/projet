@@ -2,9 +2,12 @@
 pragma solidity ^0.8.18;
 
 import {LibERC721} from "../libraries/LibERC721.sol";
-//import {ERC721Errors} from "../libraries/Errors.sol";
+import {ERC721Errors} from "../libraries/Errors.sol";
 import {T2GTypes} from "../libraries/Types.sol";
 import { LibDiamond } from "../libraries/LibDiamond.sol";
+import { ERC721Facet } from "./ERC721Facet.sol";
+import { T2G_PoolFacet } from "./PoolFacet.sol";
+import {T2GTypes} from "../libraries/Types.sol";
 
 
 /******************************************************************************\
@@ -18,12 +21,16 @@ import { LibDiamond } from "../libraries/LibDiamond.sol";
 
 contract T2G_HoneyFacet {
 
+    address private diamond;
+
     error HoneyInvalidTokenId(uint256 tokenId);
     error HoneyInvalidOwner(address owner);
     error HoneyInvalidSender(address sender);
     error HoneyInvalidAmount(address sender);
+    error HoneyInvalidContractAddress();
     error HoneyInvalidStatus(uint256 tokenId);
-    
+    error HoneyInvalidValueUnit(uint256 tokenId, T2GTypes.CoinUnit unit);
+
     event HoneySetWhiteList(uint256 tokenId, T2GTypes.BusinessSector _sector);
     event HoneySetBlackList(uint256 tokenId, T2GTypes.BusinessSector _sector);
     event HoneyActive( uint256 tokenId);
@@ -75,11 +82,24 @@ contract T2G_HoneyFacet {
         _;
         }
 
+    constructor( address _root ) {
+        if (_root == address(0)) revert HoneyInvalidContractAddress();
+        diamond = _root;
+        }
+
      /// @notice checks that the deployed contract is alive and returns its version
      /// @dev the returned text is to be updated whenever a change in the contract is made and new deployment is carried out
      /// @return string that recalls the contact name + its current deployed version : "contractname::version"
 
     function beacon_HoneyFacet() public pure returns (string memory) { return "T2G_HoneyFacet::1.0.9"; }
+
+     /// @notice returns the address of the the contract
+     /// @dev MODIFIER : checks first that msg.sender is T2G owner. Otherwise revert HoneyInvalidSender error
+     /// @dev All Facet in T2G application must implement this function of type "get_<Contract Name>()
+     /// @return Address of the current instance of contract
+    function get_T2G_HoneyFacet() public isT2GOwner view returns (address) {
+        return address(this);        
+        }
 
      /// @notice returns the amount currently remaining on the contract balance in native coin
      /// @dev MODIFIER : checks first that msg.sender is T2G owner. Otherwise revert HoneyInvalidSender error
@@ -99,32 +119,37 @@ contract T2G_HoneyFacet {
      /// @return tuple (type of token, status of token, amount tied to token)
 
     function honey(uint256 _tokenId) 
-        external isT2GOwnerOrHoneyOwner(_tokenId) isHoney(_tokenId) view returns (LibERC721.Typeoftoken , LibERC721.Statusoftoken, uint256) {
+        external isT2GOwnerOrHoneyOwner(_tokenId) isHoney(_tokenId) view returns (LibERC721.Typeoftoken , LibERC721.Statusoftoken, string memory, uint256, uint8, uint8) {
         LibERC721.TokenStruct memory data = LibERC721._tokenFeatures(_tokenId);
-        return (data.token, data.state, data.amount);
+        return (data.token, data.state, data.date, data.value, data.valueUnit, data.rate);
         }
 
      /// @notice Mints a new Honey Token for a specific owner address. Emits a {Transfer} event when successful
      /// @notice This is a payable function that requires msg.value represents the amount of gift that is related to the Honey Token
-     /// @notice Minting Honey with no msg.value or zero is not permitted. Value represent the amoung in native coin (WEI) that is given by the owner to T2G apps
+     /// @notice Minting Honey with no msg.value or zero is not permitted. Value represent the amoung in native coin (GWEI) that is given by the owner to T2G apps
      /// @notice The newly created Honey Token is set with a Draft status and will remain so until the white or black list have been sets
      /// @notice YTBD: and Honey token has been approved by the T2G owner through the function approveHoney. From this moment onward, the Honey turns active
      /// @notice YTBD: Until approval, the Honey Token can be burned and canceled.
      /// @notice YTBD: Once status is active, the Honey Token can no longer be burned.T2G Owner can transfer the amount from This contract to the pool.
      /// @param _to address of the new Honey token owner
      /// @param _tokenId the Id gien to the new Honey Token
+     /// @param _unit the unit of the amount given
+     /// @param _rate the percentage of the amount dedicated to gift
      /// @dev MODIFIER : checks first that msg.sender is T2G owner. Otherwise revert HoneyInvalidSender error
      /// @dev MODIFIER : checks second that msg.value > 0. Otherwise revert HoneyInvalidAmount error
      /// @dev YTBD : checks third that future owner of new token has already signed up to the T2G app and is known. Otherwise revert HoneyInvalidOwner error
      /// @dev checks then that tokenId does not refer to no already existing token (of any type). Otherwise revert HoneyInvalidTokenId error
      /// @dev once cheks are OK and Honey token minted, then sets the approval flags that allow either the owner or the T2G owner to manage the token
 
-    function mintHoney(address _to, uint256 _tokenId) external isT2GOwner isFee payable {
+    function mintHoney(address _to, uint256 _tokenId, T2GTypes.CoinUnit _unit, uint8 _rate) external isT2GOwner isFee payable {
         LibERC721.TokenStruct memory _data;
         
         _data.token = LibERC721.Typeoftoken.Honey;
         _data.state = LibERC721.Statusoftoken.draft;
-        _data.amount = msg.value;
+        _data.value = msg.value;
+        _data.valueUnit = uint8(_unit);
+        _data.rate = _rate;
+        _data.date = "Now";
 
         LibERC721._safeMint(_to, _tokenId, abi.encode(_data));
         LibERC721._approve(msg.sender, _tokenId, _to);
@@ -178,7 +203,7 @@ contract T2G_HoneyFacet {
      /// @notice Both TokenId and Owner address are to be given as inputs to prevent any undesired or malicious action.
      /// @notice Emits a {HoneyActive} event when successful
      /// @notice YTBD: Until approval, the Honey Token can be burned and canceled.
-     /// @notice YTBD: Once status is active, the Honey Token can no longer be burned.T2G Owner can transfer the amount from This contract to the pool.
+     /// @notice YTBD: Once status is active, the Honey Token can no longer be burned.T2G Owner can transfer the value from This contract to the pool.
      /// @param _tokenId the Id given to the Honey Token
      /// @param _owner address of the owner of the token. 
      /// @dev MODIFIER : checks first that msg.sender is T2G owner. Otherwise revert HoneyInvalidSender error
@@ -202,11 +227,19 @@ contract T2G_HoneyFacet {
      /// @dev MODIFIER : checks then that _owner is the token owner. Otherwise revert HoneyInvalidOwner error
      /// @dev MODIFIER : checks then that tokenId refers to an already existing Honey token. Otherwise revert HoneyInvalidTokenId error
      /// @dev MODIFIER : checks then that tokenId refers to one Active Honey token. Otherwise revert HoneyInvalidStatus error
-     /// @dev YTBD : once cheks are OK, then send a transfer call from this contract to the T2G_PoolFacet contract
+     /// @dev Once cheks are OK, then send a transfer call from this contract to the T2G_PoolFacet contract
 
     function transferToPool(uint256 _tokenId, address _owner) 
         external isT2GOwner isHoneyOwner(_tokenId, _owner) isHoney(_tokenId) isActive(_tokenId) payable {
-        // Yet ot be done
+        // On récupère le montant de don associé Token
+        LibERC721.TokenStruct memory data = LibERC721._tokenFeatures(_tokenId);
+
+        // On authorise le T2G_PoolFacet contract à agir sur le Token de Owner
+        LibERC721._approve( T2G_PoolFacet(diamond).get_T2G_PoolFacet(), _tokenId, _owner);
+        // POC (Only) Check that unit is GWEI otherwise revert
+        // T2G (YTBD) check unit related to value and turn it into GWEI is possible
+        if (T2GTypes.CoinUnit(data.valueUnit) != T2GTypes.CoinUnit.GWEI) revert HoneyInvalidValueUnit(_tokenId, T2GTypes.CoinUnit(data.valueUnit));
+        T2G_PoolFacet(T2G_PoolFacet(diamond).get_T2G_PoolFacet()).poolTransfertFrom(data.value);
         }
 
      /// @notice Burns / Cancels a draft Honey Token. For security reasons. 

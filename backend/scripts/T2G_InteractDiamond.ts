@@ -15,8 +15,8 @@ import { rwType, Account, Value, Typeoftoken, Statusoftoken, rwRecord, InteractW
 const rwList : rwRecord[] = [
     { rwType: rwType.READ, contract: "DiamondLoupeFacet", function: "beacon_DiamondLoupeFacet", args: [], label: "Beacon", outcome: [ "string"] },
     { rwType: rwType.READ, contract: "DiamondLoupeFacet", function: "facets", args: [], label: "Facets", outcome: [ "array"] },
-    { rwType: rwType.READ, contract: "DiamondLoupeFacet", function: "facetAddresses", args: [], label: "Facet Addresses", outcome: [ "array"] }
-    //{ rwType: rwType.READ, contract: "DiamondLoupeFacet", function: "owner", args: [], label: "@owner of T2G Diamond", outcome: [ "address"] },
+    { rwType: rwType.READ, contract: "DiamondLoupeFacet", function: "facetAddresses", store: true, args: [], label: "Facet Addresses", outcome: [ "array"] },
+    { rwType: rwType.READ, contract: "DiamondLoupeFacet", function: "facetFunctionSelectors", args: [  Value.Address ], loopAddress: "facetAddresses", label: "Facets details", outcome: [ "array"] },
     //{ rwType: rwType.READ, contract: "DiamondLoupeFacet", function: "ownerOf", args: [ Value.TokenId ], loopTokenId: [4,5,6,7], label: "@owner of Honey Token", outcome: [ "address"] }
     ]
 

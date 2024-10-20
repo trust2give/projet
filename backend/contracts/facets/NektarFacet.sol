@@ -18,12 +18,16 @@ import { LibDiamond } from "../libraries/LibDiamond.sol";
 
 contract T2G_NektarFacet {
 
+    address private diamond;
+
+
     error NektarInvalidTokenId(uint256 tokenId);
     error NektarInvalidOwner(address owner);
     error NektarInvalidSender(address sender);
     error NektarInvalidAmount(address sender);
     error NektarInvalidStatus(uint256 tokenId);
-    
+    error NektarInvalidContractAddress();
+
     event NektarSetWhiteList(uint256 tokenId, T2GTypes.BusinessSector _sector);
     event NektarSetBlackList(uint256 tokenId, T2GTypes.BusinessSector _sector);
     event NektarActive( uint256 tokenId);
@@ -70,11 +74,24 @@ contract T2G_NektarFacet {
         _;
         }
 
+    constructor( address _root ) {
+        if (_root == address(0)) revert NektarInvalidContractAddress();
+        diamond = _root;
+        }
+
      /// @notice checks that the deployed contract is alive and returns its version
      /// @dev the returned text is to be updated whenever a change in the contract is made and new deployment is carried out
      /// @return string that recalls the contact name + its current deployed version : "contractname::version"
 
     function beacon_NektarFacet() public pure returns (string memory) { return "T2G_NektarFacet::1.0.1"; }
+
+     /// @notice returns the address of the the contract
+     /// @dev MODIFIER : checks first that msg.sender is T2G owner. Otherwise revert NektarInvalidSender error
+     /// @dev All Facet in T2G application must implement this function of type "get_<Contract Name>()
+     /// @return Address of the current instance of contract
+    function get_T2G_NektarFacet() public isT2GOwner view returns (address) {
+        return address(this);        
+        }
 
      /// @notice returns the features of a specific Nektar, given its tokenId 
      /// @param _tokenId token Id
@@ -86,7 +103,7 @@ contract T2G_NektarFacet {
     function nektar(uint256 _tokenId) 
         external isT2GOwnerOrNektarOwner(_tokenId) isNektar(_tokenId) view returns (LibERC721.Typeoftoken , LibERC721.Statusoftoken, uint256) {
         LibERC721.TokenStruct memory data = LibERC721._tokenFeatures(_tokenId);
-        return (data.token, data.state, data.amount);
+        return (data.token, data.state, data.value);
         }
 
      /// @notice Mints a new Nektar Token for a specific owner address. Emits a {Transfer} event when successful
@@ -108,7 +125,7 @@ contract T2G_NektarFacet {
         
         _data.token = LibERC721.Typeoftoken.Nektar;
         _data.state = LibERC721.Statusoftoken.draft;
-        _data.amount = _amount;
+        _data.value = _amount;
 
         LibERC721._safeMint(_to, _tokenId, abi.encode(_data));
         LibERC721._approve(msg.sender, _tokenId, _to);

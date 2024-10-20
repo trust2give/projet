@@ -17,7 +17,7 @@ export enum rwType { READ, WRITE }
 /// enum type qui permet de sélectionner les 6 premiers @Wallet du node hardhat
 export enum Account { A0 = "0_", A1 = "1_", A2 = "2_", A3 = "3_", A4 = "4_", A5 = "5_", A6 = "6_" }
 /// enum type qui permet dans le tableau args de définir une liste de valeur plutôt qu'une valeur spécifique
-export enum Value { TokenId = "T__", Index = "I__", Account = "A__" }
+export enum Value { TokenId = "T__", Index = "I__", Account = "A__", Address = "@_" }
 
 export const Typeoftoken : string[] = ["None", "Pollen", "Honey", "Nektar", "Cell"]
 
@@ -35,6 +35,7 @@ export type rwRecord = {
     args?: Array<any>,
     sender?: Account,
     fees?: number | bigint,
+    loopAddress? : Address[] | string,  // Permet de gérer une liste d'inputs [...]de type Address ou valeur @ stockée dans storage
     loopTokenId? : number[] | string,   // Permet de gérer une liste d'inputs [...]de type index ou [0...Max] => Max : valeur dans storge
     loopIndex? : number[] | string,     // Permet de gérer une liste d'inputs [...]de type index ou [0...Max] => Max : valeur dans storge
     loopAccount? : Account[] | string,  // Permet de gérer une liste d'inputs [...]de type @Accounts ou valeur @Account stockée dans storge
@@ -59,6 +60,15 @@ function parseRwRecordForSpecificItemWithDefaultValue( item: string, rwItem: rwR
                 throw("parseRwRecord::Inconsistant Sender Input: ".concat(<string>element));                
                 }
             case "store": return outcome;
+            case "loopAddress": {
+                if (typeof element === "string" && <string>element in storage) {
+                    if (Array.isArray(storage[<string>element]) && storage[<string>element].length > 0)  {
+                        return storage[<string>element];
+                        }
+                    }
+                if (Array.isArray(element)) return element;
+                throw("parseRwRecord::Inconsistant loopAddress Input: ".concat(<string>element));                
+                }
             case "loopTokenId": 
             case "loopIndex": {
                 if (typeof element === "string" && <string>element in storage) {
@@ -94,8 +104,12 @@ function parseOutcome( template: Array<any>, result: Array<any>, rwItem: rwRecor
     if (template.length != result.length && template[0] != "array") throw("Inconstant Oucome");
 
     return result.map((res : any, i : number) => {
-        const choice = (template[0] == "array") ? "" : template[i];
-        switch (choice) {
+        if (template[0] == "array") {
+            if (Array.isArray(res)) return "[ ".concat( Object.values(res).join("| "), "]");
+            if (typeof res === "object") return "[ ".concat( Object.values(res).join("| "), "]");
+            return res;
+            }
+        switch (template[i]) {
             case "Typeoftoken": return Typeoftoken[res];
             case "Statusoftoken": return Statusoftoken[res];
             case "string": return parseRwRecordForSpecificItemWithDefaultValue( "decode", rwItem, res, res);
@@ -120,9 +134,6 @@ export async function InteractWithContracts(rwList : rwRecord[]) {
     const wallets = await hre.viem.getWalletClients();
     const publicClient = await hre.viem.getPublicClient();
 
-    //const args = process.argv.slice(2);
-    //var saisie = prompt('Saisir quelque chose');
-
     console.log("Enter InteractWithContracts app")
 
     var facet;
@@ -136,6 +147,9 @@ export async function InteractWithContracts(rwList : rwRecord[]) {
             { client: { wallet: wallets[sender] } }
             );
 
+            // On gère les liste de addresses
+            const rangeAddress : Address[] = parseRwRecordForSpecificItemWithDefaultValue( "loopAddress", rwItem, [NULL_ADDRESS]);
+
             // On gère les liste de Accounts
             const rangeAccount : number[] = parseRwRecordForSpecificItemWithDefaultValue( "loopAccount", rwItem, [Account.A0]);
 
@@ -147,79 +161,84 @@ export async function InteractWithContracts(rwList : rwRecord[]) {
 
             for ( const account of rangeAccount) {
                 for ( const token of rangeToken) {
-                    for ( const index of rangeIndex) {
-                    
-                    // On transcrit les arguments s'ils existent : type Account
+                    for ( const index of rangeIndex) {                    
+                        for ( const addr of rangeAddress) {
+                            // On transcrit les arguments s'ils existent : type Account
 
-                    var newArgs = rwItem.args.map((x) => {
-                        if (Object.values(Account).includes(x)) {       
-                            return accounts[x.split('_')[0]].address;
-                        }
-                        else if (x === Value.Account) {
-                            return accounts[account.split('_')[0]].address;
-                        } 
-                        else if (x === Value.Index) {
-                            return index;
-                        } 
-                        else if (x === Value.TokenId) {
-                            return token;
-                        } 
-                        return x;
-                    });
-                    
-                    var log : string  = "[R_@".concat( facet.address.substring(0, 6), "..]:", rwItem.contract.padEnd(15, ' '), "::");
-                    log = log.concat( "[S_@", accounts[sender].address.substring(0, 6), "..]::");
-                    log = log.concat( ("label" in rwItem) ? <string>rwItem.label : rwItem.function );
-                    log = log.concat( "[ ", newArgs.map((arg, i) => {
-                        if (Object.values(Account).includes(rwItem.args[i]) || rwItem.args[i] === Value.Account) return "@".concat( arg.substring(0, 6), "..")
-                        if (rwItem.args[i] === Value.Index) return "Index ".concat( arg )
-                        if (rwItem.args[i] === Value.TokenId) return "Id ".concat( arg )
-                        return arg;
-                        }).join("| ")," ] >> " );
-
-                    try {
-                        if (rwItem.rwType == rwType.WRITE) {
-
-                            const method = await facet.write[rwItem.function](newArgs, rwItem.fees ? { 
-                                value: BigInt(rwItem.fees)
-                                }  : null, wallets[sender] );
-
-                            const eventLogs = await  publicClient.getContractEvents({
-                                abi: facet.abi,
-                                address: (<Address>diamondNames.Diamond.address),
-                                })
-                                
-                            log = log.concat( (typeof method === "object") ? method.reduce( (acc, cur) => { return cur.concat(acc, "|")} ) : "[Tx:".concat( method.substring(0, 6), "..]"));
-
-                            for ( const event of eventLogs) {
-                                if (event.transactionHash == method) {
-                                    log = log.concat( " >> Event ", event.eventName, "[ ", Object.values(event.args).join("| "), " ]" );                
-                                    }
+                            var newArgs = rwItem.args.map((x) => {
+                                if (Object.values(Account).includes(x)) {       
+                                    return accounts[x.split('_')[0]].address;
                                 }
-                            } 
-                        else if (rwItem.rwType == rwType.READ) {
-                            var result : any = await facet.read[rwItem.function]( newArgs, wallets[sender] );
+                                else if (x === Value.Account) {
+                                    return accounts[account.split('_')[0]].address;
+                                } 
+                                else if (x === Value.Index) {
+                                    return index;
+                                } 
+                                else if (x === Value.TokenId) {
+                                    return token;
+                                } 
+                                else if (x === Value.Address) {
+                                    return addr;
+                                } 
+                                return x;
+                            });
+                            
+                            var log : string  = "[R_@".concat( facet.address.substring(0, 6), "..]:", rwItem.contract.padEnd(15, ' '), "::");
+                            log = log.concat( "[S_@", accounts[sender].address.substring(0, 6), "..]::");
+                            log = log.concat( ("label" in rwItem) ? <string>rwItem.label : rwItem.function );
+                            log = log.concat( "[ ", newArgs.map((arg, i) => {
+                                if (Object.values(Account).includes(rwItem.args[i]) || rwItem.args[i] === Value.Account) return "@".concat( arg.substring(0, 6), "..")
+                                if (rwItem.args[i] === Value.Index) return "Index ".concat( arg )
+                                if (rwItem.args[i] === Value.TokenId) return "Id ".concat( arg )
+                                if (rwItem.args[i] === Value.Address) return "@".concat( arg.substring(0, 6), "..")
+                                return arg;
+                                }).join("| ")," ] >> " );
 
-                            var beacon : any = Array.isArray(result) ? result : [ result ];
+                            try {
+                                if (rwItem.rwType == rwType.WRITE) {
 
-                            storage[rwItem.function] = parseRwRecordForSpecificItemWithDefaultValue( "store", rwItem, [],  beacon);
+                                    const method = await facet.write[rwItem.function](newArgs, rwItem.fees ? { 
+                                        value: BigInt(rwItem.fees)
+                                        }  : null, wallets[sender] );
 
-                            beacon = parseOutcome( rwItem.outcome, result, rwItem);
+                                    const eventLogs = await  publicClient.getContractEvents({
+                                        abi: facet.abi,
+                                        address: (<Address>diamondNames.Diamond.address),
+                                        })
+                                        
+                                    log = log.concat( (typeof method === "object") ? method.reduce( (acc, cur) => { return cur.concat(acc, "|")} ) : "[Tx:".concat( method.substring(0, 6), "..]"));
 
-                            if (Array.isArray(beacon)) log = log.concat( "[ ", beacon.join("| ")," ]" );
-                            else log = log.concat( (typeof beacon === "object") ? beacon.reduce( (acc, cur) => { return cur.concat(acc)}, "| " ) : <string>beacon)
-                            }
-                            console.info(log);
-                        } catch (error) {
-                            //console.log(Object.entries(error));
-                            log = log.concat( "[@", error.contractAddress.substring(0, 12), "...]:", error.functionName, "::");
-                            log = log.concat( "[", error.args.join("|"),"] >> " );
-                            log = log.concat( <string>error.metaMessages, "\n");
-                            console.error(log); 
-                        }  
-                    }
-                }          
-            }    
+                                    for ( const event of eventLogs) {
+                                        if (event.transactionHash == method) {
+                                            log = log.concat( " >> Event ", event.eventName, "[ ", Object.values(event.args).join("| "), " ]" );                
+                                            }
+                                        }
+                                    } 
+                                else if (rwItem.rwType == rwType.READ) {
+                                    var result : any = await facet.read[rwItem.function]( newArgs, wallets[sender] );
+
+                                    var beacon : any = Array.isArray(result) ? result : [ result ];
+
+                                    storage[rwItem.function] = parseRwRecordForSpecificItemWithDefaultValue( "store", rwItem, [],  beacon);
+
+                                    beacon = parseOutcome( rwItem.outcome, result, rwItem);
+
+                                    if (Array.isArray(beacon)) log = log.concat( "[ ", beacon.join("| ")," ]" );
+                                    else log = log.concat( (typeof beacon === "object") ? beacon.reduce( (acc, cur) => { return cur.concat(acc)}, "| " ) : <string>beacon)
+                                    }
+                                    console.info(log);
+                                } catch (error) {
+                                    //console.log(Object.entries(error));
+                                    log = log.concat( "[@", error.contractAddress.substring(0, 12), "...]:", error.functionName, "::");
+                                    log = log.concat( "[", error.args.join("|"),"] >> " );
+                                    log = log.concat( <string>error.metaMessages, "\n");
+                                    console.error(log); 
+                                }
+                            }     
+                        }   
+                    }          
+                }    
         }
     }
 
