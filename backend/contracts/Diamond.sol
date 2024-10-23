@@ -62,5 +62,7 @@ contract Diamond {
         }
     }
 
-    receive() external payable {}
+    receive() external payable {
+        revert("Receive payable receipt");
+    }
 }

@@ -11,7 +11,7 @@ library T2GTypes {
 
 enum CoinUnit {
   NONE,
-  GWEI,
+  T2GSC,
   EURO,
   DOLLAR,
   SWISSFRANC,

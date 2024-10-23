@@ -21,6 +21,8 @@ export enum Value { TokenId = "T__", Index = "I__", Account = "A__", Address = "
 
 export const Typeoftoken : string[] = ["None", "Pollen", "Honey", "Nektar", "Cell"]
 
+export const TypeofUnit : string[] = ["None", "GWEI", "EURO", "DOLLAR", "SWISSFRANC", "STERLINGPOUND", "YEN", "YUAN", "USDC", "USDT", "EURC", "SUI"]
+
 export const Statusoftoken : string[] =  [ "None", "Draft", "Active", "Burnt", "Canceled"]
 
 /// loopIndex: <null> | [index] | string -> [facultatif] Défini soit un ensemble de valeurs d'index dans le cas d'un appel multiple d'une fonction
@@ -29,6 +31,7 @@ export const Statusoftoken : string[] =  [ "None", "Draft", "Active", "Burnt", "
 /// loopTokenId: <null> | [TokenId] | string -> [facultatif] Meme règle que loopIndex pour une liste de valeur de TokenId
 /// Si l'un ou l'autre attibut est présent, alors dans la valeur args [], un des inputs est définit par Enum(Valeur | Account)
 export type rwRecord = { 
+    tag?: string,
     rwType: rwType,
     contract: string, 
     function: string, 
@@ -51,7 +54,7 @@ var storage : object = {};
 /// Fonction qui parse un objet rwRecord à la recherche d'un "item" et renvoie une valeur si présent, ou une valeur par défaut defValue sinon
 /// Si l'item est trouvé, la fonction renvoyée peut dépendre de l'item, qui peut également utiliser la valeur outcome passée en entrée
 /// Renvoie une erreur si détecte la présence de item dans l'objet mais ne trouve pas sa valeur
-function parseRwRecordForSpecificItemWithDefaultValue( item: string, rwItem: rwRecord, defValue: any, outcome?: any ) : any {
+export function parseRwRecordForSpecificItemWithDefaultValue( item: string, rwItem: rwRecord, defValue: any, outcome?: any ) : any {
     if (item in rwItem) {
         const element : any = rwItem[item];
         switch (item) {
@@ -98,7 +101,7 @@ function parseRwRecordForSpecificItemWithDefaultValue( item: string, rwItem: rwR
     return defValue;
 }
 
-function parseOutcome( template: Array<any>, result: Array<any>, rwItem: rwRecord) : Array<any> {
+export function parseOutcome( template: Array<any>, result: Array<any>, rwItem: rwRecord) : Array<any> {
     result = Array.isArray(result) ? result : [ result ];
 
     if (template.length != result.length && template[0] != "array") throw("Inconstant Oucome");
@@ -112,10 +115,12 @@ function parseOutcome( template: Array<any>, result: Array<any>, rwItem: rwRecor
         switch (template[i]) {
             case "Typeoftoken": return Typeoftoken[res];
             case "Statusoftoken": return Statusoftoken[res];
+            case "TypeOfUnit": return TypeofUnit[res];
             case "string": return parseRwRecordForSpecificItemWithDefaultValue( "decode", rwItem, res, res);
             case "address": {
                 return "@".concat( res.substring(0, 12), "...");
                 }
+            case "number":
             case "bigint": {
                 return res;
                 }
@@ -129,19 +134,15 @@ function parseOutcome( template: Array<any>, result: Array<any>, rwItem: rwRecor
         });
     }
 
-export async function InteractWithContracts(rwList : rwRecord[]) {
-    const accounts = await hre.ethers.getSigners();
+export async function InteractWithContracts(rwItem : rwRecord, accountList: Address[]) {
     const wallets = await hre.viem.getWalletClients();
     const publicClient = await hre.viem.getPublicClient();
 
     console.log("Enter InteractWithContracts app")
 
-    var facet;
-    for (const rwItem of rwList) {
-
         const sender: number = parseRwRecordForSpecificItemWithDefaultValue( "sender", rwItem, 0);
 
-        facet = await hre.viem.getContractAt(
+        const facet = await hre.viem.getContractAt(
             rwItem.contract,
             (<Address>diamondNames.Diamond.address),
             { client: { wallet: wallets[sender] } }
@@ -164,13 +165,13 @@ export async function InteractWithContracts(rwList : rwRecord[]) {
                     for ( const index of rangeIndex) {                    
                         for ( const addr of rangeAddress) {
                             // On transcrit les arguments s'ils existent : type Account
-
+                            //console.log(rwItem.args);
                             var newArgs = rwItem.args.map((x) => {
                                 if (Object.values(Account).includes(x)) {       
-                                    return accounts[x.split('_')[0]].address;
+                                    return accountList[x.split('_')[0]];
                                 }
                                 else if (x === Value.Account) {
-                                    return accounts[account.split('_')[0]].address;
+                                    return accountList[account.split('_')[0]];
                                 } 
                                 else if (x === Value.Index) {
                                     return index;
@@ -185,7 +186,7 @@ export async function InteractWithContracts(rwList : rwRecord[]) {
                             });
                             
                             var log : string  = "[R_@".concat( facet.address.substring(0, 6), "..]:", rwItem.contract.padEnd(15, ' '), "::");
-                            log = log.concat( "[S_@", accounts[sender].address.substring(0, 6), "..]::");
+                            log = log.concat( "[S_@", accountList[sender].substring(0, 6), "..]::");
                             log = log.concat( ("label" in rwItem) ? <string>rwItem.label : rwItem.function );
                             log = log.concat( "[ ", newArgs.map((arg, i) => {
                                 if (Object.values(Account).includes(rwItem.args[i]) || rwItem.args[i] === Value.Account) return "@".concat( arg.substring(0, 6), "..")
@@ -197,7 +198,7 @@ export async function InteractWithContracts(rwList : rwRecord[]) {
 
                             try {
                                 if (rwItem.rwType == rwType.WRITE) {
-
+                                    //console.log(newArgs);
                                     const method = await facet.write[rwItem.function](newArgs, rwItem.fees ? { 
                                         value: BigInt(rwItem.fees)
                                         }  : null, wallets[sender] );
@@ -214,22 +215,26 @@ export async function InteractWithContracts(rwList : rwRecord[]) {
                                             log = log.concat( " >> Event ", event.eventName, "[ ", Object.values(event.args).join("| "), " ]" );                
                                             }
                                         }
+                                    //console.log(eventLogs)
                                     } 
                                 else if (rwItem.rwType == rwType.READ) {
+                                    //console.log("Read")
                                     var result : any = await facet.read[rwItem.function]( newArgs, wallets[sender] );
 
                                     var beacon : any = Array.isArray(result) ? result : [ result ];
+                                    //console.log(beacon)
 
                                     storage[rwItem.function] = parseRwRecordForSpecificItemWithDefaultValue( "store", rwItem, [],  beacon);
+                                    //console.log(storage[rwItem.function])
 
                                     beacon = parseOutcome( rwItem.outcome, result, rwItem);
-
+                                    //console.log("Out", beacon)
                                     if (Array.isArray(beacon)) log = log.concat( "[ ", beacon.join("| ")," ]" );
                                     else log = log.concat( (typeof beacon === "object") ? beacon.reduce( (acc, cur) => { return cur.concat(acc)}, "| " ) : <string>beacon)
                                     }
                                     console.info(log);
                                 } catch (error) {
-                                    //console.log(Object.entries(error));
+                                    console.log(Object.entries(error));
                                     log = log.concat( "[@", error.contractAddress.substring(0, 12), "...]:", error.functionName, "::");
                                     log = log.concat( "[", error.args.join("|"),"] >> " );
                                     log = log.concat( <string>error.metaMessages, "\n");
@@ -239,6 +244,5 @@ export async function InteractWithContracts(rwList : rwRecord[]) {
                         }   
                     }          
                 }    
-        }
     }
 

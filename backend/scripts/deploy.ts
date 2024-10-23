@@ -5,11 +5,14 @@ import { Address, encodeFunctionData } from "viem";
 export type contractRecord = { 
     name?: string, 
     action?: number, 
+    argInit?: boolean,
+    addReader?: boolean,
     address?: string,
     beacon?: string
   }
   
 export type diamondCore = {
+    Stablecoin: contractRecord,
     Diamond: contractRecord,
     DiamondCutFacet: contractRecord,
     DiamondInit: contractRecord,
@@ -52,6 +55,7 @@ export async function deployDiamond( diamonds: diamondCore, token: { name: strin
 
     var cut = [];
 
+    var stablecoin; // on récupère l'instance stablecoin EurSC
     var diamond; // on récupère l'instance T2G_Root
     var diamondLoupe; // on récupère l'instance DiamonLoupeFacet
     var diamondCutFacet; // on récupère l'instance DiamondCutFacet
@@ -59,13 +63,27 @@ export async function deployDiamond( diamonds: diamondCore, token: { name: strin
 
     var initFunc = NULL_ADDRESS;
     var initAddress = NULL_ADDRESS;
+    var stableName : string = (diamonds.Stablecoin.name || "EUR");
     var diamName : string = (diamonds.Diamond.name || "Diamond");
     var loupeName : string = (diamonds.DiamondLoupeFacet.name || "DiamondLoupeFacet");
     var CutName : string = (diamonds.DiamondCutFacet.name || "DiamondCutFacet");
 
+    if (!("action" in diamonds.Stablecoin) &&  "address" in diamonds.Stablecoin && String(diamonds.Stablecoin.address).match(regex)) {
+        stablecoin = await hre.viem.getContractAt(
+            stableName,
+            (<Address>diamonds.Stablecoin.address)
+            );
+        }
+    else if ("action" in diamonds.Stablecoin 
+        && diamonds.Stablecoin.action == FacetCutAction.Add 
+        && !String(diamonds.Stablecoin.address).match(regex)) {
+            stablecoin = await hre.viem.deployContract( stableName );
+
+        console.log(`Add ${stableName} @: ${stablecoin.address}`);        
+        }
+
     if (!("action" in diamonds.Diamond) &&  "address" in diamonds.Diamond && String(diamonds.Diamond.address).match(regex)) {
-        // il y a une instance existante
-        // On récupère les informations 
+        // il y a une instance existante On récupère les informations 
         diamond = await hre.viem.getContractAt(
             diamName,
             (<Address>diamonds.Diamond.address)
@@ -125,7 +143,7 @@ export async function deployDiamond( diamonds: diamondCore, token: { name: strin
         initFunc = encodeFunctionData({
             abi: diamondInit.abi,
             functionName: "init",
-            args: [ token.name, token.symbol ]
+            args: [ token.name, token.symbol, diamond.address ]
         });
 
         initAddress = diamondInit.address;
@@ -152,7 +170,49 @@ export async function deployDiamond( diamonds: diamondCore, token: { name: strin
                     });    
                 }
             else if (facetName.action == FacetCutAction.Add || facetName.action == FacetCutAction.Replace) {
-                facet = await hre.viem.deployContract(facetName.name);
+                if (facetName.argInit) {
+                    facet = await hre.viem.deployContract(
+                        facetName.name, 
+                        [ diamond.address ],
+                        {
+                            client: { wallet: deployWallet },
+                            //gas: 1000000,
+                            //value: parseEther("0.0001"),
+                            //confirmations: 1, // 1 by default
+                        });
+                    }
+                else {
+                    facet = await hre.viem.deployContract(facetName.name);
+                    }
+
+                const eventLogs = await  publicClient.getContractEvents({
+                    abi: facet.abi,
+                    address: (<Address>facet.address),
+                    })
+                    
+                for ( const event of eventLogs) {
+                    console.log (" >> Event ".concat( event.eventName, "[ ", Object.values(event.args).join("| "), " ]" ));                
+                    }
+
+                }
+            else throw new Error(`Incompatible Action ${facetName.action} for ${facetName.name} & address recorded`);
+
+            //const readBeacon = await facet.read[facetName.beacon]();
+            //const readAddress : Address | string = (facetName.addReader) ? await facet.read["get_".concat(facetName.name)]() : "No Address";
+            //console.log(`Deployed ${facetName.name} @: ${readAddress} : ${readBeacon}`);                      
+                      
+                // Modele de fonction
+                /*const contractA = await hre.viem.deployContract(
+                    "contractName",
+                    ["arg1", 50, "arg3"],
+                    {
+                      client: { wallet: secondWalletClient }
+                      gas: 1000000,
+                      value: parseEther("0.0001"),
+                      confirmations: 5, // 1 by default
+                    }
+                  );*/
+
                 console.log(`${facetName.name} - Action ${facetName.action} @: ${diamond.address}`);    
                 cut.push({
                     facetAddress: facet.address,
@@ -160,9 +220,7 @@ export async function deployDiamond( diamonds: diamondCore, token: { name: strin
                     functionSelectors: getSelectors(facet)
                     });
                 }
-            else throw new Error(`Incompatible Action ${facetName.action} for ${facetName.name} & address recorded`);
             }
-        }
 
     const diamondCut = await hre.viem.getContractAt("IDiamondCut", diamond.address);
 

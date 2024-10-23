@@ -4,6 +4,8 @@ pragma solidity ^0.8.18;
 import {T2GTypes} from "../libraries/Types.sol";
 import { LibDiamond } from "../libraries/LibDiamond.sol";
 import { T2G_HoneyFacet } from "./HoneyFacet.sol";
+import {LibERC721} from "../libraries/LibERC721.sol";
+import { DiamondLoupeFacet } from "./DiamondLoupeFacet.sol";
 
 
 /******************************************************************************\
@@ -17,11 +19,12 @@ import { T2G_HoneyFacet } from "./HoneyFacet.sol";
 
 contract T2G_PoolFacet {
 
-    address private diamond;
-
     error PoolInvalidSender(address sender);
     error PoolInvalidContractAddress();
     error PoolInvalidValueTransfered(uint256 value);
+
+    event PoolRootAddressSet( address root );
+    event PoolReceivedAmount( uint256 value, uint256 balance );
 
     modifier isT2GOwner {
         if (msg.sender != LibDiamond.contractOwner()) revert PoolInvalidSender(msg.sender);
@@ -29,7 +32,7 @@ contract T2G_PoolFacet {
         }
 
     modifier isT2GOwnerOrHoneyContract {
-        address honeyAddress = T2G_HoneyFacet(diamond).get_T2G_HoneyFacet();
+        address honeyAddress = T2G_HoneyFacet(LibERC721.layout().root).get_T2G_HoneyFacet();
 
         if (msg.sender != LibDiamond.contractOwner() && msg.sender != honeyAddress) revert PoolInvalidSender(msg.sender);
         _;
@@ -37,20 +40,24 @@ contract T2G_PoolFacet {
 
     constructor( address _root ) payable {
         if (_root == address(0)) revert PoolInvalidContractAddress();
-        diamond = _root;
+        else if (LibERC721.layout().root == address(0)) {
+            LibERC721.layout().root = _root;
+            emit PoolRootAddressSet( _root );
+            }
+        else if (_root != LibERC721.layout().root) revert PoolInvalidContractAddress();
         }
 
-    function poolTransfertFrom( uint256 _value ) public isT2GOwnerOrHoneyContract payable {
-        if (_value == 0) revert PoolInvalidValueTransfered(_value);
+    function poolTransfertFrom() external isT2GOwnerOrHoneyContract payable {
+        if (msg.value == 0) revert PoolInvalidValueTransfered(msg.value);
+        emit PoolReceivedAmount( msg.value, address(this).balance );
         //address(this).balance = _value;
         }
 
      /// @notice returns the address of the the contract
-     /// @dev MODIFIER : checks first that msg.sender is T2G owner. Otherwise revert HoneyInvalidSender error
      /// @dev All Facet in T2G application must implement this function of type "get_<Contract Name>()
      /// @return Address of the current instance of contract
-    function get_T2G_PoolFacet() public isT2GOwner view returns (address) {
-        return address(this);        
+    function get_T2G_PoolFacet() public view returns (address) {
+        return address(DiamondLoupeFacet(LibERC721.layout().root).facetAddress(bytes4(abi.encodeWithSignature("beacon_PoolFacet()"))));
         }
 
      /// @notice checks that the deployed contract is alive and returns its version
@@ -66,7 +73,7 @@ contract T2G_PoolFacet {
      /// @return uint amount of native token in WEI or equivalent
 
     function poolBalanceOf() external isT2GOwner view returns (uint) {
-        return address(this).balance;        
+        return address(DiamondLoupeFacet(LibERC721.layout().root).facetAddress(bytes4(abi.encodeWithSignature("beacon_PoolFacet()")))).balance;
         }
 
     }

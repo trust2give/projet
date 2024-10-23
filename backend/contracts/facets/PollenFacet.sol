@@ -32,6 +32,7 @@ contract T2G_PollenFacet {
     event PollenActive( uint256 tokenId);
     event PollenAmountTransfer( uint256 tokenId);
     event PollenReview( address owner );
+    event PollenRootAddressSet( address root );
 
     modifier isT2GOwner {
         if (msg.sender != LibDiamond.contractOwner()) revert PollenInvalidSender(msg.sender);
@@ -75,7 +76,11 @@ contract T2G_PollenFacet {
 
     constructor( address _root ) {
         if (_root == address(0)) revert PollenInvalidContractAddress();
-        diamond = _root;
+        else if (LibERC721.layout().root == address(0)) {
+            LibERC721.layout().root = _root;
+            emit PollenRootAddressSet( _root );
+            }
+        else if (_root != LibERC721.layout().root) revert PollenInvalidContractAddress();
         }
 
      /// @notice checks that the deployed contract is alive and returns its version
@@ -85,10 +90,9 @@ contract T2G_PollenFacet {
     function beacon_PollenFacet() public pure returns (string memory) { return "T2G_PollenFacet::1.0.9"; }
 
      /// @notice returns the address of the the contract
-     /// @dev MODIFIER : checks first that msg.sender is T2G owner. Otherwise revert PollenInvalidSender error
      /// @dev All Facet in T2G application must implement this function of type "get_<Contract Name>()
      /// @return Address of the current instance of contract
-    function get_T2G_PollenFacet() public isT2GOwner view returns (address) {
+    function get_T2G_PollenFacet() public view returns (address) {
         return address(this);        
         }
 

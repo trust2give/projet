@@ -16,33 +16,40 @@ import { diamondCore } from "./deploy";
 ///   Pour chaque facet:
 ///   - name: <null> || "nom_contract" => le nom de Smart Contract de la facet
 ///   - action: FacetCutAction.Add || FacetCutAction.Replace || FacetCutAction.Remove || <null>
-/// 
-
+///   - argInit : boolean qui indique si le constructeur attend aucun input (false) ou l'adresse du T2G_Root (true)
+///   - addReader : boolen qui indique si le contract contient la méthode get_<Nom Contrat> pour avoir l'addresse propres du SC
+///  
+/*
 export const diamondNames : diamondCore = {
-    Diamond: { name: "T2G_root", address: "0x5f3f1dbd7b74c6b46e8c44f98792a1daf8d69154" },
+    Diamond: { name: "T2G_root", action: FacetCutAction.Add, address: "" },
     DiamondCutFacet: { },
     DiamondLoupeFacet: { },
-    DiamondInit: { address: "0xcd8a1c3ba11cf5ecfa6267617243239504a98d90" },
+    DiamondInit: { address: "" },
     facetNames: [
-      { name: 'OwnershipFacet', beacon: 'beacon_OwnershipFacet' },
-      { name: 'ERC721Facet', beacon: 'beacon_ERC721Facet' },
-      { name: 'T2G_NektarFacet', action: FacetCutAction.Replace, beacon: 'beacon_NektarFacet' },
-      { name: 'T2G_PollenFacet', action: FacetCutAction.Replace, beacon: 'beacon_PollenFacet' },
-      { name: 'T2G_HoneyFacet', action: FacetCutAction.Replace, beacon: 'beacon_HoneyFacet' },
-      { name: 'T2G_PoolFacet', action: FacetCutAction.Replace, beacon: 'beacon_PoolFacet' }
+      { name: 'OwnershipFacet', argInit: false, action: FacetCutAction.Add, beacon: 'beacon_OwnershipFacet' },
+      { name: 'ERC721Facet', argInit: false, action: FacetCutAction.Add, beacon: 'beacon_ERC721Facet' },
+      { name: 'T2G_NektarFacet', argInit: true, action: FacetCutAction.Add, addReader: true, beacon: 'beacon_NektarFacet' },
+      { name: 'T2G_PollenFacet', argInit: true, action: FacetCutAction.Add, addReader: true, beacon: 'beacon_PollenFacet' },
+      { name: 'T2G_HoneyFacet', argInit: true, action: FacetCutAction.Add, addReader: true, beacon: 'beacon_HoneyFacet' },
+      { name: 'T2G_PoolFacet', argInit: true, action: FacetCutAction.Add, addReader: true, beacon: 'beacon_PoolFacet' }
       ]
     }
-
-/*export const diamondNames : diamondCore = {
-      Diamond: { name: "T2G_root", address: "0x9e545e3c0baab3e08cdfd552c960a1050f373042" },
+*/
+export const diamondNames : diamondCore = {
+      Stablecoin: { name: "EUR", address: "0x696358bbb1a743052e0e87bed78aad9d18f0e1f4" },
+      Diamond: { name: "T2G_root", address: "0x6e0a5725dd4071e46356bd974e13f35dbf9ef367" },
       DiamondCutFacet: { },
       DiamondLoupeFacet: { },
-      DiamondInit: { address: "0x1613beb3b2c4f22ee086b2b38c1476a3ce7f78e8" },
+      DiamondInit: { address: "0x6b21b3ae41f818fc91e322b53f8d0773d31ecb75" },
       facetNames: [
-        { name: 'OwnershipFacet', beacon: 'beacon_OwnershipFacet' },
-        { name: 'ERC721Facet', beacon: 'beacon_ERC721Facet' },
-        { name: 'HoneyFacet', action: FacetCutAction.Replace, beacon: 'beacon_HoneyFacet' } 
+      { name: 'OwnershipFacet', argInit: false, beacon: 'beacon_OwnershipFacet' },
+      { name: 'ERC721Facet', argInit: false, beacon: 'beacon_ERC721Facet' },
+      { name: 'T2G_NektarFacet', argInit: true, addReader: true, beacon: 'beacon_NektarFacet' },
+      { name: 'T2G_PollenFacet', argInit: true, addReader: true, beacon: 'beacon_PollenFacet' },
+      { name: 'T2G_HoneyFacet', argInit: true, action: FacetCutAction.Replace, addReader: true, beacon: 'beacon_HoneyFacet' },
+      { name: 'T2G_PoolFacet', argInit: true, action: FacetCutAction.Replace, addReader: true, beacon: 'beacon_PoolFacet' }
         ]
-      }*/
+      }
   
+      //0x6e0a5725dd4071e46356bd974e13f35dbf9ef367
 export const tokenCredential = { name: "Honey", symbol: "HONEY" } 

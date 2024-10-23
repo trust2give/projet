@@ -18,9 +18,6 @@ import { LibDiamond } from "../libraries/LibDiamond.sol";
 
 contract T2G_NektarFacet {
 
-    address private diamond;
-
-
     error NektarInvalidTokenId(uint256 tokenId);
     error NektarInvalidOwner(address owner);
     error NektarInvalidSender(address sender);
@@ -33,6 +30,7 @@ contract T2G_NektarFacet {
     event NektarActive( uint256 tokenId);
     event NektarAmountTransfer( uint256 tokenId);
     event NektarReview( address owner );
+    event NektarRootAddressSet( address root );
 
     modifier isT2GOwner {
         if (msg.sender != LibDiamond.contractOwner()) revert NektarInvalidSender(msg.sender);
@@ -76,7 +74,11 @@ contract T2G_NektarFacet {
 
     constructor( address _root ) {
         if (_root == address(0)) revert NektarInvalidContractAddress();
-        diamond = _root;
+        else if (LibERC721.layout().root == address(0)) {
+            LibERC721.layout().root = _root;
+            emit NektarRootAddressSet( _root );
+            }
+        else if (_root != LibERC721.layout().root) revert NektarInvalidContractAddress();
         }
 
      /// @notice checks that the deployed contract is alive and returns its version
@@ -86,10 +88,9 @@ contract T2G_NektarFacet {
     function beacon_NektarFacet() public pure returns (string memory) { return "T2G_NektarFacet::1.0.1"; }
 
      /// @notice returns the address of the the contract
-     /// @dev MODIFIER : checks first that msg.sender is T2G owner. Otherwise revert NektarInvalidSender error
      /// @dev All Facet in T2G application must implement this function of type "get_<Contract Name>()
      /// @return Address of the current instance of contract
-    function get_T2G_NektarFacet() public isT2GOwner view returns (address) {
+    function get_T2G_NektarFacet() public view returns (address) {
         return address(this);        
         }
 

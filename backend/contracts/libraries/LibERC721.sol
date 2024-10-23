@@ -28,6 +28,7 @@ library LibERC721 {
     enum Statusoftoken {
         None,
         draft,
+        validated,
         active,
         burnt,
         canceled
@@ -45,6 +46,7 @@ library LibERC721 {
         uint8 valueUnit;    // Either a T2GTypes.CoinUnit or T2GTypes.sizeUnit depending on the type of Token
         uint8 rate;         // Percentage value (optional) for Honey applicable to amount dedicated to Gift versus Project Funding
         string[2] uri;      // Uri links to BEGES documents that certify the value for Pollen
+        string[3] hash;     // hash of recorded transactions of stablecoin transfers
         T2GTypes.BusinessSector sector;
         }
 
@@ -57,6 +59,7 @@ library LibERC721 {
     bytes32 internal constant STORAGE_SLOT = keccak256("diamond.storage.erc721");
 
     struct Layout {
+        address root;
         uint256[] allTokens;
         mapping(uint256 typeId => TokenIdCard) idFeatures;
         mapping(uint256 tokenId => address) owners;

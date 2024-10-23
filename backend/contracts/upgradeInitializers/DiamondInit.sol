@@ -26,7 +26,7 @@ contract DiamondInit {
 
     // You can add parameters to this function in order to pass in 
     // data to set your own state variables
-    function init(string memory _name, string memory _symbol) external {
+    function init(string memory _name, string memory _symbol, address _root) external {
         // adding ERC165 data
         LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
         ds.supportedInterfaces[type(IERC165).interfaceId] = true;
@@ -40,6 +40,7 @@ contract DiamondInit {
 
         layout.idFeatures[uint256(LibERC721.Typeoftoken.None)].name = _name;
         layout.idFeatures[uint256(LibERC721.Typeoftoken.None)].symbol = _symbol;
+        layout.root = _root;
 
         // add your own state variables 
         // EIP-2535 specifies that the `diamondCut` function takes two optional 
