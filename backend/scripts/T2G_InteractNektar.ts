@@ -12,15 +12,13 @@ import * as readline from 'readline';
 /// netstat -a -o -n
 /// taskkill /f /pid ####
 /// npx hardhat node
-/// npx hardhat run .\scripts\T2G_InteractPool.ts --network localhost
+/// npx hardhat run .\scripts\T2G_InteractNektar.ts --network localhost
 
-export const rwPoolList : rwRecord[] = [
-    { rwType: rwType.READ, contract: "T2G_PoolFacet", function: "beacon_PoolFacet", args: [], label: "Beacon", outcome: [ "string"] },    
-    { rwType: rwType.READ, contract: "T2G_PoolFacet", function: "poolBalanceOf", args: [], label: "POL/ETH of T2G Contract pool", outcome: [ "bigint"] },
-    { rwType: rwType.READ, contract: "T2G_PoolFacet", function: "get_T2G_PoolFacet", args: [], label: "Address poll", outcome: [ "address"] },
+export const rwNektarList : rwRecord[] = [
+    { rwType: rwType.READ, contract: "T2G_NektarFacet", function: "beacon_NektarFacet", args: [], label: "Beacon", outcome: [ "string"] },
     ]
 
-export async function T2G_InteractPool( accountList: Address[], tag: string, rl : readline.Interface, item : rwRecord ) {
+export async function T2G_InteractNektar( accountList: Address[], tag: string, rl : readline.Interface, item : rwRecord ) {
     //console.log("Enter T2G_InteractDiamond Application")
     await InteractWithContracts( item, accountList, rl );
     }

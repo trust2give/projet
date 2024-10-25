@@ -4,6 +4,7 @@ import { Address, encodeFunctionData } from "viem";
 import { InteractWithERC20Contract } from "./InteractWithERC20";
 import * as readline from 'readline';
 import { diamondNames } from "./T2G_Data";
+import { colorOutput } from "./T2G_utils";
 
 /******************************************************************************\
 * Author: Franck Dervillez <franck.dervillez@trust2give.com>, Twitter/Github: @fdervillez
@@ -17,34 +18,18 @@ import { diamondNames } from "./T2G_Data";
 /// npx hardhat run .\scripts\T2G_InteractERC20.ts --network localhost
 
 export const rwERC20List : rwRecord[] = [
-    { tag: "11", rwType: rwType.READ, contract: "EUR", function: "name", args: [], label: "Stable Coin Name", outcome: [ "string"] },
-    { tag: "12", rwType: rwType.READ, contract: "EUR", function: "symbol", args: [], label: "Stable Coin Symbol", outcome: [ "string"] },
-    { tag: "13", rwType: rwType.READ, contract: "EUR", function: "decimals", args: [], label: "Stable Coin Décimals", outcome: [ "number"] },
-    { tag: "14", rwType: rwType.READ, contract: "EUR", function: "totalSupply", args: [], label: "Stable Coin Supply", outcome: [ "bigint"] },
-    { tag: "15", rwType: rwType.READ, contract: "EUR", function: "balanceOf", args: [Value.Account], loopAccount: [Account.A0, Account.A1, Account.A2], label: "Balance Of @ ", outcome: [ "string"] },    
-    //{ rwType: rwType.READ, contract: "EUR", function: "balanceOfRoot", args: [], label: "POL/ETH of T2G Contract Root", outcome: [ "bigint"] },
-    //{ rwType: rwType.READ, contract: "EUR", function: "poolBalanceOf", args: [], label: "POL/ETH of T2G Contract pool", outcome: [ "bigint"] },
-    //{ rwType: rwType.READ, contract: "EUR", function: "get_T2G_HoneyFacet", args: [], label: "Address Honey", outcome: [ "address"] },
-    //{ rwType: rwType.READ, contract: "EUR", function: "get_T2G_PoolFacet", args: [], label: "Address poll", outcome: [ "address"] },
-    //{ rwType: rwType.READ, contract: "EUR", function: "balanceOf", args: [], label: "POL/ETH of T2G Contract Honey", outcome: [ "bigint"] },
-    //{ rwType: rwType.READ, contract: "EUR", function: "beacon_DiamondLoupeFacet", args: [], label: "Beacon", outcome: [ "string"] },
-    //{ rwType: rwType.READ, contract: "EUR", function: "facets", args: [], label: "Facets", outcome: [ "array"] },
-    //{ rwType: rwType.READ, contract: "EUR", function: "facetAddresses", store: true, args: [], label: "Facet Addresses", outcome: [ "array"] },
-    //{ rwType: rwType.READ, contract: "EUR", function: "facetFunctionSelectors", args: [  Value.Address ], loopAddress: "facetAddresses", label: "Facets details", outcome: [ "array"] },
-    //{ rwType: rwType.READ, contract: "EUR", function: "ownerOf", args: [ Value.TokenId ], loopTokenId: [4,5,6,7], label: "@owner of Honey Token", outcome: [ "address"] }
+    { rwType: rwType.READ, contract: "EUR", function: "name", args: [], label: "Stable Coin Name", outcome: [ "string"] },
+    { rwType: rwType.READ, contract: "EUR", function: "symbol", args: [], label: "Stable Coin Symbol", outcome: [ "string"] },
+    { rwType: rwType.READ, contract: "EUR", function: "decimals", args: [], label: "Stable Coin Décimals", outcome: [ "number"] },
+    { rwType: rwType.READ, contract: "EUR", function: "totalSupply", args: [], label: "Stable Coin Supply", outcome: [ "bigint"] },
+    { rwType: rwType.READ, contract: "EUR", function: "balanceOf", args: [Value.Account], label: "Balance Of @ ", outcome: [ "bigint"] },    
+    { rwType: rwType.WRITE, contract: "EUR", function: "transfer", args: [Value.Account, Value.Number], label: "Transfer EUR To", outcome: [] },
+    { rwType: rwType.WRITE, contract: "EUR", function: "transferFrom", args: [Value.Account, Value.Account, Value.Number], label: "Transfer EUR from", outcome: [] },
     ]
 
-export async function T2G_InteractERC20 ( accountList: Address[], tag: string )  {
-    console.log("Enter T2G_InteractERC20 Application")
-
-    const found = rwERC20List.find((element) => element.tag == tag);
-    console.log('Answer: ', found);
-    if (found != undefined) {
-      await InteractWithERC20Contract(found, <Address>diamondNames.Stablecoin.address, accountList );
-      }
-    
-    return "Function ".concat( rwERC20List.map( (item) => { return ("tag" in item) ? item.tag?.substring(1).concat( ' ', item.function) : "";}).join("| ") );
-
+export async function T2G_InteractERC20 ( accountList: Address[], tag: string, rl : readline.Interface, item : rwRecord )  {
+  colorOutput("Enter T2G_InteractERC20 Application", "cyan")
+    await InteractWithERC20Contract(item, <Address>diamondNames.Stablecoin.address, accountList, rl );
     }
 
 //main().catch((error) => {

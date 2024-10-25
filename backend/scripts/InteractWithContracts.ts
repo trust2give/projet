@@ -3,6 +3,8 @@ import { diamondNames } from "./T2G_Data";
 import { Address, InvalidSerializedTransactionTypeError } from "viem";
 //import decodeMethod  from "abi-decoder-typescript"
 //import { bigint } from "hardhat/internal/core/params/argumentTypes";
+import * as readline from 'readline';
+import { colotOutput } from "./T2G_utils";
 
 /// npx hardhat node
 /// npx hardhat run .\scripts\InteractWithContracts.ts --network localhost
@@ -17,7 +19,7 @@ export enum rwType { READ, WRITE }
 /// enum type qui permet de sélectionner les 6 premiers @Wallet du node hardhat
 export enum Account { A0 = "0_", A1 = "1_", A2 = "2_", A3 = "3_", A4 = "4_", A5 = "5_", A6 = "6_" }
 /// enum type qui permet dans le tableau args de définir une liste de valeur plutôt qu'une valeur spécifique
-export enum Value { TokenId = "T__", Index = "I__", Account = "A__", Address = "@_" }
+export enum Value { TokenId = "T__", Index = "I__", Account = "A__", Address = "@_", Number = "N_" }
 
 export const Typeoftoken : string[] = ["None", "Pollen", "Honey", "Nektar", "Cell"]
 
@@ -31,11 +33,10 @@ export const Statusoftoken : string[] =  [ "None", "Draft", "Active", "Burnt", "
 /// loopTokenId: <null> | [TokenId] | string -> [facultatif] Meme règle que loopIndex pour une liste de valeur de TokenId
 /// Si l'un ou l'autre attibut est présent, alors dans la valeur args [], un des inputs est définit par Enum(Valeur | Account)
 export type rwRecord = { 
-    tag?: string,
     rwType: rwType,
     contract: string, 
     function: string, 
-    args?: Array<any>,
+    args: Array<any>,
     sender?: Account,
     fees?: number | bigint,
     loopAddress? : Address[] | string,  // Permet de gérer une liste d'inputs [...]de type Address ou valeur @ stockée dans storage
@@ -134,11 +135,11 @@ export function parseOutcome( template: Array<any>, result: Array<any>, rwItem: 
         });
     }
 
-export async function InteractWithContracts(rwItem : rwRecord, accountList: Address[]) {
+export async function InteractWithContracts(rwItem : rwRecord, accountList: Address[], rl : readline.Interface) {
     const wallets = await hre.viem.getWalletClients();
     const publicClient = await hre.viem.getPublicClient();
 
-    console.log("Enter InteractWithContracts app")
+    //console.log("Enter InteractWithContracts app")
 
         const sender: number = parseRwRecordForSpecificItemWithDefaultValue( "sender", rwItem, 0);
 
@@ -232,7 +233,7 @@ export async function InteractWithContracts(rwItem : rwRecord, accountList: Addr
                                     if (Array.isArray(beacon)) log = log.concat( "[ ", beacon.join("| ")," ]" );
                                     else log = log.concat( (typeof beacon === "object") ? beacon.reduce( (acc, cur) => { return cur.concat(acc)}, "| " ) : <string>beacon)
                                     }
-                                    console.info(log);
+                                    colotOutput(log, "green");
                                 } catch (error) {
                                     console.log(Object.entries(error));
                                     log = log.concat( "[@", error.contractAddress.substring(0, 12), "...]:", error.functionName, "::");

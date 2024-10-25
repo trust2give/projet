@@ -1,6 +1,7 @@
 const hre = require("hardhat");
 import { diamondNames, tokenCredential } from "./T2G_Data";
 import { deployDiamond } from "./deploy";
+import { Address, encodeFunctionData } from "viem";
 
 
 /******************************************************************************\
@@ -14,7 +15,7 @@ import { deployDiamond } from "./deploy";
 /// npx hardhat node
 /// npx hardhat run .\scripts\main.ts --network localhost
 
-export async function DeployContracts() {
+export async function DeployContracts(accountList: Address[], tag: string) {
   console.log("Enter DeployContracts app")
   const diamond = await deployDiamond(diamondNames, tokenCredential)
   return diamond

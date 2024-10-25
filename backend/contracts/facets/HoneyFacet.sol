@@ -135,7 +135,7 @@ contract T2G_HoneyFacet {
 
      /// @notice Mints a new Honey Token for a specific owner address. Emits a {Transfer} event when successful
      /// @notice This is a payable function that requires msg.value represents the amount of gift that is related to the Honey Token
-     /// @notice Minting Honey with no msg.value or zero is not permitted. Value represent the amoung in native coin (GWEI) that is given by the owner to T2G apps
+     /// @notice Minting Honey with no msg.value or zero is not permitted. Value represent the amoung in native coin (T2GSC) that is given by the owner to T2G apps
      /// @notice The newly created Honey Token is set with a Draft status and will remain so until the white or black list have been sets
      /// @notice YTBD: and Honey token has been approved by the T2G owner through the function approveHoney. From this moment onward, the Honey turns active
      /// @notice YTBD: Until approval, the Honey Token can be burned and canceled.
@@ -248,9 +248,9 @@ contract T2G_HoneyFacet {
         if (_root == address(0)) revert HoneyInvalidContractAddress("PoolFacet");
         // On authorise le T2G_PoolFacet contract à agir sur le Token de Owner
         LibERC721._approve( _root, _tokenId, _owner);
-        // POC (Only) Check that unit is GWEI otherwise revert
-        // T2G (YTBD) check unit related to value and turn it into GWEI is possible
-        if (T2GTypes.CoinUnit(data.valueUnit) != T2GTypes.CoinUnit.GWEI) revert HoneyInvalidValueUnit(_tokenId, T2GTypes.CoinUnit(data.valueUnit));
+        // POC (Only) Check that unit is T2GSC otherwise revert
+        // T2G (YTBD) check unit related to value and turn it into T2GSC is possible
+        if (T2GTypes.CoinUnit(data.valueUnit) != T2GTypes.CoinUnit.T2GSC) revert HoneyInvalidValueUnit(_tokenId, T2GTypes.CoinUnit(data.valueUnit));
         //try T2G_PoolFacet(payable(_root)).poolTransfertFrom(data.value) {
         //(bool success, bytes memory result) = payable(_root).delegatecall.value(data.value)(abi.encodeWithSignature("poolTransfertFrom()"));
         //require(success, "delegatecall failed");

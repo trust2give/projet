@@ -2,6 +2,8 @@ import hre from "hardhat";
 import { diamondNames } from "./T2G_Data";
 import { Address, InvalidSerializedTransactionTypeError } from "viem";
 import { rwType, rwRecord, parseRwRecordForSpecificItemWithDefaultValue, parseOutcome, Account, Value } from "./InteractWithContracts";
+import * as readline from 'readline';
+import { colorOutput } from "./T2G_utils";
 
 //import decodeMethod  from "abi-decoder-typescript"
 //import { bigint } from "hardhat/internal/core/params/argumentTypes";
@@ -15,12 +17,12 @@ const NULL_ADDRESS = <Address>"0x0000000000000000000000000000000000000000"
 
 var storage : object = {};
 
-export async function InteractWithERC20Contract(rwItem : rwRecord, contractAddress: Address, accountList: Address[] ) {
+export async function InteractWithERC20Contract(rwItem : rwRecord, contractAddress: Address, accountList: Address[], rl : readline.Interface ) {
     //const accounts = await hre.ethers.getSigners();
     const wallets = await hre.viem.getWalletClients();
     const publicClient = await hre.viem.getPublicClient();
 
-    console.log("Enter InteractWithERC20Contract app")
+    //console.log("Enter InteractWithERC20Contract app")
 
     const sender: number = parseRwRecordForSpecificItemWithDefaultValue( "sender", rwItem, 0);
 
@@ -66,10 +68,11 @@ export async function InteractWithERC20Contract(rwItem : rwRecord, contractAddre
                         return arg;
                         }).join("| ");
 
-                    var log : string  = "[R_@".concat( facet.address.substring(0, 6), "..]:", rwItem.contract.padEnd(15, ' '), "::");
-                    log = log.concat( "[S_@", accountList[sender].substring(0, 6), "..]::");
-                    log = log.concat( ("label" in rwItem) ? <string>rwItem.label : rwItem.function );
-                    log = log.concat( "[ ", dispArgs," ] >> " );
+                    var log : string  = colorOutput( "[R_@".concat( facet.address.substring(0, 6), "..]"), "yellow", true )
+                    log = log.concat( ":", colorOutput(rwItem.contract.padEnd(15, ' '), "cyan", true), "::" );
+                    log = log.concat( colorOutput( "[S_@".concat(accountList[sender].substring(0, 6), "..]"), "magenta", true));
+                    log = log.concat( "::", ("label" in rwItem) ? <string>rwItem.label : rwItem.function );
+                    log = log.concat( "[ ", colorOutput(dispArgs, "blue", true)," ] >> " );
 
                     try {
                         if (rwItem.rwType == rwType.WRITE) {
@@ -83,11 +86,11 @@ export async function InteractWithERC20Contract(rwItem : rwRecord, contractAddre
                                 address: contractAddress,
                                 })
                                 
-                            log = log.concat( (typeof method === "object") ? method.reduce( (acc, cur) => { return cur.concat(acc, "|")} ) : "[Tx:".concat( method.substring(0, 6), "..]"));
+                            log = log.concat( colorOutput( (typeof method === "object") ? method.reduce( (acc, cur) => { return cur.concat(acc, "|")} ) : "[Tx:".concat( method.substring(0, 6), "..]"), "green", true ));
 
                             for ( const event of eventLogs) {
                                 if (event.transactionHash == method) {
-                                    log = log.concat( " >> Event ", event.eventName, "[ ", Object.values(event.args).join("| "), " ]" );                
+                                    log = log.concat( colorOutput( " >> Event ".concat( event.eventName, "[ ", Object.values(event.args).join("| "), " ]"), "yellow", true ));                
                                     }
                                 }
                             //console.log(eventLogs)
@@ -103,13 +106,13 @@ export async function InteractWithERC20Contract(rwItem : rwRecord, contractAddre
                             //console.log(storage[rwItem.function])
 
                             beacon = parseOutcome( rwItem.outcome, result, rwItem);
-                            
+
                             //console.log("Out", beacon)
-                            if (Array.isArray(beacon)) log = log.concat( "[ ", beacon.join("| ")," ]" );
-                            else log = log.concat( (typeof beacon === "object") ? beacon.reduce( (acc, cur) => { return cur.concat(acc)}, "| " ) : <string>beacon)
+                            if (Array.isArray(beacon)) log = log.concat( "[ ", colorOutput( beacon.join("| "), "green", true )," ]" );
+                            else log = log.concat( colorOutput( (typeof beacon === "object") ? beacon.reduce( (acc, cur) => { return cur.concat(acc)}, "| " ) : <string>beacon, "green", true) );
                             }
 
-                            console.info(log);
+                            colorOutput(log);
                         
                         } catch (error) {
                             console.log(Object.entries(error));

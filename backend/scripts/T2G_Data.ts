@@ -21,6 +21,7 @@ import { diamondCore } from "./deploy";
 ///  
 /*
 export const diamondNames : diamondCore = {
+    Stablecoin: { name: "EUR", action: FacetCutAction.Add, address: "" },
     Diamond: { name: "T2G_root", action: FacetCutAction.Add, address: "" },
     DiamondCutFacet: { },
     DiamondLoupeFacet: { },
@@ -34,13 +35,14 @@ export const diamondNames : diamondCore = {
       { name: 'T2G_PoolFacet', argInit: true, action: FacetCutAction.Add, addReader: true, beacon: 'beacon_PoolFacet' }
       ]
     }
-*/
+
+    */
 export const diamondNames : diamondCore = {
-      Stablecoin: { name: "EUR", address: "0x696358bbb1a743052e0e87bed78aad9d18f0e1f4" },
-      Diamond: { name: "T2G_root", address: "0x6e0a5725dd4071e46356bd974e13f35dbf9ef367" },
+      Stablecoin: { name: "EUR", address: "0x5fbdb2315678afecb367f032d93f642f64180aa3" },
+      Diamond: { name: "T2G_root", address: "0x9fe46736679d2d9a65f0992f2272de9f3c7fa6e0" },
       DiamondCutFacet: { },
       DiamondLoupeFacet: { },
-      DiamondInit: { address: "0x6b21b3ae41f818fc91e322b53f8d0773d31ecb75" },
+      DiamondInit: { address: "0xdc64a140aa3e981100a9beca4e685f962f0cf6c9" },
       facetNames: [
       { name: 'OwnershipFacet', argInit: false, beacon: 'beacon_OwnershipFacet' },
       { name: 'ERC721Facet', argInit: false, beacon: 'beacon_ERC721Facet' },
@@ -50,6 +52,6 @@ export const diamondNames : diamondCore = {
       { name: 'T2G_PoolFacet', argInit: true, action: FacetCutAction.Replace, addReader: true, beacon: 'beacon_PoolFacet' }
         ]
       }
-  
+
       //0x6e0a5725dd4071e46356bd974e13f35dbf9ef367
-export const tokenCredential = { name: "Honey", symbol: "HONEY" } 
+export const tokenCredential = { name: "Trust2Give Decentralized App", symbol: "T2G" } 
