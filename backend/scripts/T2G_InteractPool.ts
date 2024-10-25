@@ -1,7 +1,8 @@
 const hre = require("hardhat");
 import { Address, encodeFunctionData } from "viem";
-import { rwType, Account, Value, Typeoftoken, Statusoftoken, rwRecord, InteractWithContracts } from "./InteractWithContracts";
+import { rwType, rwRecord, InteractWithContracts } from "./InteractWithContracts";
 import * as readline from 'readline';
+import { colorOutput, Account, Value } from "./T2G_utils";
 
 /******************************************************************************\
 * Author: Franck Dervillez <franck.dervillez@trust2give.com>, Twitter/Github: @fdervillez
@@ -20,7 +21,7 @@ export const rwPoolList : rwRecord[] = [
     { rwType: rwType.READ, contract: "T2G_PoolFacet", function: "get_T2G_PoolFacet", args: [], label: "Address poll", outcome: [ "address"] },
     ]
 
-export async function T2G_InteractPool( accountList: Address[], tag: string, rl : readline.Interface, item : rwRecord ) {
-    //console.log("Enter T2G_InteractDiamond Application")
-    await InteractWithContracts( item, accountList, rl );
+export async function T2G_InteractPool( accountList: Address[], item : rwRecord ) {
+    colorOutput("Enter T2G_InteractDiamond Application", "cyan")
+    await InteractWithContracts( item, accountList );
     }

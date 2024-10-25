@@ -1,7 +1,8 @@
 const hre = require("hardhat");
 import { Address, encodeFunctionData } from "viem";
-import { rwType, Account, Value, Typeoftoken, Statusoftoken, rwRecord, InteractWithContracts } from "./InteractWithContracts";
+import { rwType, rwRecord, InteractWithContracts } from "./InteractWithContracts";
 import * as readline from 'readline';
+import { colorOutput, Account, Value } from "./T2G_utils";
 
 /******************************************************************************\
 * Author: Franck Dervillez <franck.dervillez@trust2give.com>, Twitter/Github: @fdervillez
@@ -18,7 +19,7 @@ export const rwNektarList : rwRecord[] = [
     { rwType: rwType.READ, contract: "T2G_NektarFacet", function: "beacon_NektarFacet", args: [], label: "Beacon", outcome: [ "string"] },
     ]
 
-export async function T2G_InteractNektar( accountList: Address[], tag: string, rl : readline.Interface, item : rwRecord ) {
-    //console.log("Enter T2G_InteractDiamond Application")
-    await InteractWithContracts( item, accountList, rl );
+export async function T2G_InteractNektar( accountList: Address[], item : rwRecord ) {
+    colorOutput("Enter T2G_InteractDiamond Application", "cyan")
+    await InteractWithContracts( item, accountList );
     }

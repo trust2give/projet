@@ -1,7 +1,9 @@
-const hre = require("hardhat");
+//const hre = require("hardhat");
 import { diamondNames, tokenCredential } from "./T2G_Data";
 import { deployDiamond } from "./deploy";
-import { Address, encodeFunctionData } from "viem";
+import { Address } from "viem";
+import { rwRecord } from "./InteractWithContracts";
+import { colorOutput } from "./T2G_utils";
 
 
 /******************************************************************************\
@@ -13,10 +15,10 @@ import { Address, encodeFunctionData } from "viem";
 /// netstat -a -o -n
 /// taskkill /f /pid ####
 /// npx hardhat node
-/// npx hardhat run .\scripts\main.ts --network localhost
+/// npx hardhat run .\scripts\DeployContracts.ts --network localhost
 
-export async function DeployContracts(accountList: Address[], tag: string) {
-  console.log("Enter DeployContracts app")
+export async function DeployContracts(accountList: Address[], item : rwRecord) {
+  colorOutput("Enter DeployContracts Application", "cyan")
   const diamond = await deployDiamond(diamondNames, tokenCredential)
   return diamond
 }

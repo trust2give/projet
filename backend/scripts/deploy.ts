@@ -1,6 +1,7 @@
 import hre from "hardhat";
 import { FacetCutAction, getSelectors } from "./utils/diamond";
 import { Address, encodeFunctionData } from "viem";
+import { showObject, regex, NULL_ADDRESS } from "./T2G_utils";
 
 export type contractRecord = { 
     name?: string, 
@@ -20,34 +21,6 @@ export type diamondCore = {
     facetNames: contractRecord[]
     }
   
-// Expression régulière pour détecter une adresse ETH 
-const regex = '^(0x)?[0-9a-fA-F]{40}$';
-const NULL_ADDRESS = <Address>"0x0000000000000000000000000000000000000000"
-
-export function showObject( data: any, eol: boolean = false ) {
-    var label: string = "";
-    if (data == null) return "Object::Null";
-    for (const [key, value] of Object.entries(data)) {
-        const t = typeof value;
-        const ret = eol ? `\n` : "";
-        switch (t) {
-            case "number":
-            case "string":
-            case "bigint": label += `${key} ${t.slice(0,1)}: ${value} ${ret}`; break;
-            case "boolean": label += `${key} : ${value ? "TRUE" : "FALSE" } ${ret}`; break;
-            case "object":
-                if (Array.isArray(value)) {
-                    const tab = value.reduce((accumulator, currentValue) => { 
-                        return `${accumulator} ${typeof(currentValue) === "object" ? showObject(currentValue, false) : currentValue} |` }, "|") 
-                    label += `${key}[Arr] : ${tab} ${ret}`;
-                    }
-                else label += showObject( value );
-                break;
-            default:
-            }
-        }
-    return label;
-    }
 
 export async function deployDiamond( diamonds: diamondCore, token: { name: string, symbol: string } ) {
     const publicClient = await hre.viem.getPublicClient();

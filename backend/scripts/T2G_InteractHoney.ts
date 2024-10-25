@@ -1,8 +1,8 @@
 const hre = require("hardhat");
 import { Address, encodeFunctionData } from "viem";
 import * as readline from 'readline';
-
-import { rwType, Account, Value, Typeoftoken, Statusoftoken, TypeofUnit, rwRecord, InteractWithContracts } from "./InteractWithContracts";
+import { colorOutput, Account, Value } from "./T2G_utils";
+import { rwType, rwRecord, InteractWithContracts } from "./InteractWithContracts";
 
 /******************************************************************************\
 * Author: Franck Dervillez <franck.dervillez@trust2give.com>, Twitter/Github: @fdervillez
@@ -16,21 +16,20 @@ import { rwType, Account, Value, Typeoftoken, Statusoftoken, TypeofUnit, rwRecor
 /// npx hardhat run .\scripts\T2G_InteractHoney.ts --network localhost
 
 export const rwHoneyList : rwRecord[] = [
-    { rwType: rwType.READ, contract: "T2G_HoneyFacet", function: "beacon_HoneyFacet", args: [], label: "Beacon", outcome: [ "string"] },
-    //{ rwType: rwType.WRITE, contract: "T2G_HoneyFacet", function: "mintHoney", fees: 1234, args: [ Account.A1, Value.TokenId, 1, 100 ], loopTokenId: [8,9,10], sender: Account.A0, outcome: [] },
-    { rwType: rwType.READ, contract: "T2G_HoneyFacet", function: "balanceOf", args: [], label: "POL/ETH of T2G Contract pool", outcome: [ "bigint"] },
-    { rwType: rwType.READ, contract: "T2G_HoneyFacet", function: "honey", sender: Account.A0, args: [ Value.Index ], loopIndex: [8,9,10], label: "HONEY", outcome: [ "Typeoftoken", "Statusoftoken", "string", "bigint", "TypeOfUnit", "number"] },
-    //{ rwType: rwType.READ, contract: "T2G_HoneyFacet", function: "honey", sender: Account.A2, args: [ Value.Index ], loopIndex: [4,5,6, 7], label: "HONEY", outcome: [ "Typeoftoken", "Statusoftoken", "string", "bigint", "TypeOfUnit", "number"] },
-    //{ rwType: rwType.READ, contract: "T2G_HoneyFacet", function: "honey", sender: Account.A3, args: [ Value.Index ], loopIndex: [4,5,6, 7], label: "HONEY", outcome: [ "Typeoftoken", "Statusoftoken", "string", "bigint", "TypeOfUnit", "number"] },
-    //{ rwType: rwType.WRITE, contract: "T2G_HoneyFacet", function: "setBlackOrWhiteList", sender: Account.A1, args: [ Value.Index, 5, false, false ], loopIndex: [4], label: "Set Whitelist", outcome: [] },
-    //{ rwType: rwType.READ, contract: "T2G_HoneyFacet", function: "getBlackOrWhiteList", args: [ Value.Index, false ], loopIndex: [4], label: "Get Whitelist", outcome: [ "array"]  },
-    { rwType: rwType.READ, contract: "T2G_HoneyFacet", function: "balanceOf", args: [], label: "POL/ETH of T2G Contract pool", outcome: [ "bigint"] },
-    { rwType: rwType.WRITE, contract: "T2G_HoneyFacet", function: "approveHoney", args: [ 8, Account.A1 ], sender: Account.A0, outcome: [] },
-    //{ rwType: rwType.WRITE, contract: "T2G_HoneyFacet", function: "transferToPool", args: [ 4, Account.A2 ], sender: Account.A0, outcome: [] },
-    { rwType: rwType.READ, contract: "T2G_HoneyFacet", function: "balanceOf", args: [], label: "POL/ETH of T2G Contract Honey", outcome: [ "bigint"] },
-    ]
+  { rwType: rwType.READ, contract: "T2G_HoneyFacet", function: "beacon_HoneyFacet", args: [], label: "Beacon", outcome: [ "string"] },
+  { rwType: rwType.READ, contract: "T2G_HoneyFacet", function: "get_T2G_HoneyFacet", args: [], label: "Beacon", outcome: [ "address"] },
+  { rwType: rwType.READ, contract: "T2G_HoneyFacet", function: "balanceOf", args: [], label: "Coin Contract Balance", outcome: [ "bigint"] },
+  { rwType: rwType.READ, contract: "T2G_HoneyFacet", function: "honey", args: [ Value.TokenId ], label: "HONEY", outcome: [ "Typeoftoken", "Statusoftoken", "string", "bigint", "TypeOfUnit", "number"] },
+  { rwType: rwType.WRITE, contract: "T2G_HoneyFacet", function: "mintHoney", args: [ Value.Account, Value.TokenId, Value.Number, Value.Index, Value.Number, Value.Hash ], outcome: [] },
+  { rwType: rwType.WRITE, contract: "T2G_HoneyFacet", function: "setBlackOrWhiteList", args: [ Value.TokenId, Value.Index, Value.Flag, Value.Flag ], label: "Set Black/Whitelist", outcome: [] },
+  { rwType: rwType.READ, contract: "T2G_HoneyFacet", function: "getBlackOrWhiteList", args: [ Value.TokenId, Value.Flag ], loopIndex: [4], label: "Get Whitelist", outcome: [ "array"]  },
+  { rwType: rwType.WRITE, contract: "T2G_HoneyFacet", function: "approveHoney", args: [ Value.TokenId, Value.Account ], outcome: [] },
+  { rwType: rwType.WRITE, contract: "T2G_HoneyFacet", function: "transferToPool", args: [ Value.TokenId, Value.Account ], outcome: [] },
+  { rwType: rwType.WRITE, contract: "T2G_HoneyFacet", function: "burnHoney", args: [ Value.TokenId, Value.Account ], outcome: [] }
+  ]
 
-export async function T2G_InteractHoney( accountList: Address[], tag: string, rl : readline.Interface, item : rwRecord ) {
-    //console.log("Enter T2G_InteractHoney Application")
-    await InteractWithContracts( item, accountList, rl );
+export async function T2G_InteractHoney( accountList: Address[], item : rwRecord ) {
+    colorOutput("Enter T2G_InteractHoney Application", "cyan")
+
+    await InteractWithContracts( item, accountList );
     }

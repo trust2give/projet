@@ -1,9 +1,13 @@
 import hre from "hardhat";
-import { diamondNames } from "./T2G_Data";
-import { Address, InvalidSerializedTransactionTypeError } from "viem";
-import { rwType, rwRecord, parseRwRecordForSpecificItemWithDefaultValue, parseOutcome, Account, Value } from "./InteractWithContracts";
-import * as readline from 'readline';
-import { colorOutput } from "./T2G_utils";
+import { Address } from "viem";
+import { rwType, rwRecord } from "./InteractWithContracts";
+import { colorOutput, 
+    parseAndConvertInputArgs, 
+    parseAndDisplayInputArgs, 
+    displayAddress, displayContract, 
+    parseOutcome, 
+    parseRwRecordForSpecificItemWithDefaultValue, 
+    storage, NULL_ADDRESS, Account } from "./T2G_utils";
 
 //import decodeMethod  from "abi-decoder-typescript"
 //import { bigint } from "hardhat/internal/core/params/argumentTypes";
@@ -11,13 +15,7 @@ import { colorOutput } from "./T2G_utils";
 /// npx hardhat node
 /// npx hardhat run .\scripts\InteractWithContracts.ts --network localhost
 
-// Expression régulière pour détecter une adresse ETH 
-const regex = '^(0x)?[0-9a-fA-F]{40}$';
-const NULL_ADDRESS = <Address>"0x0000000000000000000000000000000000000000"
-
-var storage : object = {};
-
-export async function InteractWithERC20Contract(rwItem : rwRecord, contractAddress: Address, accountList: Address[], rl : readline.Interface ) {
+export async function InteractWithERC20Contract(rwItem : rwRecord, contractAddress: Address, accountList: Address[] ) {
     //const accounts = await hre.ethers.getSigners();
     const wallets = await hre.viem.getWalletClients();
     const publicClient = await hre.viem.getPublicClient();
@@ -49,29 +47,14 @@ export async function InteractWithERC20Contract(rwItem : rwRecord, contractAddre
             for ( const index of rangeIndex) {                    
                 for ( const addr of rangeAddress) {
                     // On transcrit les arguments s'ils existent : type Account
-                    //console.log(rwItem.args);
-
-                    var newArgs = rwItem.args.map((x) => {
-                        if (Object.values(Account).includes(x)) return accountList[x.split('_')[0]];
-                        else if (x === Value.Account) return accountList[account.split('_')[0]];
-                        else if (x === Value.Index) return index;
-                        else if (x === Value.TokenId) return token;
-                        else if (x === Value.Address) return addr;
-                        return x;
-                    });
+                    const newArgs = parseAndConvertInputArgs( rwItem, accountList, account, index, token, addr );
+                    // On format les valeurs pour affichage en stdout                                        
+                    const dispArgs = parseAndDisplayInputArgs( rwItem, newArgs )
                     
-                    const dispArgs : string = newArgs.map((arg, i) => {
-                        if (Object.values(Account).includes(rwItem.args[i]) || rwItem.args[i] === Value.Account) return "@".concat( arg.substring(0, 6), "..")
-                        if (rwItem.args[i] === Value.Index) return "Index ".concat( arg )
-                        if (rwItem.args[i] === Value.TokenId) return "Id ".concat( arg )
-                        if (rwItem.args[i] === Value.Address) return "@".concat( arg.substring(0, 6), "..")
-                        return arg;
-                        }).join("| ");
-
-                    var log : string  = colorOutput( "[R_@".concat( facet.address.substring(0, 6), "..]"), "yellow", true )
-                    log = log.concat( ":", colorOutput(rwItem.contract.padEnd(15, ' '), "cyan", true), "::" );
-                    log = log.concat( colorOutput( "[S_@".concat(accountList[sender].substring(0, 6), "..]"), "magenta", true));
-                    log = log.concat( "::", ("label" in rwItem) ? <string>rwItem.label : rwItem.function );
+                    var log : string  = displayAddress( facet.address, "yellow", 10 );
+                    log = log.concat( ":", displayContract(rwItem.contract, "cyan", 15), "::" );
+                    log = log.concat( displayAddress( accountList[sender], "magenta", 10 ));
+                    log = log.concat( ":: ", ("label" in rwItem) ? <string>rwItem.label : rwItem.function );
                     log = log.concat( "[ ", colorOutput(dispArgs, "blue", true)," ] >> " );
 
                     try {
@@ -115,7 +98,7 @@ export async function InteractWithERC20Contract(rwItem : rwRecord, contractAddre
                             colorOutput(log);
                         
                         } catch (error) {
-                            console.log(Object.entries(error));
+                            //console.log(Object.entries(error));
                             log = log.concat( "[@", error.contractAddress.substring(0, 12), "...]:", error.functionName, "::");
                             log = log.concat( "[", error.args.join("|"),"] >> " );
                             log = log.concat( <string>error.metaMessages, "\n");

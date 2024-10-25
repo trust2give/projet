@@ -1,10 +1,10 @@
 const hre = require("hardhat");
-import { rwType, rwRecord, Value, Account } from "./InteractWithContracts";
+import { rwType, rwRecord } from "./InteractWithContracts";
 import { Address, encodeFunctionData } from "viem";
 import { InteractWithERC20Contract } from "./InteractWithERC20";
 import * as readline from 'readline';
 import { diamondNames } from "./T2G_Data";
-import { colorOutput } from "./T2G_utils";
+import { colorOutput, Account, Value } from "./T2G_utils";
 
 /******************************************************************************\
 * Author: Franck Dervillez <franck.dervillez@trust2give.com>, Twitter/Github: @fdervillez
@@ -27,9 +27,9 @@ export const rwERC20List : rwRecord[] = [
     { rwType: rwType.WRITE, contract: "EUR", function: "transferFrom", args: [Value.Account, Value.Account, Value.Number], label: "Transfer EUR from", outcome: [] },
     ]
 
-export async function T2G_InteractERC20 ( accountList: Address[], tag: string, rl : readline.Interface, item : rwRecord )  {
+export async function T2G_InteractERC20 ( accountList: Address[], item : rwRecord )  {
   colorOutput("Enter T2G_InteractERC20 Application", "cyan")
-    await InteractWithERC20Contract(item, <Address>diamondNames.Stablecoin.address, accountList, rl );
+    await InteractWithERC20Contract(item, <Address>diamondNames.Stablecoin.address, accountList );
     }
 
 //main().catch((error) => {
