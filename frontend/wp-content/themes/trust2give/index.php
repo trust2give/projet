@@ -1,12 +1,10 @@
-<!doctype html>
-<html lang="fr">
-<head>
-  <meta charset="utf-8">
-  <title>Titre de la page</title>
-  <link rel="stylesheet" href="style/app.css">
-  <script src="script.js"></script>
-</head>
-<body>
-tfh
-</body>
-</html>
+<?php get_header(); ?>
+
+<div class="container mx-auto px-4 py-8">
+    <div class="flex flex-wrap -mx-4">
+        <main class="w-full lg:w-2/3 px-4">toto
+        </main>
+    </div>
+</div>
+
+<?php get_footer(); ?>
