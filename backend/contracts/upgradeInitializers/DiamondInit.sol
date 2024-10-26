@@ -10,6 +10,7 @@ pragma solidity ^0.8.0;
 /******************************************************************************/
 
 import { LibDiamond } from "../libraries/LibDiamond.sol";
+import { LibOwners } from "../libraries/LibOwners.sol";
 import { LibERC721 } from "../libraries/LibERC721.sol";
 import { IDiamondLoupe } from "../interfaces/IDiamondLoupe.sol";
 import { IDiamondCut } from "../interfaces/IDiamondCut.sol";
@@ -37,10 +38,16 @@ contract DiamondInit {
         ds.supportedInterfaces[type(IERC721Metadata).interfaceId] = true;
 
         LibERC721.Layout storage layout = LibERC721.layout();
+        LibOwners.Syndication storage syndication = LibOwners.syndication();
 
         layout.idFeatures[uint256(LibERC721.Typeoftoken.None)].name = _name;
         layout.idFeatures[uint256(LibERC721.Typeoftoken.None)].symbol = _symbol;
+
         layout.root = _root;
+
+        syndication.root = _root;
+        syndication.totalBanned = 0;
+        syndication.totalRegistered = 0;
 
         // add your own state variables 
         // EIP-2535 specifies that the `diamondCut` function takes two optional 

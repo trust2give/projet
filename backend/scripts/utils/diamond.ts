@@ -1,10 +1,10 @@
 import { GetContractReturnType, getFunctionSignature } from "viem";
 import { getFunctionSelector } from "viem/utils";
 
-export const FacetCutAction = {
-    Add: 0,
-    Replace: 1,
-    Remove: 2
+export enum FacetCutAction {
+    Add = 0,
+    Replace = 1,
+    Remove = 2
 };
 
 export const getSelectors = (contract: GetContractReturnType<any>) => {

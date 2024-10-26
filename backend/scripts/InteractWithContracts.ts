@@ -1,13 +1,16 @@
 import hre from "hardhat";
-import { diamondNames } from "./T2G_Data";
 import { Address } from "viem";
+import fs from 'fs';
+import { diamondNames } from "./T2G_Data";
 import { colorOutput, 
          parseAndConvertInputArgs, 
          parseAndDisplayInputArgs, 
          displayAddress, displayContract, 
          parseOutcome, 
          parseRwRecordForSpecificItemWithDefaultValue, 
-         storage, NULL_ADDRESS, Account } from "./T2G_utils";
+         storage, NULL_ADDRESS, Account,
+         contractRecord,
+         diamondCore } from "./T2G_utils";
 
 /// npx hardhat node
 /// npx hardhat run .\scripts\InteractWithContracts.ts --network localhost
@@ -38,18 +41,41 @@ export type rwRecord = {
     outcome: string[]                   // flag qui type les résultats retournés par un READ [] : valeurs "array", "string", "bool", "bigint", "address" ou le nom d'une variable Typeoftoken ou StatusOfToken
   }
 
+  
+export async function readLastDiamondJSONfile() : Promise<diamondCore> {
+    const jsonString = fs.readFileSync('./scripts/T2G_Root.json', 'utf-8');
+    const DiamondCoreArray : diamondCore[] = JSON.parse(jsonString);
+    const DiamondCore : diamondCore = <diamondCore>DiamondCoreArray.pop();
+    if (DiamondCore.Diamond.name != "T2G_root") throw("Bad Record Name for T2G_Root Address recovery :: ".concat(DiamondCore.Diamond.name));
+    //colorOutput("Recall Last Diamond Core Record >> ".concat(JSON.stringify(DiamondCore)), "cyan");
+    diamondNames.Diamond = <contractRecord>DiamondCore.Diamond;
+    diamondNames.DiamondInit = <contractRecord>DiamondCore.DiamondInit;
+    diamondNames.DiamondCutFacet = <contractRecord>DiamondCore.DiamondCutFacet;
+    diamondNames.DiamondLoupeFacet = <contractRecord>DiamondCore.DiamondLoupeFacet;
+    return diamondNames;
+    }
 
-export async function InteractWithContracts(rwItem : rwRecord, accountList: Address[] ) {
+/*    export function readLastDiamondJSONfile() : contractRecord {
+        const jsonString = fs.readFileSync('./scripts/T2G_Root.json', 'utf-8');
+        const Items : contractRecord[] = JSON.parse(jsonString);
+        const item : contractRecord = <contractRecord>Items.pop();
+        if (item.name != "T2G_Root") throw("Bad Record Name for T2G_Root Address recovery :: ".concat(item.name));
+        colorOutput("Recall Last Diamonf Root Record >> ".concat(JSON.stringify(item)), "cyan");
+        diamondNames.Diamond = item;
+        return item;
+        }*/
+    
+export async function InteractWithContracts(rwItem : rwRecord, accountList: Address[], rootAddress: Address ) {
     const wallets = await hre.viem.getWalletClients();
     const publicClient = await hre.viem.getPublicClient();
 
-    //console.log("Enter InteractWithContracts app")
+    console.log("Enter InteractWithContracts app")
 
         const sender: number = parseRwRecordForSpecificItemWithDefaultValue( "sender", rwItem, 0);
 
         const facet = await hre.viem.getContractAt(
             rwItem.contract,
-            (<Address>diamondNames.Diamond.address),
+            rootAddress,
             { client: { wallet: wallets[sender] } }
             );
 
@@ -90,17 +116,16 @@ export async function InteractWithContracts(rwItem : rwRecord, accountList: Addr
 
                                     const eventLogs = await publicClient.getContractEvents({
                                         abi: facet.abi,
-                                        address: (<Address>diamondNames.Diamond.address),
+                                        address: rootAddress,
                                         })
                                         
                                     log = log.concat( colorOutput( (typeof method === "object") ? method.reduce( (acc, cur) => { return cur.concat(acc, "|")} ) : "[Tx:".concat( method.substring(0, 6), "..]"), "green", true ));
 
                                     for ( const event of eventLogs) {
                                         if (event.transactionHash == method) {
-                                            log = log.concat( colorOutput( " >> Event ".concat( event.eventName, "[ ", Object.values(event.args).join("| "), " ]"), "yellow", true ));                
+                                            log = log.concat( colorOutput( "\n >> Event ".concat( event.eventName, "[ ", Object.values(event.args).join("| "), " ]"), "yellow", true ));                
                                             }
                                         }
-                                    //console.log(eventLogs)
                                     } 
                                 else if (rwItem.rwType == rwType.READ) {
                                     //console.log("Read")
@@ -114,8 +139,8 @@ export async function InteractWithContracts(rwItem : rwRecord, accountList: Addr
 
                                     beacon = parseOutcome( rwItem.outcome, result, rwItem);
                                     //console.log("Out", beacon)
-                                    if (Array.isArray(beacon)) log = log.concat( "[ ", colorOutput( beacon.join("| "), "green", true )," ]" );
-                                    else log = log.concat( colorOutput( (typeof beacon === "object") ? beacon.reduce( (acc, cur) => { return cur.concat(acc)}, "| " ) : <string>beacon, "green", true) );
+                                    if (Array.isArray(beacon)) log = log.concat( "\n[ ", colorOutput( beacon.join("|\n"), "green", true )," ]" );
+                                    else log = log.concat( colorOutput( (typeof beacon === "object") ? beacon.reduce( (acc, cur) => { return cur.concat(acc)}, "|\n" ) : <string>beacon, "green", true) );
                                 }
                                     colorOutput(log);
                                 } catch (error) {

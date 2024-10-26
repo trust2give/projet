@@ -1,5 +1,6 @@
-import { Address, InvalidSerializedTransactionTypeError } from "viem";
-import { rwType, rwRecord } from "./InteractWithContracts";
+import { Address } from "viem";
+import { rwRecord } from "./InteractWithContracts";
+import { FacetCutAction } from "./utils/diamond";
 
 export const Typeoftoken : string[] = ["None", "Pollen", "Honey", "Nektar", "Cell"]
 
@@ -14,6 +15,27 @@ export enum Account { A0 = "@0", A1 = "@1", A2 = "@2", A3 = "@3", A4 = "@4", A5 
 export enum Value { TokenId = "[[TokenId]]", Index = "[[Index]]", Account = "[[Account]]", Address = "[[Address]]", Number = "[[Number]]", Flag = "[[Flag]]", Hash = "[[Hash]]", Enum = "[[Enum]]", Text = "[[Text]]" }
 
 export var storage : object = {};
+
+export type cutRecord = {
+    facetAddress: Address,
+    action: FacetCutAction,
+    functionSelectors: Array<any>
+    }
+
+export interface contractRecord { 
+    name: string, 
+    argInit: boolean,
+    addReader: boolean,
+    address: Address,
+    beacon: string | boolean
+    }
+
+export type diamondCore = {
+    Diamond: contractRecord,
+    DiamondCutFacet: contractRecord,
+    DiamondInit: contractRecord,
+    DiamondLoupeFacet: contractRecord,
+    }
 
 // Expression régulière pour détecter une adresse ETH 
 export const regex = '^(0x)?[0-9a-fA-F]{40}$';

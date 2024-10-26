@@ -1,8 +1,7 @@
 const hre = require("hardhat");
-import { Address, encodeFunctionData } from "viem";
+import { Address } from "viem";
 import { rwType, rwRecord, InteractWithContracts, readLastDiamondJSONfile } from "./InteractWithContracts";
-import * as readline from 'readline';
-import { colorOutput, Account, Value, NULL_ADDRESS } from "./T2G_utils";
+import { colorOutput, Value } from "./T2G_utils";
 
 /******************************************************************************\
 * Author: Franck Dervillez <franck.dervillez@trust2give.com>, Twitter/Github: @fdervillez
@@ -13,16 +12,16 @@ import { colorOutput, Account, Value, NULL_ADDRESS } from "./T2G_utils";
 /// netstat -a -o -n
 /// taskkill /f /pid ####
 /// npx hardhat node
-/// npx hardhat run .\scripts\T2G_InteractPool.ts --network localhost
+/// npx hardhat run .\scripts\T2G_InteractSyndic.ts --network localhost | test
 
-export const rwPoolList : rwRecord[] = [
-    { rwType: rwType.READ, contract: "T2G_PoolFacet", function: "beacon_PoolFacet", args: [], label: "Beacon", outcome: [ "string"] },    
-    { rwType: rwType.READ, contract: "T2G_PoolFacet", function: "poolBalanceOf", args: [], label: "POL/ETH of T2G Contract pool", outcome: [ "bigint"] },
-    { rwType: rwType.READ, contract: "T2G_PoolFacet", function: "get_T2G_PoolFacet", args: [], label: "Address poll", outcome: [ "address"] },
+export const rwSyndicList : rwRecord[] = [
+    { rwType: rwType.READ, contract: "T2G_SyndicFacet", function: "beacon_SyndicFacet", args: [], label: "Beacon", outcome: [ "string"] },    
+    { rwType: rwType.WRITE, contract: "T2G_SyndicFacet", function: "registerWallet", args: [ Value.Account ], label: "Register new Wallet", outcome: [] },
+    { rwType: rwType.WRITE, contract: "T2G_SyndicFacet", function: "banWallet", args: [ Value.Account ], label: "Ban Wallet", outcome: [] },
     ]
 
-export async function T2G_InteractPool( accountList: Address[], item : rwRecord ) {
-    colorOutput("Enter T2G_InteractDiamond Application", "cyan")
+export async function T2G_InteractSyndic( accountList: Address[], item : rwRecord ) {
+    colorOutput("Enter T2G_InteractSyndic Application", "cyan")
 
     try {
         const diamond = await readLastDiamondJSONfile();

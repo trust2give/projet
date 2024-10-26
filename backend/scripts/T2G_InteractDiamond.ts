@@ -1,8 +1,8 @@
 const hre = require("hardhat");
 import { Address, encodeFunctionData } from "viem";
-import { rwType, rwRecord, InteractWithContracts } from "./InteractWithContracts";
+import { rwType, rwRecord, InteractWithContracts, readLastDiamondJSONfile } from "./InteractWithContracts";
 import * as readline from 'readline';
-import { colorOutput, Account, Value } from "./T2G_utils";
+import { colorOutput, Account, Value, NULL_ADDRESS } from "./T2G_utils";
 
 /******************************************************************************\
 * Author: Franck Dervillez <franck.dervillez@trust2give.com>, Twitter/Github: @fdervillez
@@ -27,5 +27,12 @@ export const rwDiamondList : rwRecord[] = [
 
 export async function T2G_InteractDiamond( accountList: Address[], item : rwRecord ) {
   colorOutput("Enter T2G_InteractDiamond Application", "cyan")
-    await InteractWithContracts( item, accountList );
+
+  try {
+    const diamond = await readLastDiamondJSONfile();
+    const rootAddress: Address =  diamond.Diamond.address;
+    await InteractWithContracts( item, accountList, rootAddress );
+  } catch (error) {
+    console.log(error);
     }
+}

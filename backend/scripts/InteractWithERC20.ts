@@ -1,28 +1,46 @@
 import hre from "hardhat";
 import { Address } from "viem";
 import { rwType, rwRecord } from "./InteractWithContracts";
+import fs from 'fs';
+import { contractSet } from "./T2G_Data";
 import { colorOutput, 
     parseAndConvertInputArgs, 
     parseAndDisplayInputArgs, 
     displayAddress, displayContract, 
     parseOutcome, 
     parseRwRecordForSpecificItemWithDefaultValue, 
-    storage, NULL_ADDRESS, Account } from "./T2G_utils";
+    storage, NULL_ADDRESS, Account, 
+    showObject, contractRecord} from "./T2G_utils";
 
 //import decodeMethod  from "abi-decoder-typescript"
 //import { bigint } from "hardhat/internal/core/params/argumentTypes";
 
 /// npx hardhat node
-/// npx hardhat run .\scripts\InteractWithContracts.ts --network localhost
+/// npx hardhat run .\scripts\InteractWithERC20Contract.ts --network localhost
+
+
+export function readLastContractSetJSONfile() : contractRecord[] {
+    const jsonString = fs.readFileSync('./scripts/ContractSet.json', 'utf-8');
+    const Items : contractRecord[] = JSON.parse(jsonString);
+    const item : contractRecord = <contractRecord>Items.pop();
+    if (item.name != "EUR") throw("Bad Record Name for EUR StableCoin Address recovery :: ".concat(item.name));
+    //colorOutput("Recall Last EUR Smart Contract Record >> ".concat(JSON.stringify(item)), "cyan");
+    contractSet[0] = <contractRecord>item;
+    return contractSet;
+    }
 
 export async function InteractWithERC20Contract(rwItem : rwRecord, contractAddress: Address, accountList: Address[] ) {
     //const accounts = await hre.ethers.getSigners();
     const wallets = await hre.viem.getWalletClients();
     const publicClient = await hre.viem.getPublicClient();
 
-    //console.log("Enter InteractWithERC20Contract app")
+    const trace : boolean = false;
+
+    if (trace) console.log("[TRACE] Enter InteractWithERC20Contract app");
 
     const sender: number = parseRwRecordForSpecificItemWithDefaultValue( "sender", rwItem, 0);
+
+    if (trace) console.log(`[TRACE] Sender : ${sender}`);
 
     const facet = await hre.viem.getContractAt(
         rwItem.contract,
@@ -59,10 +77,15 @@ export async function InteractWithERC20Contract(rwItem : rwRecord, contractAddre
 
                     try {
                         if (rwItem.rwType == rwType.WRITE) {
-                            //console.log(newArgs);
-                            const method = await facet.write[rwItem.function](newArgs, rwItem.fees ? { 
-                                value: BigInt(rwItem.fees)
-                                }  : null, wallets[sender] );
+
+                            if (trace) console.log(`[TRACE] Function : ${rwItem.function}`, facet.abi);
+                            if (trace) console.log(`[TRACE] Args : ${showObject( newArgs, true )}`);
+                            if (trace) console.log(`[TRACE] Fees : ${rwItem.fees ? { value: BigInt(rwItem.fees) }  : null}`);
+                            if (trace) console.log(`[TRACE] Wallet : ${showObject( wallets[sender], true )}`);
+
+                            const method = await facet.write[rwItem.function](newArgs, wallets[sender] );
+
+                            if (trace) console.log(`[TRACE] Write return : ${method}`);
 
                             const eventLogs = await  publicClient.getContractEvents({
                                 abi: facet.abi,
@@ -71,26 +94,28 @@ export async function InteractWithERC20Contract(rwItem : rwRecord, contractAddre
                                 
                             log = log.concat( colorOutput( (typeof method === "object") ? method.reduce( (acc, cur) => { return cur.concat(acc, "|")} ) : "[Tx:".concat( method.substring(0, 6), "..]"), "green", true ));
 
+                            if (trace) console.log(`[TRACE] Write return : ${showObject( eventLogs, true )}`);
+
                             for ( const event of eventLogs) {
                                 if (event.transactionHash == method) {
-                                    log = log.concat( colorOutput( " >> Event ".concat( event.eventName, "[ ", Object.values(event.args).join("| "), " ]"), "yellow", true ));                
+                                    log = log.concat( colorOutput( "\n >> Event ".concat( event.eventName, "[ ", Object.values(event.args).join("| "), " ]"), "yellow", true ));                
                                     }
                                 }
-                            //console.log(eventLogs)
                             } 
                         else if (rwItem.rwType == rwType.READ) {
                             //console.log("Read")
                             var result : any = await facet.read[rwItem.function]( newArgs, wallets[sender] );
 
                             var beacon : any = Array.isArray(result) ? result : [ result ];
-                            //console.log(beacon)
+
+                            if (trace) console.log(`[TRACE] Read return : ${showObject( beacon, true )}`);
 
                             storage[rwItem.function] = parseRwRecordForSpecificItemWithDefaultValue( "store", rwItem, [],  beacon);
-                            //console.log(storage[rwItem.function])
 
                             beacon = parseOutcome( rwItem.outcome, result, rwItem);
 
-                            //console.log("Out", beacon)
+                            if (trace) console.log(`[TRACE] Parsed outcome : ${showObject( beacon, true )}`);
+
                             if (Array.isArray(beacon)) log = log.concat( "[ ", colorOutput( beacon.join("| "), "green", true )," ]" );
                             else log = log.concat( colorOutput( (typeof beacon === "object") ? beacon.reduce( (acc, cur) => { return cur.concat(acc)}, "| " ) : <string>beacon, "green", true) );
                             }
@@ -98,7 +123,7 @@ export async function InteractWithERC20Contract(rwItem : rwRecord, contractAddre
                             colorOutput(log);
                         
                         } catch (error) {
-                            //console.log(Object.entries(error));
+                            console.log(Object.entries(error));
                             log = log.concat( "[@", error.contractAddress.substring(0, 12), "...]:", error.functionName, "::");
                             log = log.concat( "[", error.args.join("|"),"] >> " );
                             log = log.concat( <string>error.metaMessages, "\n");

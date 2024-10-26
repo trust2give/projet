@@ -1,10 +1,11 @@
 const hre = require("hardhat");
 import { rwType, rwRecord } from "./InteractWithContracts";
 import { Address, encodeFunctionData } from "viem";
-import { InteractWithERC20Contract } from "./InteractWithERC20";
+import { InteractWithERC20Contract, readLastContractSetJSONfile } from "./InteractWithERC20";
 import * as readline from 'readline';
-import { diamondNames } from "./T2G_Data";
-import { colorOutput, Account, Value } from "./T2G_utils";
+import { contractSet } from "./T2G_Data";
+import { colorOutput, Account, Value, contractRecord } from "./T2G_utils";
+import fs from 'fs';
 
 /******************************************************************************\
 * Author: Franck Dervillez <franck.dervillez@trust2give.com>, Twitter/Github: @fdervillez
@@ -25,11 +26,35 @@ export const rwERC20List : rwRecord[] = [
     { rwType: rwType.READ, contract: "EUR", function: "balanceOf", args: [Value.Account], label: "Balance Of @ ", outcome: [ "bigint"] },    
     { rwType: rwType.WRITE, contract: "EUR", function: "transfer", args: [Value.Account, Value.Number], label: "Transfer EUR To", outcome: [] },
     { rwType: rwType.WRITE, contract: "EUR", function: "transferFrom", args: [Value.Account, Value.Account, Value.Number], label: "Transfer EUR from", outcome: [] },
+    { rwType: rwType.READ, contract: "EUR", function: "allowance", args: [Value.Account, Value.Account], label: "Allowance EUR to spender", outcome: [ "bigint" ] },
+    { rwType: rwType.WRITE, contract: "EUR", function: "approve", args: [Value.Account, Value.Number], label: "Approve EUR To", outcome: [ "boolean"] },
     ]
+
+
+export function writeLastContractJSONfile( ) {
+  const jsonString = fs.readFileSync('./scripts/ContractSet.json', 'utf-8');
+  const Items : contractRecord[] = JSON.parse(jsonString);
+  Items.push(contractSet[0]);
+
+  let JsonFile = JSON.stringify(Items);
+  //colorOutput("Save last EUR Contract Record >> ".concat(JSON.stringify(contractSet[0])), "cyan");
+  fs.writeFile('./scripts/ContractSet.json', JsonFile, (err) => {
+      if (err) {
+          console.log('Error writing file:', err);
+      } else {
+          console.log('Successfully wrote file');
+          }
+      });
+  }
+    
 
 export async function T2G_InteractERC20 ( accountList: Address[], item : rwRecord )  {
   colorOutput("Enter T2G_InteractERC20 Application", "cyan")
-    await InteractWithERC20Contract(item, <Address>diamondNames.Stablecoin.address, accountList );
+
+    // TBD : Replace with last recorder @ or root in in file
+    const rootAddress: Address =  (readLastContractSetJSONfile())[0].address;
+
+    await InteractWithERC20Contract(item, rootAddress, accountList );
     }
 
 //main().catch((error) => {
