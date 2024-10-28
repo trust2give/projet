@@ -5,8 +5,10 @@ import {LibERC721} from "../libraries/LibERC721.sol";
 import {ERC721Errors} from "../libraries/Errors.sol";
 import {T2GTypes} from "../libraries/Types.sol";
 import { LibDiamond } from "../libraries/LibDiamond.sol";
+import { LibOwners } from "../libraries/LibOwners.sol";
 import { ERC721Facet } from "./ERC721Facet.sol";
 import { T2G_PoolFacet } from "./PoolFacet.sol";
+import { EUR } from "../EurSC.sol";
 import { DiamondLoupeFacet } from "./DiamondLoupeFacet.sol";
 import {T2GTypes} from "../libraries/Types.sol";
 
@@ -29,6 +31,7 @@ contract T2G_HoneyFacet {
     error HoneyInvalidContractAddress(string facet);
     error HoneyInvalidStatus(uint256 tokenId);
     error HoneyInvalidValueUnit(uint256 tokenId, T2GTypes.CoinUnit unit);
+    error HoneyInvalidBalance(address owner, uint256 balance);
 
     event HoneySetWhiteList(uint256 tokenId, T2GTypes.BusinessSector _sector);
     event HoneySetBlackList(uint256 tokenId, T2GTypes.BusinessSector _sector);
@@ -56,8 +59,8 @@ contract T2G_HoneyFacet {
         _;
         }
 
-    modifier isFee {
-        if (msg.value == 0) revert HoneyInvalidAmount(msg.sender);
+    modifier isRegisteredAndNotBanned( address _to ) {
+        if (!LibOwners._isRegistered(_to) || LibOwners._isBanned(_to)) revert HoneyInvalidOwner(_to);
         _;
         }
 
@@ -110,16 +113,6 @@ contract T2G_HoneyFacet {
         return DiamondLoupeFacet(LibERC721.layout().root).facetAddress(bytes4(abi.encodeWithSignature("beacon_HoneyFacet()")));
         }
 
-     /// @notice returns the amount currently remaining on the contract balance in native coin
-     /// @dev MODIFIER : checks first that msg.sender is T2G owner. Otherwise revert HoneyInvalidSender error
-     /// @dev the native coin is either ETH, POL or any other EVM compliant blockchain where the contract is deployed in
-     /// @dev the contract is inside an ERC2535 structure, so the value refers to this contract and not the diamond root
-     /// @return uint amount of native token in WEI or equivalent
-
-    function balanceOf() external isT2GOwner view returns (uint) {
-        return address(DiamondLoupeFacet(LibERC721.layout().root).facetAddress(bytes4(abi.encodeWithSignature("beacon_HoneyFacet()")))).balance;
-        }
-
      /// @notice returns the features of a specific Honey, given its tokenId 
      /// @param _tokenId token Id
      /// @dev MODIFIER : checks first that msg.sender is either the T2G owner or the token owner. Otherwise revert HoneyInvalidOwner error
@@ -128,7 +121,8 @@ contract T2G_HoneyFacet {
      /// @return tuple (type of token, status of token, amount tied to token)
 
     function honey(uint256 _tokenId) 
-        external isT2GOwnerOrHoneyOwner(_tokenId) isHoney(_tokenId) view returns (LibERC721.Typeoftoken , LibERC721.Statusoftoken, string memory, uint256, uint8, uint8) {
+        external isT2GOwnerOrHoneyOwner(_tokenId) isHoney(_tokenId) 
+        view returns (LibERC721.Typeoftoken , LibERC721.Statusoftoken, string memory, uint256, uint8, uint8) {
         LibERC721.TokenStruct memory data = LibERC721._tokenFeatures(_tokenId);
         return (data.token, data.state, data.date, data.value, data.valueUnit, data.rate);
         }
@@ -147,13 +141,21 @@ contract T2G_HoneyFacet {
      /// @param _rate the percentage of the amount dedicated to gift
      /// @param _tx the transaction Hash of the transaction of value sent by _to address
      /// @dev MODIFIER : checks first that msg.sender is T2G owner. Otherwise revert HoneyInvalidSender error
-     /// @dev YTBD : checks third that future owner of new token has already signed up to the T2G app and is known. Otherwise revert HoneyInvalidOwner error
+     /// @dev MODIFIER : checks then that future owner of new token has already signed up to the T2G app and is known. Otherwise revert HoneyInvalidOwner error
      /// @dev checks then that tokenId does not refer to no already existing token (of any type). Otherwise revert HoneyInvalidTokenId error
      /// @dev once cheks are OK and Honey token minted, then sets the approval flags that allow either the owner or the T2G owner to manage the token
 
-    function mintHoney(address _to, uint256 _tokenId, uint256 _value, T2GTypes.CoinUnit _unit, uint8 _rate, string memory _tx) external isT2GOwner {
+    function mintHoney(address _to, uint256 _tokenId, uint256 _value, T2GTypes.CoinUnit _unit, uint8 _rate, string memory _tx) 
+        external isT2GOwner isRegisteredAndNotBanned(_to) {
         LibERC721.TokenStruct memory _data;
         
+        // We neet to check that the StableCoin balance of T2G_Owner wallet has suffisant amount to cover up the Honey amount
+
+        EUR _eurSC = EUR(LibOwners.syndication().scAddress);
+        uint256 _balance = _eurSC.balanceOf(LibERC721.layout().root);
+
+        if (_balance < _value) revert HoneyInvalidBalance( _to, _balance);
+
         _data.token = LibERC721.Typeoftoken.Honey;
         _data.state = LibERC721.Statusoftoken.draft;
         _data.value = _value;

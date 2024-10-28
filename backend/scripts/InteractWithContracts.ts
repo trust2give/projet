@@ -10,7 +10,8 @@ import { colorOutput,
          parseRwRecordForSpecificItemWithDefaultValue, 
          storage, NULL_ADDRESS, Account,
          contractRecord,
-         diamondCore } from "./T2G_utils";
+         diamondCore, regex, regex2 } from "./T2G_utils";
+import { Currency } from "../recycle/web3-wrap";
 
 /// npx hardhat node
 /// npx hardhat run .\scripts\InteractWithContracts.ts --network localhost
@@ -41,7 +42,22 @@ export type rwRecord = {
     outcome: string[]                   // flag qui type les résultats retournés par un READ [] : valeurs "array", "string", "bool", "bigint", "address" ou le nom d'une variable Typeoftoken ou StatusOfToken
   }
 
-  
+export interface errorFrame {
+    cause : string,
+    details : string,
+    docsPath: string,
+    metaMessages: string,
+    shortMessage: string,
+    version: string,
+    name: string,
+    abi: string,
+    args: string,
+    contractAddress: string,
+    formattedArgs: string,
+    functionName: string,
+    sender: string
+    }
+
 export async function readLastDiamondJSONfile() : Promise<diamondCore> {
     const jsonString = fs.readFileSync('./scripts/T2G_Root.json', 'utf-8');
     const DiamondCoreArray : diamondCore[] = JSON.parse(jsonString);
@@ -142,13 +158,37 @@ export async function InteractWithContracts(rwItem : rwRecord, accountList: Addr
                                     if (Array.isArray(beacon)) log = log.concat( "\n[ ", colorOutput( beacon.join("|\n"), "green", true )," ]" );
                                     else log = log.concat( colorOutput( (typeof beacon === "object") ? beacon.reduce( (acc, cur) => { return cur.concat(acc)}, "|\n" ) : <string>beacon, "green", true) );
                                 }
-                                    colorOutput(log);
-                                } catch (error) {
-                                    //console.log(Object.entries(error));
-                                    log = log.concat( "[@", error.contractAddress.substring(0, 12), "...]:", error.functionName, "::");
-                                    log = log.concat( "[", error.args.join("|"),"] >> " );
-                                    log = log.concat( <string>error.metaMessages, "\n");
-                                    console.error(log); 
+                                colorOutput(log);
+                            } catch (error) {
+                                const errorLabel : Array<any> = Object.entries(<errorFrame>error);
+                                const errorDisplay : string = errorLabel.reduce( (last, item) => {
+                                    switch (item[0]) {
+                                        case "metaMessages": {
+                                            return last.concat( colorOutput(item[1][0], "red", true), " " );
+                                            }
+                                        case "args": {
+                                            return last.concat( colorOutput( item[1].reduce( ( acc, cur) => {
+                                                if (typeof cur == "string") {
+                                                    if (cur.match(regex)) return acc.concat( displayAddress( cur, "yellow", 10 ), " " );
+                                                    if (cur.match(regex2)) return acc.concat( displayAddress( cur, "cyan", 10 ), " " );
+                                                    }
+                                                else if (typeof cur == "bigint") return acc.concat( colorOutput( `${cur}`, "cyan", true ), " " );
+                                                else if (typeof cur == "boolean") return acc.concat( colorOutput( (cur) ? "True" : "False", "cyan", true ), " " );
+                                                else if (typeof cur == "number") return acc.concat( colorOutput( `${cur}`, "cyan", true ), " " );
+                                                return acc.concat( colorOutput( cur, "cyan", true ), " " );
+                                                }, "[ " ), "blue", true), " ]" );
+                                            }
+                                        case "contractAddress": {
+                                            return last.concat( colorOutput( displayAddress( item[1], "yellow", 10 ), "yellow", true) );
+                                            }
+                                        case "functionName": {
+                                            return last.concat( "[", colorOutput( item[1], "magenta", true), "] " );
+                                            }
+                                        default:
+                                            return last;
+                                        }
+                                    }, colorOutput( ">> " , "red", true) );
+                                console.log(errorDisplay);
                                 }
                             }     
                         }   

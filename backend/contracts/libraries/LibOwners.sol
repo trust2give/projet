@@ -8,8 +8,8 @@ library LibOwners {
 
     event SyndAlreadyRegistered(address _user);
     event SyndAlreadyBanned(address _user);
-    event SyndNewRegistered(address _user);
-    event SyndNewBanned(address _user);
+    event SyndNewRegistered(address _user, uint256 _stamp);
+    event SyndNewBanned(address _user, uint256 _stamp);
     event SyndUnknown(address _user);
 
     /**
@@ -22,16 +22,19 @@ library LibOwners {
      * Once an address is marked as banned, it can not be reverted any longer, and wallet can not longer access the T2G functions.
      * This allows T2G Smart Contract to request / check when a wallet is allowed or not to execute a function.
      *
+     * YTBD : integrate in the smart contract the check that the wallet is well registered and not banned
      */
 
     bytes32 internal constant STORAGE_SLOT = keccak256("diamond.storage.syndication");
 
     struct Syndication {
-        address root;
-        uint256 totalRegistered; // last index of registered users
-        uint256 totalBanned;     // last index of banned users
+        address root;               // @ for the T2G_Root of ERC2535. Duplicate with Layout.
+        address scAddress;          // @ for the Smart Contract that mock-up the Stable Coin transactions
+        uint256 totalRegistered;    // last index of registered users
+        uint256 totalBanned;        // last index of banned users
         mapping(address => bool) registered;
         mapping(address => bool) banned;
+        mapping(address => uint256) timestamp;
         mapping(uint256 => address) registeredAtIndex;
         mapping(uint256 => address) bannedAtIndex;
         }
@@ -66,7 +69,10 @@ library LibOwners {
                 syndication().registered[user] = true;
                 syndication().registeredAtIndex[++syndication().totalRegistered] = user;
                 syndication().banned[user] = false;
-                emit SyndNewRegistered(user);
+                // We update & record the time 
+                syndication().timestamp[user] = block.timestamp;
+
+                emit SyndNewRegistered(user, syndication().timestamp[user]);
             }
             else if (!_isBanned(user)) emit SyndAlreadyRegistered( user );
             else emit SyndAlreadyBanned( user );
@@ -80,7 +86,10 @@ library LibOwners {
                 else {
                     syndication().banned[user] = true;
                     syndication().bannedAtIndex[++syndication().totalBanned] = user;
-                    emit SyndNewBanned(user);
+                    // We update & record the time 
+                    syndication().timestamp[user] = block.timestamp;
+
+                    emit SyndNewBanned(user, syndication().timestamp[user] );
                     }
                 }
             else emit SyndUnknown( user );

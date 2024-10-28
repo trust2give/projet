@@ -19,6 +19,7 @@ import fs from 'fs';
 /// npx hardhat run .\scripts\T2G_InteractERC20.ts --network localhost
 
 export const rwERC20List : rwRecord[] = [
+    { rwType: rwType.READ, contract: "EUR", function: "get_EUR", args: [], label: "Contract @", outcome: [ "address"] },
     { rwType: rwType.READ, contract: "EUR", function: "name", args: [], label: "Stable Coin Name", outcome: [ "string"] },
     { rwType: rwType.READ, contract: "EUR", function: "symbol", args: [], label: "Stable Coin Symbol", outcome: [ "string"] },
     { rwType: rwType.READ, contract: "EUR", function: "decimals", args: [], label: "Stable Coin Décimals", outcome: [ "number"] },

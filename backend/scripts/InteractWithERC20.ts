@@ -10,7 +10,7 @@ import { colorOutput,
     parseOutcome, 
     parseRwRecordForSpecificItemWithDefaultValue, 
     storage, NULL_ADDRESS, Account, 
-    showObject, contractRecord} from "./T2G_utils";
+    showObject, contractRecord, regex, regex2} from "./T2G_utils";
 
 //import decodeMethod  from "abi-decoder-typescript"
 //import { bigint } from "hardhat/internal/core/params/argumentTypes";
@@ -123,12 +123,36 @@ export async function InteractWithERC20Contract(rwItem : rwRecord, contractAddre
                             colorOutput(log);
                         
                         } catch (error) {
-                            console.log(Object.entries(error));
-                            log = log.concat( "[@", error.contractAddress.substring(0, 12), "...]:", error.functionName, "::");
-                            log = log.concat( "[", error.args.join("|"),"] >> " );
-                            log = log.concat( <string>error.metaMessages, "\n");
-                            console.error(log); 
-                            }
+                            const errorLabel : Array<any> = Object.entries(<errorFrame>error);
+                            const errorDisplay : string = errorLabel.reduce( (last, item) => {
+                                switch (item[0]) {
+                                    case "metaMessages": {
+                                        return last.concat( colorOutput(item[1][0], "red", true), " " );
+                                        }
+                                    case "args": {
+                                        return last.concat( colorOutput( item[1].reduce( ( acc, cur) => {
+                                            if (typeof cur == "string") {
+                                                if (cur.match(regex)) return acc.concat( displayAddress( cur, "yellow", 10 ), " " );
+                                                if (cur.match(regex2)) return acc.concat( displayAddress( cur, "cyan", 10 ), " " );
+                                                }
+                                            else if (typeof cur == "bigint") return acc.concat( colorOutput( `${cur}`, "cyan", true ), " " );
+                                            else if (typeof cur == "boolean") return acc.concat( colorOutput( (cur) ? "True" : "False", "cyan", true ), " " );
+                                            else if (typeof cur == "number") return acc.concat( colorOutput( `${cur}`, "cyan", true ), " " );
+                                            return acc.concat( colorOutput( cur, "cyan", true ), " " );
+                                            }, "[ " ), "blue", true), " ]" );
+                                        }
+                                    case "contractAddress": {
+                                        return last.concat( colorOutput( displayAddress( item[1], "yellow", 10 ), "yellow", true) );
+                                        }
+                                    case "functionName": {
+                                        return last.concat( "[", colorOutput( item[1], "magenta", true), "] " );
+                                        }
+                                    default:
+                                        return last;
+                                    }
+                                }, colorOutput( ">> " , "red", true) );
+                            console.log(errorDisplay);
+                        }
                     }     
                 }   
             }          

@@ -9,7 +9,10 @@ export const Statusoftoken : string[] =  [ "None", "Draft", "Active", "Burnt", "
 export const TypeofUnit : string[] = ["None", "GWEI", "EURO", "DOLLAR", "SWISSFRANC", "STERLINGPOUND", "YEN", "YUAN", "USDC", "USDT", "EURC", "SUI"]
 
 /// enum type qui permet de sélectionner les 6 premiers @Wallet du node hardhat
-export enum Account { A0 = "@0", A1 = "@1", A2 = "@2", A3 = "@3", A4 = "@4", A5 = "@5", A6 = "@6", A7 = "@7", A8 = "@8", A9 = "@9" }
+/// A0 à A9 : correspond aux vallets du hardhat testnet de 0 à 9
+/// AA : correspond à l'adresse du Smart Contract T2G_Root
+/// AE : correspond à l'adresse du Smart Contract StableCoin EUR
+export enum Account { A0 = "@0", A1 = "@1", A2 = "@2", A3 = "@3", A4 = "@4", A5 = "@5", A6 = "@6", A7 = "@7", A8 = "@8", A9 = "@9", AA = "@A", AE = "@E" }
 
 /// enum type qui permet dans le tableau args de définir une liste de valeur plutôt qu'une valeur spécifique
 export enum Value { TokenId = "[[TokenId]]", Index = "[[Index]]", Account = "[[Account]]", Address = "[[Address]]", Number = "[[Number]]", Flag = "[[Flag]]", Hash = "[[Hash]]", Enum = "[[Enum]]", Text = "[[Text]]" }
@@ -42,9 +45,14 @@ export const regex = '^(0x)?[0-9a-fA-F]{40}$';
 export const regex2 = '^(0x)?[0-9a-fA-F]{64}$';
 export const NULL_ADDRESS = <Address>"0x0000000000000000000000000000000000000000"
 
+/// get the args attibute in rwRecord object, parses it and convert the enum values into real values to be passed to the target function as inputs
 export function parseAndConvertInputArgs( rwItem : rwRecord, accounts: Address[], account: number, index: number, token: number, addr: Address) : Array<any> {
     const tab: Array<any> = rwItem.args.map((x) => {
-        if (Object.values(Account).includes(x)) return accounts[x.substring(1)];
+        if (Object.values(Account).includes(x)) {
+            if (<Account>x == Account.AA) return accounts[10];
+            else if (<Account>x == Account.AE) return accounts[11];
+            else return accounts[x.substring(1)];
+            }
         else if (x === Value.Account) return accounts[account];
         else if (x === Value.Index) return index;
         else if (x === Value.TokenId) return token;

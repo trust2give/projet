@@ -7,7 +7,17 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 
 contract EUR is ERC20, ERC20Burnable {
+    
     constructor() ERC20("EUR StableCoin for T2G Mock-up", "EUR") {
         _mint(msg.sender, 100_000_000_000 * 10**18 );
     }
+
+    /// @notice returns the address of the the contract
+    /// @dev All Facet in T2G application must implement this function of type "get_<Contract Name>()
+    /// @return Address of the current instance of contract
+     
+    function get_EUR() public view returns (address) {
+        return address(this);
+        }
+
 }
