@@ -1,4 +1,4 @@
-import { Address } from "viem";
+import { Address, stringify } from "viem";
 import { rwRecord } from "./InteractWithContracts";
 import { FacetCutAction } from "./utils/diamond";
 
@@ -82,11 +82,6 @@ export type diamondCore = {
 /// enum type qui permet de définir si une interaction est de type READ ou WRITE
 export enum rwType { READ, WRITE }
 
-/// loopIndex: <null> | [index] | string -> [facultatif] Défini soit un ensemble de valeurs d'index dans le cas d'un appel multiple d'une fonction
-///                                         qui a input des valeurs d'index, ou la référence à une valeur dans <storage> pour définir
-///                                         un intervalle de valeur [0... Max] pour la liste des index. 
-/// loopTokenId: <null> | [TokenId] | string -> [facultatif] Meme règle que loopIndex pour une liste de valeur de TokenId
-/// Si l'un ou l'autre attibut est présent, alors dans la valeur args [], un des inputs est définit par Enum(Valeur | Account)
 export type rwRecord = { 
     rwType: rwType,
     contract: string, 
@@ -124,6 +119,7 @@ export interface errorFrame {
 // Expression régulière pour détecter une adresse ETH 
 export const regex = '^(0x)?[0-9a-fA-F]{40}$';
 export const regex2 = '^(0x)?[0-9a-fA-F]{64}$';
+export const regex3 = '^(0x)?[0-9a-fA-F]{8}$';
 export const NULL_ADDRESS = <Address>"0x0000000000000000000000000000000000000000"
 
 export const senderValue = (x: Account | undefined) : number => {
@@ -186,31 +182,36 @@ export function showObject( data: any, eol: boolean = false ) {
     }
 
 export function parseAndDisplayInputAndOutputs( pointer : Array<any>, values : Array<any> ) : string {
-const dispArgs : string = values.map((arg, i) => {
-    switch (pointer[i].type) {
-        case "address": { 
-            if (arg.match(regex)) return pointer[i].name.concat( ": ", "@".concat( arg.substring(0, 10), ".."));
-            else return pointer[i].name.concat( ": ", "<Wrong @>".concat(arg));
+    const dispArgs : string = values.map((arg, i) => {
+        switch (pointer[i].type) {
+            case "address": { 
+                if (arg.match(regex)) return pointer[i].name.concat( ": ", "@".concat( arg.substring(0, 10), ".."));
+                else return pointer[i].name.concat( ": ", "<Wrong @>".concat(arg));
             } 
-        case "string": return pointer[i].name.concat( ": ", arg);                  
-        case "uint8": { 
-            const parse = <string>pointer[i].internalType.split(' ');
-            if (parse[0] == "enum") {
-                const parseEnum = parse[1].split('.');
-                const val : string = (parseEnum.length > 1) ? parseEnum[1] : parseEnum[0];
-                if (val in listOfEnums)
-                    if (!Number.isNaN(arg) && Number(arg) < listOfEnums[val].length) return pointer[i].name.concat( ": ", listOfEnums[val][arg]);
-                return pointer[i].name.concat( ": ", "<Wrong>".concat(arg));
+            case "string": return pointer[i].name.concat( ": ", arg);                  
+            case "uint8": { 
+                const parse = <string>pointer[i].internalType.split(' ');
+                if (parse[0] == "enum") {
+                    const parseEnum = parse[1].split('.');
+                    const val : string = (parseEnum.length > 1) ? parseEnum[1] : parseEnum[0];
+                    if (val in listOfEnums)
+                        if (!Number.isNaN(arg) && Number(arg) < listOfEnums[val].length) return pointer[i].name.concat( ": ", listOfEnums[val][arg]);
+                    return pointer[i].name.concat( ": ", "<Wrong>".concat(arg));
                 }
-            else if (parse[0] == "uint8") return pointer[i].name.concat( ": ", (!Number.isNaN(arg) && Number(arg) < 2**8) ? arg : "<Wrong>".concat(arg));
-            return arg;
+                else if (parse[0] == "uint8") return pointer[i].name.concat( ": ", (!Number.isNaN(arg) && Number(arg) < 2**8) ? arg : "<Wrong>".concat(arg));
+                return arg;
             }                  
-        case "uint256": return pointer[i].name.concat( ": ", (!Number.isNaN(arg)) ? arg : "<Wrong>".concat(arg));                 
-        case "bool": {
-            if (["True", "true", "Vrai", "vrai", "1"].includes(arg)) return "True";
-            else if (["False", "false", "Faux", "faux", "0", "-1"].includes(arg)) return "False";
-            return pointer[i].name.concat( ": ", "<Wrong>".concat(arg));
+            case "uint256": return pointer[i].name.concat( ": ", (!Number.isNaN(arg)) ? arg : "<Wrong>".concat(arg));                 
+            case "bool": {
+                if (["True", "true", "Vrai", "vrai", "1"].includes(arg)) return "True";
+                else if (["False", "false", "Faux", "faux", "0", "-1"].includes(arg)) return "False";
+                return pointer[i].name.concat( ": ", "<Wrong>".concat(arg));
             }
+            case "tuple[]": {
+                return arg.reduce( ( acc, cur) => {
+                    return acc.concat(stringify(cur), " |\n");
+                    }, "\n[" );
+                }
         default:
             return pointer[i].name.concat( ": ", arg);            
         }   

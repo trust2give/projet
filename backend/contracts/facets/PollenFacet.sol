@@ -90,7 +90,7 @@ contract T2G_PollenFacet {
      /// @dev the returned text is to be updated whenever a change in the contract is made and new deployment is carried out
      /// @return string that recalls the contact name + its current deployed version : "contractname::version"
 
-    function beacon_PollenFacet() public pure returns (string memory) { return "T2G_PollenFacet::1.0.9"; }
+    function beacon_PollenFacet() public pure returns (string memory) { return "T2G_PollenFacet::1.0.10"; }
 
      /// @notice returns the address of the the contract
      /// @dev All Facet in T2G application must implement this function of type "get_<Contract Name>()
@@ -242,29 +242,38 @@ contract T2G_PollenFacet {
      /// @notice Update features relates to the source Entity for the given Pollen Token
      /// @param _owner address of the new Pollen token owner
      /// @param _tokenId the Id gien to the new Pollen Token
-     /// @param _entity the value related the nature of the Entity
+     /// @param _data the Id gien to the new Pollen Token
+/*     /// @param _entity the value related the nature of the Entity
      /// @param _sector the value related the sector of the Entity
      /// @param _type the value related the type of the Entity
      /// @param _size the value related the size of the Entity
-     /// @param _country the value related the coutry of the Entity
+     /// @param _country the value related the coutry of the Entity*/
      /// @dev MODIFIER : checks first that msg.sender is T2G owner. Otherwise revert PollenInvalidSender error
      /// @dev Checks then that future owner of new token has already signed up to the T2G app and is known. Otherwise revert PollenInvalidOwner error
      /// @dev checks then that tokenId refers to no already existing Pollen. Otherwise revert PollenInvalidTokenId error
      /// @dev once cheks are OK, then sets the adds up the new uri to the list related to the Pollen
      /// @dev IMPORTANT : Does not check the consistency of the IPFS link and reality of the GHG Report
 
-    function updatePollenEntity( address _owner, uint256 _tokenId, T2GTypes.EntityType _entity, T2GTypes.BusinessSector _sector, T2GTypes.UnitType _type, T2GTypes.UnitSize _size, T2GTypes.countries _country ) 
-        external isT2GOwner isPollen(_tokenId) {
+    //T2GTypes.EntityType _entity, T2GTypes.BusinessSector _sector, T2GTypes.UnitType _type, T2GTypes.UnitSize _size, T2GTypes.countries _country ) 
+    
+    function updatePollenEntity( address _owner, uint256 _tokenId, bytes memory _data) external isT2GOwner isPollen(_tokenId) {
         // We check first that the _owner if allowed and has the rights to update
         if (!LibOwners._isAllowed(_owner, T2GTypes.R_FARMS )) revert PollenInvalidOwner(_owner);
-        LibERC721.layout().entity[_tokenId].entity = _entity;
+        /*LibERC721.layout().entity[_tokenId].entity = _entity;
         LibERC721.layout().entity[_tokenId].sector = _sector;
         LibERC721.layout().entity[_tokenId].unitType = _type;
         LibERC721.layout().entity[_tokenId].unitSize = _size;
         LibERC721.layout().entity[_tokenId].country = _country;
-        LibERC721.layout().token[_tokenId].updated = block.timestamp;
+        LibERC721.layout().token[_tokenId].updated = block.timestamp;*/
+
+        LibERC721.layout().entity[_tokenId] = LibERC721.parseDataBytesToTokenEntitySpecific( _data );
         }
 
+     /// @notice Validate a Pollen before being certifiable
+     /// @notice Only the T2G Owner can run this function on behalf of an owner of the token that has the R_FARMS profile, 
+     /// @notice Both TokenId and Owner address are to be given as inputs to prevent any undesired or malicious action.
+     /// @notice To validate a Pollen, it is required to update / fill up all mandatory attributes
+     
     function validatePollen( address _owner, uint256 _tokenId ) external isT2GOwner {
         // We check first that the _owner if allowed and has the rights to update
         if (!LibOwners._isAllowed(_owner, T2GTypes.R_FARMS )) revert PollenInvalidOwner(_owner);

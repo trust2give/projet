@@ -1,16 +1,8 @@
 const hre = require("hardhat");
-import { readLastContractSetJSONfile, writeLastContractJSONfile, InteractWithContracts, readLastDiamondJSONfile, readLastFacetJSONfile, writeLastFacetJSONfile } from "./InteractWithContracts";
-//import { T2G_InteractERC20, rwERC20List } from "./T2G_InteractERC20";
+import { readLastContractSetJSONfile, writeLastContractJSONfile, InteractWithContracts, writeLastDiamondJSONfile, readLastDiamondJSONfile, readLastFacetJSONfile, writeLastFacetJSONfile } from "./InteractWithContracts";
 import { Address } from "viem";
-//import { T2G_InteractDiamond, rwDiamondList } from "./T2G_InteractDiamond";
-//import { T2G_InteractERC721, rwERC721List } from "./T2G_InteractERC721";
-//import { T2G_InteractHoney, rwHoneyList } from "./T2G_InteractHoney";
-//import { T2G_InteractPollen, rwPollenList } from "./T2G_InteractPollen";
-//import { T2G_InteractNektar, rwNektarList } from "./T2G_InteractNektar";
-//import { T2G_InteractPool, rwPoolList } from "./T2G_InteractPool";
-//import { T2G_InteractSyndic, rwSyndicList } from "./T2G_InteractSyndic";
-import { colorOutput, regex, regex2, Account, Value, NULL_ADDRESS, displayAccountTable, rwRecord, rwType, listOfEnums, menuRecord, senderValue } from "./T2G_utils";
-import { DeployContracts, writeLastDiamondJSONfile } from "./DeployContracts";
+import { colorOutput, regex, regex2, regex3, Account, Value, NULL_ADDRESS, displayAccountTable, rwRecord, rwType, listOfEnums, menuRecord, senderValue } from "./T2G_utils";
+import { DeployContracts,  } from "./DeployContracts";
 import * as readline from 'readline';
 import { contractSet, diamondNames } from "./T2G_Data";
 
@@ -48,8 +40,6 @@ import { contractSet, diamondNames } from "./T2G_Data";
 /// npx hardhat node        - Run the hardhat node prior to script if required
 /// npx hardhat run .\scripts\Menu.ts --network localhost | test - Run the script (test for NAS version)
 
-
-
 type  menuState = {
     inputs?: "None" | "Function" | "Sender" | "Args" | "OK" = "None",
     deploy?: boolean,
@@ -77,9 +67,7 @@ export async function updateInstances( accountList: Address[] ) {
                     item.instance = await hre.viem.getContractAt( item.contract, (root != undefined) ? root : accountList[10], { client: { wallet: wallets[senderValue(globalState.sender)] } } );
                     item.events = await publicClient.getContractEvents({ abi: item.instance.abi, address: (root != undefined) ? root : accountList[10], })
                     }
-            else item.instance = undefined;
             }
-        else item.instance = undefined;
         }
     }
 
@@ -92,7 +80,6 @@ export var globalState : menuState = {};
 
 /// SMART OBJECT
 /// Array to append when a new contract is to be deployed along with the T2G_Data.ts file
-/// Add a new object after having created a new callback function (script T2G_InteractXXXX.ts)
 /// Please be aware not to use a tag value which is similar to other keyword used. 
 /// Nor similar to any function name of the facets to interact with. Make it unique.
 
@@ -101,6 +88,7 @@ export var smart : menuRecord[] = [
     { tag: "EUR", contract: "EUR", diamond: Account.AE, args: [], instance: undefined, events: undefined },
     { tag: "Honey", contract: "T2G_HoneyFacet", diamond: Account.AA, args: [], instance: undefined, events: undefined },
     { tag: "Diamond", contract: "T2G_root", diamond: Account.AA, args: [], instance: undefined, events: undefined },
+    { tag: "Loupe", contract: "DiamondLoupeFacet", diamond: Account.AA, args: [], instance: undefined, events: undefined },
     { tag: "Erc721", contract: "ERC721Facet", diamond: Account.AA, args: [], instance: undefined, events: undefined }, 
     { tag: "Pool", contract: "T2G_PoolFacet", diamond: Account.AA, args: [], instance: undefined, events: undefined },
     { tag: "Nektar", contract: "T2G_NektarFacet", diamond: Account.AA, args: [], instance: undefined, events: undefined }, 
@@ -128,9 +116,12 @@ async function main() {
 
     setState( { inputs: "None", deploy: false, index: 0, tag: "", help: "", level: "", promptText: "Smart Contract (<Help>, <Accounts> or <Contact Name>) >> ", preset: "" }, <rwRecord>{});
 
+    await readLastDiamondJSONfile();
+    await readLastContractSetJSONfile();
+    
     // Get the "Get_T2G_XXXFacet()" readers for fetching real addresses.
-    accountList.push( (await readLastDiamondJSONfile()).Diamond.address );
-    accountList.push( (await readLastContractSetJSONfile()[0]).address );
+    accountList.push( diamondNames.Diamond.address );
+    accountList.push( contractSet[0].address );
     accountList.push( await readLastFacetJSONfile( "T2G_PoolFacet", accountList[10]) );
     accountList.push( await readLastFacetJSONfile( "T2G_HoneyFacet", accountList[10]) );
     accountList.push( await readLastFacetJSONfile( "T2G_NektarFacet", accountList[10]) );
@@ -144,7 +135,6 @@ async function main() {
     colorOutput( ("*".concat(" ".padStart(2, " "), `${Account["AH"]}: `.concat(accountList[13]), " HoneySC" ).padEnd(59, " ")).concat("*"), "cyan");
     colorOutput( ("*".concat(" ".padStart(2, " "), `${Account["AN"]}: `.concat(accountList[14]), " NektarSC" ).padEnd(59, " ")).concat("*"), "cyan");
     colorOutput( ("*".concat(" ".padStart(2, " "), `${Account["AP"]}: `.concat(accountList[15]), " PollenSC" ).padEnd(59, " ")).concat("*"), "cyan");
-
     
     const rl : readline.Interface = readline.createInterface({
         input: process.stdin,
@@ -179,7 +169,7 @@ async function main() {
             const rwRec = (name : string) : rwRecord => {
                 const fct = record.instance.abi.filter((item) => (item.type == "function" && item.name == answer))[0];
                 return <rwRecord>{ 
-                    rwType: fct.stateMutability == "view" ? rwType.READ : rwType.WRITE,
+                    rwType: (fct.stateMutability == "view" || fct.stateMutability == "pure") ? rwType.READ : rwType.WRITE,
                     contract: record.contract,
                     function: fct.name, 
                     args: fct.inputs,
@@ -205,23 +195,16 @@ async function main() {
                 colorOutput(<string>globalState.help, "yellow");
                 }
             else {
-                const [ diaAddress, scAddress, facetList ] = await DeployContracts( accountList, answer );
-                if (diaAddress != NULL_ADDRESS && diaAddress != diamondNames.Diamond.address) {
-                    // We need to write down the new address in a json file
-                    colorOutput( "Diamond Root @[".concat(diaAddress, "]"), "green");
-                    diamondNames.Diamond.address = diaAddress;
-                    writeLastDiamondJSONfile();
-                    }
-                if (scAddress != NULL_ADDRESS && scAddress != contractSet[0].address) {
-                    // We need to write down the new address in a json file
-                    colorOutput( "SC Contract  @[".concat(scAddress, "]"), "green");
-                    contractSet[0].address = scAddress;
-                    writeLastContractJSONfile();
-                    }
-                if (facetList != NULL_ADDRESS && typeof facetList == "object") {
-                    console.log(facetList);
-                    writeLastFacetJSONfile( facetList, diamondNames.Diamond.address );
-                    }
+                await DeployContracts( accountList, answer, smart );
+
+                accountList[10] = diamondNames.Diamond.address;
+                accountList[11] = contractSet[0].address;
+                /*accountList[12] = await readLastFacetJSONfile( "T2G_PoolFacet", accountList[10]);
+                accountList[13] = await readLastFacetJSONfile( "T2G_HoneyFacet", accountList[10]);
+                accountList[14] = await readLastFacetJSONfile( "T2G_NektarFacet", accountList[10]);
+                accountList[15] = await readLastFacetJSONfile( "T2G_PollenFacet", accountList[10]);
+            
+                await updateInstances( accountList );   */
                 }
             }
         // In the case when contract are selected. 
@@ -233,7 +216,7 @@ async function main() {
                     else {
                         if (globalState.sender != <Account>answer) {
                             globalState.sender = <Account>answer;
-                            await updateInstances( accountList );    
+                            await updateInstances( accountList );  
                             }
 
                         setState( { inputs: (globalState.item.args.length > 0) ? "Args" : "OK", index: 0 });
@@ -245,6 +228,7 @@ async function main() {
                     try {
                         var index: number = <number>globalState.index;
                         var item: rwRecord = globalState.item;
+                        console.log( item.args[index] )
                         switch (item.args[index].type) {
                             case "address": { 
                                 if (answer.match(regex)) item.values[index++] = answer;
@@ -279,7 +263,11 @@ async function main() {
                                 break; 
                                 }                  
                             case "uint256": { item.values[index++] = BigInt(answer); break; }                  
-                            case Value.Index: { item.values[index++] = BigInt(answer); break; }                  
+                            case "bytes": { item.values[index++] = answer; break; }                  
+                            case "bytes4": { 
+                                if (answer.match(regex3)) item.values[index++] = answer;
+                                break; 
+                                }                  
                             case Value.TokenId: { item.values[index++] = BigInt(answer); break; }                  
                             case Value.Hash: { if (answer.match(regex2)) item.values[index++] = answer; break; }                  
                             case "bool": {
@@ -303,11 +291,6 @@ async function main() {
                 }
             // Checks whether input conditions are met or not. If so then call up smart contract function
             if (globalState.inputs == "OK") {
-                var rootAddress: Address = accountList[10];
-                
-                if (record.diamond == Account.AA) rootAddress = accountList[10]; // (readLastContractSetJSONfile())[0].address;
-                else if (record.diamond == Account.AE) rootAddress = accountList[11]; // (readLastContractSetJSONfile())[0].address;
-
                 await InteractWithContracts( <rwRecord>globalState.item, <Account>globalState.sender, accountList, [ record, smart[1] ] );
                 setState( { inputs: "Function", tag: "" }, <rwRecord>{});
                 }

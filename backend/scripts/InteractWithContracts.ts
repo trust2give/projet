@@ -2,21 +2,22 @@ import hre from "hardhat";
 import { Address } from "viem";
 import fs from 'fs';
 import { diamondNames, contractSet } from "./T2G_Data";
-import { colorOutput, parseAndConvertInputArgs, parseAndDisplayInputAndOutputs, 
-         displayAddress, displayContract, 
-         parseRwRecordForSpecificItemWithDefaultValue, 
-         storage, NULL_ADDRESS, Account, contractRecord, senderValue,
-         diamondCore, regex, regex2, displayResults, rwRecord, rwType, errorFrame, menuRecord } from "./T2G_utils";
+import { colorOutput, parseAndDisplayInputAndOutputs, 
+         displayAddress, displayContract, NULL_ADDRESS, Account, contractRecord, senderValue,
+         diamondCore, regex, regex2, rwRecord, rwType, errorFrame, menuRecord } from "./T2G_utils";
 
 /// npx hardhat node
 /// npx hardhat run .\scripts\InteractWithContracts.ts --network localhost
+
+
+//{"diamond":"0xb9d9e972100a1dd01cd441774b45b5821e136043","facets":{"T2G_HoneyFacet":"0x6b21b3ae41f818fc91e322b53f8d0773d31ecb75","T2G_NektarFacet":"0xbf2ad38fd09f37f50f723e35dd84eea1c282c5c9","T2G_PollenFacet":"0xd0ec100f1252a53322051a95cf05c32f0c174354","T2G_PoolFacet":"0x20d7b364e8ed1f4260b5b90c41c2dec3c1f6d367","T2G_SyndicFacet":"Object"} }
 
 export interface facetRecord { 
     diamond: Address, 
     facets: Object
     }
 
-export function readLastContractSetJSONfile() : contractRecord[] {
+export async function readLastContractSetJSONfile() : Promise<contractRecord[]> {
     const jsonString = fs.readFileSync('./scripts/ContractSet.json', 'utf-8');
     const Items : contractRecord[] = JSON.parse(jsonString);
     const item : contractRecord = <contractRecord>Items.pop();
@@ -26,7 +27,7 @@ export function readLastContractSetJSONfile() : contractRecord[] {
     return contractSet;
     }
 
-export function writeLastContractJSONfile( ) {
+export async function writeLastContractJSONfile( ) {
     const jsonString = fs.readFileSync('./scripts/ContractSet.json', 'utf-8');
     const Items : contractRecord[] = JSON.parse(jsonString);
     Items.push(contractSet[0]);
@@ -44,30 +45,22 @@ export function writeLastContractJSONfile( ) {
 
 export async function readLastFacetJSONfile( facetName: string, diamond: Address ) : Promise<Address> {
     const jsonString = fs.readFileSync('./scripts/T2G_Facets.json', 'utf-8');
-    const FacetArray : facetRecord[] = JSON.parse(jsonString);
-    const FacetList : facetRecord = <facetRecord>FacetArray.find( (facet) => ((facet.diamond == diamond) && (facetName in facet.facets) ));
-    if (FacetList == undefined) throw("Bad Record Name for Facet Address recovery :: ".concat(facetName));
+    const FacetList : facetRecord = JSON.parse(jsonString);
+    if (FacetList.diamond != diamond) throw("Bad Record Name for Diamond Address recovery :: ".concat(FacetList.diamond));
+    if (!(facetName in FacetList.facets)) throw("Bad Record Name for Facet Address recovery :: ".concat(facetName));
     return FacetList.facets[facetName];
     }
 
-export function writeLastFacetJSONfile( facets: Object[], diamond: Address ) {
-    console.log( facets, diamond )
+export async function writeLastFacetJSONfile( facets: Object, diamond: Address ) {
     const jsonString = fs.readFileSync('./scripts/T2G_Facets.json', 'utf-8');
-    const FacetArray : facetRecord[] = JSON.parse(jsonString);
-    var DiamondRecord : facetRecord = <facetRecord>FacetArray.find( (facet) => (facet.diamond == diamond));
-    if (DiamondRecord == undefined) DiamondRecord = { diamond: diamond, facets: {}};
-
-    console.log( DiamondRecord )
+    const FacetRecord : facetRecord = JSON.parse(jsonString);
+    if (FacetRecord.diamond != diamond) throw("Bad Record Name for Diamond Address recovery :: ".concat(FacetRecord.diamond));
 
     for ( const facet of Object.keys(facets)) {
-        DiamondRecord.facets[facet] = facets[facet];
+        FacetRecord.facets[facet] = facets[facet];
         }
 
-    console.log( DiamondRecord )
-
-    FacetArray.push(DiamondRecord);
-     
-    let JsonFile = JSON.stringify(FacetArray);
+    let JsonFile = JSON.stringify(FacetRecord);
     fs.writeFile('./scripts/T2G_Facets.json', JsonFile, (err) => {
         if (err) {
             console.log('Error writing file:', err);
@@ -76,29 +69,28 @@ export function writeLastFacetJSONfile( facets: Object[], diamond: Address ) {
             }
         });
     }
-    
+
+export async function writeLastDiamondJSONfile( ) {
+    let JsonFile = JSON.stringify(diamondNames);
+    fs.writeFile('./scripts/T2G_Root.json', JsonFile, (err) => {
+        if (err) {
+            console.log('Error writing file:', err);
+        } else {
+            console.log('Successfully wrote file');
+            }
+        });
+    }
+      
 export async function readLastDiamondJSONfile() : Promise<diamondCore> {
     const jsonString = fs.readFileSync('./scripts/T2G_Root.json', 'utf-8');
-    const DiamondCoreArray : diamondCore[] = JSON.parse(jsonString);
-    const DiamondCore : diamondCore = <diamondCore>DiamondCoreArray.pop();
+    const DiamondCore : diamondCore = JSON.parse(jsonString);
     if (DiamondCore.Diamond.name != "T2G_root") throw("Bad Record Name for T2G_Root Address recovery :: ".concat(DiamondCore.Diamond.name));
-    //colorOutput("Recall Last Diamond Core Record >> ".concat(JSON.stringify(DiamondCore)), "cyan");
     diamondNames.Diamond = <contractRecord>DiamondCore.Diamond;
     diamondNames.DiamondInit = <contractRecord>DiamondCore.DiamondInit;
     diamondNames.DiamondCutFacet = <contractRecord>DiamondCore.DiamondCutFacet;
     diamondNames.DiamondLoupeFacet = <contractRecord>DiamondCore.DiamondLoupeFacet;
     return diamondNames;
     }
-
-/*    export function readLastDiamondJSONfile() : contractRecord {
-        const jsonString = fs.readFileSync('./scripts/T2G_Root.json', 'utf-8');
-        const Items : contractRecord[] = JSON.parse(jsonString);
-        const item : contractRecord = <contractRecord>Items.pop();
-        if (item.name != "T2G_Root") throw("Bad Record Name for T2G_Root Address recovery :: ".concat(item.name));
-        colorOutput("Recall Last Diamonf Root Record >> ".concat(JSON.stringify(item)), "cyan");
-        diamondNames.Diamond = item;
-        return item;
-        }*/
     
 export async function InteractWithContracts(rwItem : rwRecord, from: Account, accountList: Address[], facets: menuRecord[] ) {
     const wallets = await hre.viem.getWalletClients();
@@ -151,15 +143,19 @@ export async function InteractWithContracts(rwItem : rwRecord, from: Account, ac
             }
             } 
         else if (rwItem.rwType == rwType.READ) {
-            var result : any = await facets[0].instance.read[rwItem.function]( newArgs, wallets[sender] );
-
-            const beacon = parseAndDisplayInputAndOutputs( rwItem.outcome, Array.isArray(result) ? result : [ result ] );
+            const raw : any = await facets[0].instance.read[rwItem.function]( newArgs, wallets[sender] );
+            const result = (rwItem.outcome.length > 1) ? raw : [ raw ];
+            const beacon = parseAndDisplayInputAndOutputs( rwItem.outcome, result );
 
             if (Array.isArray(beacon)) log = log.concat( "\n[ ", colorOutput( beacon.join("|\n"), "green", true )," ]" );
             else log = log.concat( colorOutput( (typeof beacon === "object") ? beacon.reduce( (acc, cur) => { return cur.concat(acc)}, "|\n" ) : <string>beacon, "green", true) );
             }
+
+        // We display the log
         colorOutput(log);
+
     } catch (error) {
+        console.log(error)
         const errorLabel : Array<any> = Object.entries(<errorFrame>error);
         const errorDisplay : string = errorLabel.reduce( (last, item) => {
             switch (item[0]) {

@@ -104,7 +104,7 @@ contract T2G_HoneyFacet {
      /// @dev the returned text is to be updated whenever a change in the contract is made and new deployment is carried out
      /// @return string that recalls the contact name + its current deployed version : "contractname::version"
 
-    function beacon_HoneyFacet() public pure returns (string memory) { return "T2G_HoneyFacet::1.0.1"; }
+    function beacon_HoneyFacet() public pure returns (string memory) { return "T2G_HoneyFacet::1.0.2"; }
 
      /// @notice returns the address of the the contract
      /// @dev All Facet in T2G application must implement this function of type "get_<Contract Name>()

@@ -120,6 +120,27 @@ library LibERC721 {
     }
 
     /**
+     * @dev additional function to parse & decode data structure 
+     * NEW : T2G specific
+     */
+
+    function parseDataBytesToTokenStruct(bytes memory _data) public pure returns (TokenStruct memory) {
+        (TokenStruct memory result) = abi.decode(_data, (TokenStruct));
+        //
+        return result;
+    }
+
+    /**
+     * @dev additional function to parse & decode data structure 
+     * NEW : T2G specific
+     */
+
+    function parseDataBytesToTokenEntitySpecific(bytes memory _data) public pure returns (TokenEntitySpecific memory) {
+        (TokenEntitySpecific memory result) = abi.decode(_data, (TokenEntitySpecific));
+        return result;
+    }
+
+    /**
      * @dev checks if tokenId is a specific type of token of type Typeoftoken and belong to the caller as owner
      * @dev 
      * @dev 
@@ -415,15 +436,6 @@ library LibERC721 {
         _safeMint(to, tokenId, "");
     }
 
-    /**
-     * @dev additional function to parse & decode data structure 
-     * NEW : T2G specific
-     */
-
-    function parseDataBytesToTokenStruct(bytes memory _data) public pure returns (TokenStruct memory) {
-        (TokenStruct memory result) = abi.decode(_data, (TokenStruct));
-        return result;
-    }
 
     /**
      * @dev Same as {xref-ERC721-_safeMint-address-uint256-}[`_safeMint`], with an additional `data` parameter which is

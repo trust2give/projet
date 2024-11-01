@@ -17,69 +17,79 @@ export async function getOrDeployContract( contract : contractRecord, name: stri
     else throw("Wrong action for EUR Contract ".concat(contract.address));
     }
 
-
-export async function deployDiamond( diamonds: diamondCore, action: FacetCutAction, token: { name: string, symbol: string }, cut: cutRecord[] ) : Promise<Array<any>> {
-    const publicClient = await hre.viem.getPublicClient();
-    const [deployWallet] = await hre.viem.getWalletClients();
-
-    var diamond; // on récupère l'instance T2G_Root
+export async function deployLoupeDiamond( diamonds: diamondCore, action: FacetCutAction, cut: cutRecord[] ) : Promise<Array<any>> { 
     var diamondLoupe; // on récupère l'instance DiamonLoupeFacet
+    var loupeName : string = (diamonds.DiamondLoupeFacet.name || "DiamondLoupeFacet");
+
+    switch (action) {
+        case (FacetCutAction.Replace): {
+            colorOutput(`Replace ${loupeName} @: ${diamonds.DiamondLoupeFacet.address}`, "magenta");    
+            } 
+        case (FacetCutAction.Add): {
+            colorOutput(`Add ${loupeName} @: ${diamonds.DiamondLoupeFacet.address}`, "magenta");    
+
+            diamondLoupe = await hre.viem.deployContract( loupeName );                
+            break;
+            } 
+        default:
+            throw("wrong action for DiamondLoupeFacet");
+        }
+
+    cut.push({
+        facetAddress: diamondLoupe.address,
+        action: action,
+        functionSelectors: getSelectors(diamondLoupe)
+        });
+
+    return cut;    
+    }
+
+
+export async function deployDiamond( diamonds: diamondCore, token: { name: string, symbol: string } ) : Promise<Array<any>> {
+    const [deployWallet] = await hre.viem.getWalletClients();
+    
+    var diamond; // on récupère l'instance T2G_Root
     var diamondCutFacet; // on récupère l'instance DiamondCutFacet
     var diamondInit;
+
+    var CutName : string = (diamonds.DiamondCutFacet.name || "DiamondCutFacet");
 
     var initFunc = NULL_ADDRESS;
     var initAddress = NULL_ADDRESS;
 
     var diamName : string = (diamonds.Diamond.name || "Diamond");
-    var loupeName : string = (diamonds.DiamondLoupeFacet.name || "DiamondLoupeFacet");
-    var CutName : string = (diamonds.DiamondCutFacet.name || "DiamondCutFacet");
 
-    if (action == FacetCutAction.Add) {
-        // On est dans le cas où on créé un nouveau T2G_Root
-        diamondCutFacet = await hre.viem.deployContract( CutName );
+    // On est dans le cas où on créé un nouveau T2G_Root
 
-        colorOutput(`Add ${CutName} @: ${diamondCutFacet.address}`, "magenta");
+    diamondCutFacet = await hre.viem.deployContract( CutName );
 
-        diamond = await hre.viem.deployContract( diamName, [
-            deployWallet.account.address,
-            diamondCutFacet.address
-            ]);
+    colorOutput(`Add ${CutName} @: ${diamondCutFacet.address}`, "magenta");
 
-        colorOutput(`Add ${diamName} @: ${diamond.address}`, "magenta");    
+    diamond = await hre.viem.deployContract( diamName, [
+        deployWallet.account.address,
+        diamondCutFacet.address
+        ]);
 
-        diamondLoupe = await hre.viem.deployContract( loupeName );
-
-        colorOutput(`Add ${loupeName} @: ${diamondLoupe.address}`, "magenta");    
-
-        cut.push({
-            facetAddress: diamondLoupe.address,
-            action: action,
-            functionSelectors: getSelectors(diamondLoupe)
-            });
-        
-        diamondInit = await hre.viem.deployContract("DiamondInit");
-
-        colorOutput(`Add DiamondInit @: ${diamondInit.address}`, "magenta");    
+    colorOutput(`Add ${diamName} @: ${diamond.address}`, "magenta");    
     
-        initFunc = encodeFunctionData({
-            abi: diamondInit.abi,
-            functionName: "init",
-            args: [ token.name, token.symbol, diamond.address ]
+    diamondInit = await hre.viem.deployContract("DiamondInit");
+
+    colorOutput(`Add DiamondInit @: ${diamondInit.address}`, "magenta");    
+
+    initFunc = encodeFunctionData({
+        abi: diamondInit.abi,
+        functionName: "init",
+        args: [ token.name, token.symbol, diamond.address ]
         });
 
-        initAddress = diamondInit.address;
-        }
-    else throw new Error(`Incompatible Action for ${diamName} & address recorded`);
+    initAddress = diamondInit.address;
 
-    // si Remove => Adresse doit être zéro
-    // si Add & Replace => Adresse doit être nouveau SC (condition : une @ existante (replace) ou pas (Add))
-    // Partie à compléter : Franck - 20240930
-    return [diamond.address, initFunc, initAddress, cut ]
+    return [diamond.address, diamondCutFacet.address, initFunc, initAddress ]
     }
 
 
 
-export async function deployFacets( diamond: Address , name: string, action: FacetCutAction, constructor: boolean, cut: cutRecord[]  ) : Promise<cutRecord[]> {
+export async function deployFacets( diamond: Address , name: string, action: FacetCutAction, constructor: boolean,  cut: cutRecord[]  ) : Promise<cutRecord[]> {
     const publicClient = await hre.viem.getPublicClient();
     const [deployWallet] = await hre.viem.getWalletClients();
 
@@ -149,25 +159,4 @@ export async function deployWithDiamondCut( diamondAddress: Address, cut : cutRe
     colorOutput(`Transaction Hash : ${tx}`, "green");
 
     return diamondAddress;
-    }
-
-
-
-export async function getBeacons( facetNames: contractRecord[], diamondAddress: Address ) {
-    // On vérifie que les beacons de chaque facet sont bien actifs
-    for (const facetName of facetNames) {
-        const facet = await hre.viem.getContractAt(
-            <string>facetName.name,
-            diamondAddress
-            );        
-        // On récupère le beacon de DiamondLoupeFacet
-        if (typeof facetName == "string") {
-            //if (!("action" in facetName)) {
-                //if ("action" in facetName && facetName.action < FacetCutAction.Remove)) {
-                    const beacon = await facet.read[<string>facetName.beacon]();
-                    console.log(`Retrieve ${facetName.name} @: ${facet.address} : ${beacon}`);    
-                    }
-                //} 
-            //}
-        }
     }
