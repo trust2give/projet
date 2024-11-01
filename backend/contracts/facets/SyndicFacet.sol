@@ -15,6 +15,31 @@ import { DiamondLoupeFacet } from "./DiamondLoupeFacet.sol";
 /******************************************************************************/
 
 /// @title Contract that manages the registration process for Trust2Give dApp
+/// @title a user is represented by a wallet address and is given rights to use
+/// @title part of the services
+
+/// There are six types of user profiles:
+/// Profile 1 [P1] : Public viewer : wallet that can access public data managed by the service (bu default)
+/// Profile 2 [P2] : Giver : any wallet that is willing to give funds and stablecoins
+/// Profile 3 [P3] : GHG Gain Collector : any wallet that belong to an entity seeking, carrying out and valueing GHG gains
+/// Profile 4 [P4] : Certifier : any wallet that is allowed to certify and endorse the reality of GHG gains declared
+/// Profile 5 [P5] : T2G Governor : any wallet that owns Gouvernance Tokens
+/// Profile 6 [P6] : T2G Owner : any wallet that belongs to T2G organization
+
+/// Access to smart contract facets depends on the rights linked to a wallet
+/// Honey Facet  : P1 (Partial) / P2 (Full) / P6 (Full)
+/// Pollen Facet : P1 (Partial) / P3 (Full) / P4 (Certifier) / P6 (Full)
+/// Nektar Facet : P1 (Full) / P2 (Full) / P3 (Full) / P6 (Full)
+/// Pool Facet   : P6 (Full)
+/// Cell Facet   : P5 (Full) / P6 (Full)
+
+/// Each profile may have sublevels of profiles and is identified by a flag, set or unset depending on the rights
+/// P1 : R_VIEWS
+/// P2 : R_GIVES
+/// P3 is splitted into two roles : R_FARMS (Creator) & R_COLLECTS (Apicist)
+/// P4 : R_GRANTS
+/// P5 : R_OWNS
+/// P6 : R_ADMINS
 
 contract T2G_SyndicFacet {
 
@@ -56,6 +81,14 @@ contract T2G_SyndicFacet {
      /// @dev registered does not mean active. It means that the wallet has already been interacting at least once with the service
      /// @return bool true if the wallet is registered, false otherwise
 
+     /// @notice returns the rights of a given wallet
+     /// @dev if the wallet address is not registered yet or banned, then revert SyndFordidden error
+     /// @return uint8 value of the rights granted to the wallet @. Values are related to USR_XXXX flags
+     
+    function getWalletRights( address _wallet ) public view returns (uint8) {
+        return LibOwners._rights(_wallet);
+        }
+
     function isWalletRegistered( address _wallet ) external isT2GOwner view returns( bool ) {
         return LibOwners._isRegistered(_wallet);
         } 
@@ -75,8 +108,24 @@ contract T2G_SyndicFacet {
      /// @dev SyndAlreadyRegistered event in case the wallet address is already in
      /// @dev SyndAlreadyBanned event in case the wallet address is already registered AND banned
 
-    function registerWallet( address _wallet ) external isT2GOwner {
-        LibOwners._register(_wallet);
+    function registerWallet( address _wallet, uint8 _profile ) external isT2GOwner {
+        LibOwners._register( _wallet, _profile );
+        }
+
+     /// @notice allow additionnal rights to a given wallet address
+     /// @dev An event is emitted : SyndRightsGranted when setting process went through
+     /// @dev if the wallet address is not registered yet or banned, then revert SyndFordidden error
+
+    function grantWalletRights( address _wallet, uint8 _profile ) external isT2GOwner {
+        LibOwners._grantRights( _wallet, _profile );
+        }
+
+     /// @notice restrict rights to a given wallet address
+     /// @dev An event is emitted : SyndRightsDeclined when setting process went through
+     /// @dev if the wallet address is not registered yet or banned, then revert SyndFordidden error
+
+    function declineWalletRights( address _wallet, uint8 _profile ) external isT2GOwner {
+        LibOwners._grantRights( _wallet, _profile );
         }
 
      /// @notice ban the wallet address. From this moment on, the wallet is no longer allowed to use the services
@@ -86,7 +135,7 @@ contract T2G_SyndicFacet {
      /// @dev SyndAlreadyBanned event in case the wallet address is already banned
 
     function banWallet( address _wallet ) external isT2GOwner {
-        LibOwners._ban(_wallet);(_wallet);
+        LibOwners._ban(_wallet);
         }
 
      /// @notice this function is used to change the address for the smart contract that simulate StableCoin

@@ -1,33 +1,19 @@
 import hre from "hardhat";
 import { Address } from "viem";
-import { rwType, rwRecord } from "./InteractWithContracts";
 import fs from 'fs';
 import { contractSet } from "./T2G_Data";
 import { colorOutput, 
     parseAndConvertInputArgs, 
-    parseAndDisplayInputArgs, 
     displayAddress, displayContract, 
-    parseOutcome, 
     parseRwRecordForSpecificItemWithDefaultValue, 
     storage, NULL_ADDRESS, Account, 
-    showObject, contractRecord, regex, regex2} from "./T2G_utils";
+    showObject, contractRecord, regex, regex2, rwRecord, rwType, errorFrame} from "./T2G_utils";
 
 //import decodeMethod  from "abi-decoder-typescript"
 //import { bigint } from "hardhat/internal/core/params/argumentTypes";
 
 /// npx hardhat node
 /// npx hardhat run .\scripts\InteractWithERC20Contract.ts --network localhost
-
-
-export function readLastContractSetJSONfile() : contractRecord[] {
-    const jsonString = fs.readFileSync('./scripts/ContractSet.json', 'utf-8');
-    const Items : contractRecord[] = JSON.parse(jsonString);
-    const item : contractRecord = <contractRecord>Items.pop();
-    if (item.name != "EUR") throw("Bad Record Name for EUR StableCoin Address recovery :: ".concat(item.name));
-    //colorOutput("Recall Last EUR Smart Contract Record >> ".concat(JSON.stringify(item)), "cyan");
-    contractSet[0] = <contractRecord>item;
-    return contractSet;
-    }
 
 export async function InteractWithERC20Contract(rwItem : rwRecord, contractAddress: Address, accountList: Address[] ) {
     //const accounts = await hre.ethers.getSigners();

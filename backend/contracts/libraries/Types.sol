@@ -4,6 +4,44 @@ pragma solidity ^0.8.0;
 
 library T2GTypes {
 
+/* UserRight Flags
+ * Defines the profils of users around the T2G application
+ */
+
+ uint8 constant R_VIEWS = 1;
+ uint8 constant R_GIVES = 2;
+ uint8 constant R_OWNS = 4;
+ uint8 constant R_FARMS = 8;
+ uint8 constant R_GRANTS = 16;
+ uint8 constant R_COLLECTS = 32;
+ uint8 constant R_ADMINS = 64;
+
+enum countries {
+  NONE,
+  FRANCE,
+  GERMANY,
+  BELGIUM,
+  SWITZERLAND,
+  ITALY,
+  SPAIN,
+  PORTUGAL,
+  GREATBRITAIN,
+  SCOTTLAND,
+  IRELAND,
+  NETHERLAND,
+  LUXEMBURG,
+  POLAND,
+  DENMARK,
+  SWEDEN,
+  NORWAY,
+  ISLAND,
+  FINLAND,
+  USA,
+  BRAZIL,
+  OTHERS
+}
+
+
 /* Type CoinUnit 
  * Utilisé pour les unités monétaires pour les valorisation des tokens POLLEN, NEKTAR, CELL et HONEY
  * et pour les autres usages en général
@@ -24,6 +62,10 @@ enum CoinUnit {
   SUI
 }
 
+/* Type UnitSize
+ * Type utilisé pour la caractérisation la taille des unités dans la ruche
+ */ 
+
 enum sizeUnit {
   NONE,
   KILO,
@@ -32,9 +74,6 @@ enum sizeUnit {
   MTON
 }
 
-/* Type UnitSize
- * Type utilisé pour la caractérisation la taille des unités dans la ruche
- */ 
 
 enum TextType {
   NONE,       // Etat transitoire par défault à la création d'un objet

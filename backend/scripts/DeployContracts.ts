@@ -33,10 +33,15 @@ export function writeLastDiamondJSONfile( ) {
           console.log('Successfully wrote file');
           }
       });
-}
+  }
 
+  
 /*
- *
+ * This function carries out the actions related to Facets / Diamond or Contracts to manage
+ * It returns a truple [ @diamond, @contract, cut object] depending on the FacetCutAction values
+ * @diamond = new @ of T2G_Root or NULL_ADDRESS otherwise
+ * @contract = new @ of EUR contract or NULL_ADDRESS otherwise
+ * cut object = [{cutfacet}] or NULL_ADDRESS
  */
 
 export async function DeployContracts(accountList: Address[], answer : string) : Promise<any> {
@@ -59,39 +64,35 @@ export async function DeployContracts(accountList: Address[], answer : string) :
   // command[1] => "Add", "Replace", "Remove"
   // command[2+] => space separated contract name list 
 try {
-  const instance = await getOrDeployContract( contractSet[0], <string>contractSet[0].name );
+  const instance = await getOrDeployContract( contractSet[0], <string>contractSet[0].name, undefined );
   
   if (commands.length > 2) {
     
     switch (commands[1]) {
       case "Add": {
         choice = FacetCutAction.Add;
-        if (trace) console.log("Add Selected")
-          break;
-      }
+        break;
+        }
       case "Replace": {
         choice = FacetCutAction.Replace;
-        if (trace) console.log("Replace Selected")
-          break;
-      }
+        break;
+        }
       case "Remove": {
         choice = FacetCutAction.Remove;
-        if (trace) console.log("Remove Selected")
-          break;
-      }
+        break;
+        }
       default:
-        return [ NULL_ADDRESS, NULL_ADDRESS ];
+        return [ NULL_ADDRESS, NULL_ADDRESS, NULL_ADDRESS ];
       }
 
       
       switch (commands[0]) {
-        case "Diamond": {
-          if (choice != FacetCutAction.Add)
-            throw("Bad action <Remove> for Diamond Smart Contract ERC 2535 - Only Add possible")
+      case "Diamond": {
+          if (choice != FacetCutAction.Add) throw("Bad action <Remove> for Diamond Smart Contract ERC 2535 - Only Add possible")
           
-        smarts = diamondNames;
-        [ diamondAddress, initFunc, initAddress, <cutRecord[]>cut ] = await deployDiamond( smarts, choice, tokenCredential, cut );
-        }
+          smarts = diamondNames;
+          [ diamondAddress, initFunc, initAddress, <cutRecord[]>cut ] = await deployDiamond( smarts, choice, tokenCredential, cut );
+          }
       case "Facet": {
         if (trace) console.log("Facet Selected")
         smarts = facetNames;
@@ -120,33 +121,32 @@ try {
           commands = <string[]>[ "-", "Add"].concat( smarts.map((element) => <string>element.name));
           }
 
-        if (trace) console.log("Facet prepared", cut)
-          
-          for (var i = 2; i < commands.length; i++) {
+        var facetList = {};
+
+        for (var i = 2; i < commands.length; i++) {
           const item = (smarts.find((element) => element.name == commands[i]));
           if (trace) console.log("Facet found", commands[i], item)
-            if (item != undefined) {
-              cut = await deployFacets(diamondAddress, <string>item.name, <FacetCutAction>choice, <boolean>item.argInit, cut);
+          if (item != undefined) {
+            cut = await deployFacets(diamondAddress, <string>item.name, <FacetCutAction>choice, <boolean>item.argInit, cut);
+            facetList[item.name] = (<cutRecord>cut.slice().pop()).facetAddress;
             }
           }
 
-        if (trace) console.log("Ready to deploy", cut, initFunc, initAddress)
-
         deployWithDiamondCut( diamondAddress, cut, initFunc, initAddress );      
         //getBeacons( smarts, diamondAddress );
-        return [ diamondAddress, instance ];
+        return [ diamondAddress, instance, facetList ];
         }
       case "Contract": {
         smarts = contractSet;
         if (trace) console.log("Contract found", smarts, choice);
         const res = await getOrDeployContract( smarts[0], <string>smarts[0].name, <FacetCutAction>choice );
-        return [ diamondAddress, res ];
+        return [ diamondAddress, res, NULL_ADDRESS ];
         }
       default:
-        return [ NULL_ADDRESS, NULL_ADDRESS ];
+        return [ NULL_ADDRESS, NULL_ADDRESS, NULL_ADDRESS ];
       }    
     }
-    return [ diamondAddress, instance ];
+    return [ diamondAddress, instance, NULL_ADDRESS ];
   } catch (error) {
     console.error(error);    
   }

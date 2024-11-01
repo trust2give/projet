@@ -11,6 +11,10 @@ library LibOwners {
     event SyndNewRegistered(address _user, uint256 _stamp);
     event SyndNewBanned(address _user, uint256 _stamp);
     event SyndUnknown(address _user);
+    event SyndRightsGranted(address _user);
+    event SyndRightsDeclined(address _user);
+
+    error SyndFordidden(address _user);
 
     /**
      * @dev Define the data specific structure of Syndication data that are stored
@@ -35,6 +39,7 @@ library LibOwners {
         mapping(address => bool) registered;
         mapping(address => bool) banned;
         mapping(address => uint256) timestamp;
+        mapping(address => uint8) rights;           // list of flags USR_XXX that represent the profile of the user
         mapping(uint256 => address) registeredAtIndex;
         mapping(uint256 => address) bannedAtIndex;
         }
@@ -54,6 +59,21 @@ library LibOwners {
         }
 
     /**
+     * @notice Returns the granted rights for the user.
+     * @dev the uint8 value is the aggregation of flags USR_XXX (type.sol)
+     * @dev A wallet@ can have several mixed rights with the following combinations
+     * @dev For Giver Wallet : USR_GIVERS & USR_OWNER (when getting CELLS)
+     * @dev For public : USR_VIEWER only
+     * @dev For Entreprises: USR_FARMS, USR_GRANTS, USR_COLLECTS, USR_ADMINS
+     * @dev since a wallet can be giver and enterprise at the same time, all combinations are possibles
+     * @return uint8 value représeting the flags
+     */
+    function _rights(address user) internal view returns (uint8) {
+        if (!_isRegistered(user) || _isBanned(user)) revert SyndFordidden(user);
+        return syndication().rights[user];
+        }
+
+    /**
      * @dev Returns whether the address is banned or not.
      */
     function _isBanned(address user) internal view returns (bool) {
@@ -61,19 +81,46 @@ library LibOwners {
         }
 
     /**
+     * @dev Returns whether the address has the given rights or not.
+     */
+    function _isAllowed(address user, uint8 rights) internal view returns (bool) {
+        if (!_isRegistered(user) || _isBanned(user)) revert SyndFordidden(user);
+        return ((syndication().rights[user] & rights) == rights);
+        }
+
+    /**
+     * @dev Set new rights to the given user.
+     */
+    function _grantRights(address user, uint8 rights) internal {
+        if (!_isRegistered(user) || _isBanned(user)) revert SyndFordidden(user);
+        syndication().rights[user] |= rights;
+        emit SyndRightsGranted(user);
+        }
+
+    /**
+     * @dev Decline rights to the given user.
+     */
+    function _declineRights(address user, uint8 rights) internal {
+        if (!_isRegistered(user) || _isBanned(user)) revert SyndFordidden(user);
+        syndication().rights[user] &= ~rights;
+        emit SyndRightsDeclined(user);
+        }
+
+    /**
      * @dev  
      */
-    function _register( address user ) internal {
+    function _register( address user, uint8 _profile ) internal {
         if (user != address(0)) {
             if (!_isRegistered(user)) {
                 syndication().registered[user] = true;
                 syndication().registeredAtIndex[++syndication().totalRegistered] = user;
                 syndication().banned[user] = false;
+                syndication().rights[user] = _profile;
                 // We update & record the time 
                 syndication().timestamp[user] = block.timestamp;
 
                 emit SyndNewRegistered(user, syndication().timestamp[user]);
-            }
+                }
             else if (!_isBanned(user)) emit SyndAlreadyRegistered( user );
             else emit SyndAlreadyBanned( user );
             }

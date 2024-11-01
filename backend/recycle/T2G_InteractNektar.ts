@@ -1,14 +1,15 @@
 const hre = require("hardhat");
-import { Address } from "viem";
-import { rwType, rwRecord, InteractWithContracts, readLastDiamondJSONfile } from "./InteractWithContracts";
-import { colorOutput, Value } from "./T2G_utils";
+import { Address, encodeFunctionData } from "viem";
+import { InteractWithContracts, readLastDiamondJSONfile } from "./InteractWithContracts";
+import * as readline from 'readline';
+import { colorOutput, Account, Value, NULL_ADDRESS, rwRecord, rwType } from "./T2G_utils";
 
 /******************************************************************************\
 * Author: Franck Dervillez <franck.dervillez@trust2give.com>, Twitter/Github: @fdervillez
-* EIP-2535 Diamonds - Interaction Script with Syndic Facet Contracts
+* EIP-2535 Diamonds - Interaction Script with Pool Facet Contracts
 * 
 * This script is called by the Menu.ts main script in order to interact with
-* SyndicFacet smart contract
+* NektarFacet smart contract
 * 
 * It is to be created and updated whenever there's a change in the ABI of
 * the smart contract, to reflect the actual behavior of the contract
@@ -39,26 +40,16 @@ import { colorOutput, Value } from "./T2G_utils";
 * 
 /******************************************************************************/
 
-
-
-export const rwSyndicList : rwRecord[] = [
-    { rwType: rwType.READ, contract: "T2G_SyndicFacet", function: "beacon_SyndicFacet", args: [], label: "Beacon", outcome: [ "string"] },    
-    { rwType: rwType.READ, contract: "T2G_SyndicFacet", function: "get_T2G_SyndicFacet", args: [], label: "Contract @", outcome: [ "address"] },    
-    { rwType: rwType.READ, contract: "T2G_SyndicFacet", function: "isWalletRegistered", args: [ Value.Account ], label: "Wallet Registered ? ", outcome: [ "bool"] },    
-    { rwType: rwType.READ, contract: "T2G_SyndicFacet", function: "isWalletBanned", args: [ Value.Account ], label: "Wallet Banned ? ", outcome: [ "bool"] },    
-    { rwType: rwType.WRITE, contract: "T2G_SyndicFacet", function: "registerWallet", args: [ Value.Account ], label: "Register new Wallet", outcome: [] },
-    { rwType: rwType.WRITE, contract: "T2G_SyndicFacet", function: "banWallet", args: [ Value.Account ], label: "Ban Wallet", outcome: [] },
-    { rwType: rwType.WRITE, contract: "T2G_SyndicFacet", function: "updateMockUpAddress", args: [ Value.Address ], label: "Update Stable Coin @", outcome: [] },
+export const rwNektarList : rwRecord[] = [
+    { rwType: rwType.READ, contract: "T2G_NektarFacet", function: "beacon_NektarFacet", args: [], label: "Beacon", outcome: [ "string"] },
     ]
 
-export async function T2G_InteractSyndic( accountList: Address[], item : rwRecord ) {
-    colorOutput("Enter T2G_InteractSyndic Application", "cyan")
+export async function T2G_InteractNektar( accountList: Address[], item : rwRecord ) {
+    colorOutput("Enter T2G_InteractDiamond Application", "cyan")
 
     try {
-        const diamond = await readLastDiamondJSONfile();
-        const rootAddress: Address =  diamond.Diamond.address;
-        await InteractWithContracts( item, accountList, rootAddress );
+        await InteractWithContracts( item, accountList );
       } catch (error) {
         console.log(error);
         }
-    }
+      }

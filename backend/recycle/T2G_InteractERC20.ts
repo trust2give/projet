@@ -1,10 +1,9 @@
 const hre = require("hardhat");
-import { rwType, rwRecord } from "./InteractWithContracts";
 import { Address, encodeFunctionData } from "viem";
 import { InteractWithERC20Contract, readLastContractSetJSONfile } from "./InteractWithERC20";
 import * as readline from 'readline';
 import { contractSet } from "./T2G_Data";
-import { colorOutput, Account, Value, contractRecord } from "./T2G_utils";
+import { colorOutput, Account, Value, contractRecord, rwRecord, rwType } from "./T2G_utils";
 import fs from 'fs';
 
 /******************************************************************************\
@@ -29,25 +28,7 @@ export const rwERC20List : rwRecord[] = [
     { rwType: rwType.WRITE, contract: "EUR", function: "transferFrom", args: [Value.Account, Value.Account, Value.Number], label: "Transfer EUR from", outcome: [] },
     { rwType: rwType.READ, contract: "EUR", function: "allowance", args: [Value.Account, Value.Account], label: "Allowance EUR to spender", outcome: [ "bigint" ] },
     { rwType: rwType.WRITE, contract: "EUR", function: "approve", args: [Value.Account, Value.Number], label: "Approve EUR To", outcome: [ "boolean"] },
-    ]
-
-
-export function writeLastContractJSONfile( ) {
-  const jsonString = fs.readFileSync('./scripts/ContractSet.json', 'utf-8');
-  const Items : contractRecord[] = JSON.parse(jsonString);
-  Items.push(contractSet[0]);
-
-  let JsonFile = JSON.stringify(Items);
-  //colorOutput("Save last EUR Contract Record >> ".concat(JSON.stringify(contractSet[0])), "cyan");
-  fs.writeFile('./scripts/ContractSet.json', JsonFile, (err) => {
-      if (err) {
-          console.log('Error writing file:', err);
-      } else {
-          console.log('Successfully wrote file');
-          }
-      });
-  }
-    
+    ]    
 
 export async function T2G_InteractERC20 ( accountList: Address[], item : rwRecord )  {
   colorOutput("Enter T2G_InteractERC20 Application", "cyan")
