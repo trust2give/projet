@@ -8,6 +8,9 @@ module.exports = {
         'green': '#108c6c',
         'clear-green': '#d1ece5',
         // ...
+      },
+      space: {
+        '20px': '20px',
       }
     },
   },

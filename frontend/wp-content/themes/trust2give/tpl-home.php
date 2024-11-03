@@ -23,7 +23,8 @@ Template Name: Homepage
             </div>
         </div>
     </div>
-    <div class="py-8 w-full bg-indigo-500 text-center text-white">
+    <div class="flex items-center w-full bg-indigo-500 text-center text-white h-48 text-xl">
+        <div class="w-full sm:w-2/5 mx-auto">
         <?php
             $post_query = new WP_Query([
                 'name' => 'luttons',
@@ -39,10 +40,11 @@ Template Name: Homepage
                 wp_reset_postdata();
             }
         ?>
+        </div>
     </div>
-    <div class="w-full sm:w-3/5 sm:mx-auto min-h-20 bg-world py-8 text-center shadow-lg py-36">
-        <span class="text-green text-4xl font-bold">Où en sommes nous aujourd'hui ?</span>
-        <div class="text-green text-xl font-bold">
+    <div class="w-full sm:w-3/5 sm:mx-auto bg-world py-24 text-center shadow-lg h-96 font-bold">
+        <span class="text-green text-4xl">Où en sommes nous aujourd'hui ?</span>
+        <div class="text-green text-xl">
             <ul class="flex align-items-center mt-8">
                 <li class="flex flex-col w-1/3">
                     <span>36.3MD</span>
@@ -59,21 +61,68 @@ Template Name: Homepage
             </ul>
         </div>
     </div>
-    <div class="py-8 w-full bg-clear-green text-center text-white">
-        <?php
-            $post_query = new WP_Query([
-                'name' => 'il-etait-une-fois-trust2give',
-                'post_type' => 'post',
-                'post_status' => 'publish',
-                'posts_per_page' => 1
-            ]);
-            
-            if ($post_query->have_posts()) {    
-                while ($post_query->have_posts()) : $post_query->the_post();
-                    the_content();
-                endwhile;
-                wp_reset_postdata();
-            }
-        ?>
+    <div class="py-8 w-full bg-clear-green text-black ">
+        <div class="flex flew-col sm:flex-row w-full sm:w-3/5 sm:mx-auto space-x-[20px]">
+            <div class="w-full sm:w-1/2">
+                <?php
+                    $post_query = new WP_Query([
+                        'name' => 'il-etait-une-fois-trust2give',
+                        'post_type' => 'post',
+                        'post_status' => 'publish',
+                        'posts_per_page' => 1
+                    ]);
+                    
+                    if ($post_query->have_posts()) {    
+                        while ($post_query->have_posts()) : $post_query->the_post(); ?>
+                            <h2 class="text-center text-xl text-green mb-10"><?php echo the_title(); ?></h2>
+                            <?php echo the_content(); ?>
+                        <?php endwhile;
+                        wp_reset_postdata();
+                    }
+                ?>
+                <br>
+                <div class="text-right">
+                    <a class="py-2 px-6 border-solid border-2 bg-green text-white rounded-xl" href="#">
+                        En savoir plus
+                    </a>
+                </div>
+                
+            </div>
+            <div class="w-full sm:w-1/2 relative h-[20rem]">
+                <!-- <div class="flex"> -->
+                    <img src="<?php echo bloginfo('template_url'); ?>/assets/img/team.png" alt="team" width="300" class="absolute top-0 right-0">
+                    <img src="<?php echo bloginfo('template_url'); ?>/assets/img/don.png" alt="don" width="180" class="absolute bottom-0">
+                <!-- </div> -->
+            </div>
+        </div>
+    </div>
+    <div class=" w-full sm:w-3/5 sm:mx-auto">
+        <ul class="flex flex-col sm:flex-row justify-between text-center">
+            <li class="shadow-lg sm:w-64 p-4">
+                <img class="mx-auto mb-2" src="<?php echo bloginfo('template_url'); ?>/assets/img/oeil.png" width="70" alt="">
+                <h3>Transparence</h3>
+                <p class="text-sm">
+                    TransparenceLorem ipsum dolor sit amet, consectetur adipiscing elit, 
+                    sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. 
+                    Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                </p>
+            <li class="shadow-lg sm:w-64 p-4">
+                <img class="mx-auto mb-2" src="<?php echo bloginfo('template_url'); ?>/assets/img/cadenas.png" width="70" alt="">
+                <h3>Intégrité</h3>
+                <p class="text-sm">
+                    TransparenceLorem ipsum dolor sit amet, consectetur adipiscing elit, 
+                    sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. 
+                    Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                </p>
+            <li class="shadow-lg sm:w-64 p-4">
+                <img class="mx-auto mb-2" src="<?php echo bloginfo('template_url'); ?>/assets/img/impact.png" width="60" alt="">
+                <h3>Impact</h3>
+                <p class="text-sm">
+                    TransparenceLorem ipsum dolor sit amet, consectetur adipiscing elit, 
+                    sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. 
+                    Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                </p>
+            </li>
+        </ul>
     </div>
 <?php get_footer(); ?>

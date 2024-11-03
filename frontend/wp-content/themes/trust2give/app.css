@@ -2,7 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
+
 .bg-world {
     @apply bg-cover bg-center;
-    background-image: url('assets/img/monde.png');
+    background-image: url('assets/img/monde2.png');
 }
