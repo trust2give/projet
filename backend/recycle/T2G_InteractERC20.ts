@@ -1,10 +1,10 @@
 const hre = require("hardhat");
-import { rwType, rwRecord } from "./InteractWithContracts";
 import { Address, encodeFunctionData } from "viem";
-import { InteractWithERC20Contract } from "./InteractWithERC20";
+import { InteractWithERC20Contract, readLastContractSetJSONfile } from "./InteractWithERC20";
 import * as readline from 'readline';
-import { diamondNames } from "./T2G_Data";
-import { colorOutput, Account, Value } from "./T2G_utils";
+import { contractSet } from "./T2G_Data";
+import { colorOutput, Account, Value, contractRecord, rwRecord, rwType } from "./T2G_utils";
+import fs from 'fs';
 
 /******************************************************************************\
 * Author: Franck Dervillez <franck.dervillez@trust2give.com>, Twitter/Github: @fdervillez
@@ -18,6 +18,7 @@ import { colorOutput, Account, Value } from "./T2G_utils";
 /// npx hardhat run .\scripts\T2G_InteractERC20.ts --network localhost
 
 export const rwERC20List : rwRecord[] = [
+    { rwType: rwType.READ, contract: "EUR", function: "get_EUR", args: [], label: "Contract @", outcome: [ "address"] },
     { rwType: rwType.READ, contract: "EUR", function: "name", args: [], label: "Stable Coin Name", outcome: [ "string"] },
     { rwType: rwType.READ, contract: "EUR", function: "symbol", args: [], label: "Stable Coin Symbol", outcome: [ "string"] },
     { rwType: rwType.READ, contract: "EUR", function: "decimals", args: [], label: "Stable Coin Décimals", outcome: [ "number"] },
@@ -25,11 +26,17 @@ export const rwERC20List : rwRecord[] = [
     { rwType: rwType.READ, contract: "EUR", function: "balanceOf", args: [Value.Account], label: "Balance Of @ ", outcome: [ "bigint"] },    
     { rwType: rwType.WRITE, contract: "EUR", function: "transfer", args: [Value.Account, Value.Number], label: "Transfer EUR To", outcome: [] },
     { rwType: rwType.WRITE, contract: "EUR", function: "transferFrom", args: [Value.Account, Value.Account, Value.Number], label: "Transfer EUR from", outcome: [] },
-    ]
+    { rwType: rwType.READ, contract: "EUR", function: "allowance", args: [Value.Account, Value.Account], label: "Allowance EUR to spender", outcome: [ "bigint" ] },
+    { rwType: rwType.WRITE, contract: "EUR", function: "approve", args: [Value.Account, Value.Number], label: "Approve EUR To", outcome: [ "boolean"] },
+    ]    
 
 export async function T2G_InteractERC20 ( accountList: Address[], item : rwRecord )  {
   colorOutput("Enter T2G_InteractERC20 Application", "cyan")
-    await InteractWithERC20Contract(item, <Address>diamondNames.Stablecoin.address, accountList );
+
+    // TBD : Replace with last recorder @ or root in in file
+    const rootAddress: Address =  (readLastContractSetJSONfile())[0].address;
+
+    await InteractWithERC20Contract(item, rootAddress, accountList );
     }
 
 //main().catch((error) => {

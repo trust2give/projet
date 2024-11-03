@@ -1,28 +1,152 @@
-import { Address, InvalidSerializedTransactionTypeError } from "viem";
-import { rwType, rwRecord } from "./InteractWithContracts";
+import { Address, stringify } from "viem";
+import { rwRecord } from "./InteractWithContracts";
+import { FacetCutAction } from "./utils/diamond";
+
 
 export const Typeoftoken : string[] = ["None", "Pollen", "Honey", "Nektar", "Cell"]
 
-export const Statusoftoken : string[] =  [ "None", "Draft", "Active", "Burnt", "Canceled"]
+export const Statusoftoken : string[] =  [ "None", "Draft", "Validated", "Active", "Burnt", "Canceled"]
 
 export const TypeofUnit : string[] = ["None", "GWEI", "EURO", "DOLLAR", "SWISSFRANC", "STERLINGPOUND", "YEN", "YUAN", "USDC", "USDT", "EURC", "SUI"]
 
+export const TypeofSector: string[] = [ "NONE", "TRANSPORT", "AUTOMOTIVE", "AEROSPACE", "SERVICES", "SOFTWARE", "ITINDUSTRY", "HIGHTECH", "LUXURY", "BUILDINGS", "SUPPLYCHAIN", "FOOD", "HEALTHCARE" ]
+
+export const TypeofGainType : string[] = [ "NONE", "REDUCTION", "SEQUESTRATION", "EVIT_PRODUIT", "EVIT_CHAINE", "EVIT_COMPENSATION" ]
+
+export const TypeofGainScope : string[] = [ "NONE", "S1_FIXE", "S1_MOBILE", "S1_PROCESS", "S1_FUGITIVE", "S1_BIOMASSE", "S2_ELECTRICITY", "S2_HEATCOLD", "S3_UPSTREAMNRJ", "S3_RAWPURCHASE", "S3_AMMORTIZATION", "S3_WASTES", "S3_UPSTREAMSUPPLY", "S3_TRAVELS", "S3_UPSTREAMLEASING", "S3_TBD2", "S3_VISITORS", "S3_DOWNSTREAMSUPPLY", "S3_SALES", "S3_ENDOFLIFE", "S3_DOWNSTREAMFRANCHISE", "S3_DOWNSTREAMLEASING", "S3_TBD3", "S3_TBD4" ]
+
+export const TypeofGainSource : string[] = [ "NONE", "PROCESS", "PRODUCT", "SUPPLIER", "PROVIDER", "EQUIPMENT", "CONSUMPTION", "TRANSPORT", "OTHER" ]
+
+export const TypeofsizeUnit : string[] = [ "NONE", "KILO", "TON", "KTON", "MTON" ]
+
+export const TypeofEntityType : string[] = [ "NONE", "PERSON", "ENTITY", "GROUP", "NETWORK" ]
+
+export const TypeofUnitType : string[] = [ "NONE", "ENTREPRISE", "ASSOCIATION", "FONDATION", "PLATEFORME", "COLLECTIVITE", "EPICS", "ETAT" ]
+
+export const TypeofUnitSize : string[] = [ "NONE", "SOLE", "TPE", "PME", "ETI", "GE" ]
+
+export const TypeCountries : string[] = [ "NONE", "FRANCE", "GERMANY", "BELGIUM", "SWITZERLAND", "ITALY", "SPAIN", "PORTUGAL", "GREATBRITAIN", "SCOTTLAND", "IRELAND", "NETHERLAND", "LUXEMBURG", "POLAND", "DENMARK", "SWEDEN", "NORWAY", "ISLAND", "FINLAND", "USA", "BRAZIL", "OTHERS" ]
+
+export const listOfEnums = {
+    Typeoftoken,
+    Statusoftoken,
+    TypeofUnit,
+    TypeofSector,
+    TypeofGainType,
+    TypeofGainScope,
+    TypeofGainSource,
+    TypeofsizeUnit,
+    TypeofEntityType,
+    TypeofUnitType,
+    TypeofUnitSize,
+    TypeCountries
+    }
+
 /// enum type qui permet de sélectionner les 6 premiers @Wallet du node hardhat
-export enum Account { A0 = "@0", A1 = "@1", A2 = "@2", A3 = "@3", A4 = "@4", A5 = "@5", A6 = "@6", A7 = "@7", A8 = "@8", A9 = "@9" }
+/// A0 à A9 : correspond aux vallets du hardhat testnet de 0 à 9
+/// AA : correspond à l'adresse du Smart Contract T2G_Root
+/// AE : correspond à l'adresse du Smart Contract StableCoin EUR
+/// AF : correspond à l'adresse du Smart Contract PoolFacet
+/// AH : correspond à l'adresse du Smart Contract HoneyFacet
+/// AN : correspond à l'adresse du Smart Contract NektarFacet
+/// AP : correspond à l'adresse du Smart Contract PollenFacet
+
+export enum Account { A0 = "@0", A1 = "@1", A2 = "@2", A3 = "@3", A4 = "@4", A5 = "@5", A6 = "@6", A7 = "@7", A8 = "@8", A9 = "@9", AA = "@A", AE = "@E", AF = "@F", AH = "@H", AN = "@N", AP = "@P" }
 
 /// enum type qui permet dans le tableau args de définir une liste de valeur plutôt qu'une valeur spécifique
 export enum Value { TokenId = "[[TokenId]]", Index = "[[Index]]", Account = "[[Account]]", Address = "[[Address]]", Number = "[[Number]]", Flag = "[[Flag]]", Hash = "[[Hash]]", Enum = "[[Enum]]", Text = "[[Text]]" }
 
 export var storage : object = {};
 
+export type cutRecord = {
+    facetAddress: Address,
+    action: FacetCutAction,
+    functionSelectors: Array<any>
+    }
+
+export interface contractRecord { 
+    name: string, 
+    argInit: boolean,
+    addReader: boolean,
+    address: Address,
+    beacon: string | boolean
+    }
+
+export type diamondCore = {
+    Diamond: contractRecord,
+    DiamondCutFacet: contractRecord,
+    DiamondInit: contractRecord,
+    DiamondLoupeFacet: contractRecord,
+    }
+
+/// enum type qui permet de définir si une interaction est de type READ ou WRITE
+export enum rwType { READ, WRITE }
+
+export type rwRecord = { 
+    rwType: rwType,
+    contract: string, 
+    function: string, 
+    args: Array<any>,
+    values: Array<any>,
+    outcome: Array<any>
+}
+
+export type menuRecord = {
+    tag: string,
+    args: Object,
+    diamond: Account | undefined,
+    instance: any,
+    events: any,
+    contract: string | undefined
+    }
+
+export interface errorFrame {
+    cause : string,
+    details : string,
+    docsPath: string,
+    metaMessages: string,
+    shortMessage: string,
+    version: string,
+    name: string,
+    abi: string,
+    args: string,
+    contractAddress: string,
+    formattedArgs: string,
+    functionName: string,
+    sender: string
+    }
+
 // Expression régulière pour détecter une adresse ETH 
 export const regex = '^(0x)?[0-9a-fA-F]{40}$';
 export const regex2 = '^(0x)?[0-9a-fA-F]{64}$';
+export const regex3 = '^(0x)?[0-9a-fA-F]{8}$';
 export const NULL_ADDRESS = <Address>"0x0000000000000000000000000000000000000000"
 
+export const senderValue = (x: Account | undefined) : number => {
+    if (Object.values(Account).includes(x)) {
+        if (x == Account.AA) return 10;
+        else if (x == Account.AE) return 11;
+        else if (x == Account.AF) return 12;
+        else if (x == Account.AH) return 13;
+        else if (x == Account.AN) return 14;
+        else if (x == Account.AP) return 15;
+        else return Number(x.substring(1));
+        }
+    else return 0;
+    };
+
+/// get the args attibute in rwRecord object, parses it and convert the enum values into real values to be passed to the target function as inputs
 export function parseAndConvertInputArgs( rwItem : rwRecord, accounts: Address[], account: number, index: number, token: number, addr: Address) : Array<any> {
     const tab: Array<any> = rwItem.args.map((x) => {
-        if (Object.values(Account).includes(x)) return accounts[x.substring(1)];
+        if (Object.values(Account).includes(x)) {
+            if (<Account>x == Account.AA) return accounts[10];
+            else if (<Account>x == Account.AE) return accounts[11];
+            else if (<Account>x == Account.AF) return accounts[12];
+            else if (<Account>x == Account.AH) return accounts[13];
+            else if (<Account>x == Account.AN) return accounts[14];
+            else if (<Account>x == Account.AP) return accounts[15];
+            else return accounts[x.substring(1)];
+            }
         else if (x === Value.Account) return accounts[account];
         else if (x === Value.Index) return index;
         else if (x === Value.TokenId) return token;
@@ -57,16 +181,44 @@ export function showObject( data: any, eol: boolean = false ) {
     return label;
     }
 
-export function parseAndDisplayInputArgs( rwItem : rwRecord, newArgs : Array<any>) : string {
-    const dispArgs : string = newArgs.map((arg, i) => {
-        if (Object.values(Account).includes(rwItem.args[i]) || rwItem.args[i] === Value.Account) return "@".concat( arg.substring(0, 6), "..")
-        if (rwItem.args[i] === Value.Index) return "Index ".concat( arg )
-        if (rwItem.args[i] === Value.TokenId) return "Id ".concat( arg )
-        if (rwItem.args[i] === Value.Address) return "@".concat( arg.substring(0, 6), "..")
-        return arg;
-        }).join("| ");
+export function parseAndDisplayInputAndOutputs( pointer : Array<any>, values : Array<any> ) : string {
+    const dispArgs : string = values.map((arg, i) => {
+        switch (pointer[i].type) {
+            case "address": { 
+                if (arg.match(regex)) return pointer[i].name.concat( ": ", "@".concat( arg.substring(0, 10), ".."));
+                else return pointer[i].name.concat( ": ", "<Wrong @>".concat(arg));
+            } 
+            case "string": return pointer[i].name.concat( ": ", arg);                  
+            case "uint8": { 
+                const parse = <string>pointer[i].internalType.split(' ');
+                if (parse[0] == "enum") {
+                    const parseEnum = parse[1].split('.');
+                    const val : string = (parseEnum.length > 1) ? parseEnum[1] : parseEnum[0];
+                    if (val in listOfEnums)
+                        if (!Number.isNaN(arg) && Number(arg) < listOfEnums[val].length) return pointer[i].name.concat( ": ", listOfEnums[val][arg]);
+                    return pointer[i].name.concat( ": ", "<Wrong>".concat(arg));
+                }
+                else if (parse[0] == "uint8") return pointer[i].name.concat( ": ", (!Number.isNaN(arg) && Number(arg) < 2**8) ? arg : "<Wrong>".concat(arg));
+                return arg;
+            }                  
+            case "uint256": return pointer[i].name.concat( ": ", (!Number.isNaN(arg)) ? arg : "<Wrong>".concat(arg));                 
+            case "bool": {
+                if (["True", "true", "Vrai", "vrai", "1"].includes(arg)) return "True";
+                else if (["False", "false", "Faux", "faux", "0", "-1"].includes(arg)) return "False";
+                return pointer[i].name.concat( ": ", "<Wrong>".concat(arg));
+            }
+            case "tuple[]": {
+                return arg.reduce( ( acc, cur) => {
+                    return acc.concat(stringify(cur), " |\n");
+                    }, "\n[" );
+                }
+        default:
+            return pointer[i].name.concat( ": ", arg);            
+        }   
+    }).join("| ");
+
     return dispArgs;
-}
+    }
 
 export function displayAddress( addr : Address, color: string, pad?: number ) : string {
     return colorOutput( "[@".concat(addr.substring(0, pad ? pad : 6), "...]"), color, true);
@@ -76,38 +228,18 @@ export function displayContract( contract : string, color: string, pad?: number 
     const label = contract.substring(0, pad ? pad : 20).padEnd( pad ? pad : 20, '.');
     return colorOutput( label, color, true);
     }
-    
-export function parseOutcome( template: Array<any>, result: Array<any>, rwItem: rwRecord) : Array<any> {
-    result = Array.isArray(result) ? result : [ result ];
 
-    if (template.length != result.length && template[0] != "array") throw("Inconstant Oucome");
-
-    return result.map((res : any, i : number) => {
-        if (template[0] == "array") {
-            if (Array.isArray(res)) return "[ ".concat( Object.values(res).join("| "), "]");
-            if (typeof res === "object") return "[ ".concat( Object.values(res).join("| "), "]");
-            return res;
+export function displayResults( start: string, results: Array<any> ) : string {
+    return start.concat( results.reduce( ( acc, cur) => {
+        if (typeof cur == "string") {
+            if (cur.match(regex)) return acc.concat( displayAddress( cur, "yellow", 10 ), " " );
+            if (cur.match(regex2)) return acc.concat( displayAddress( cur, "cyan", 10 ), " " );
             }
-        switch (template[i]) {
-            case "Typeoftoken": return Typeoftoken[res];
-            case "Statusoftoken": return Statusoftoken[res];
-            case "TypeOfUnit": return TypeofUnit[res];
-            case "string": return parseRwRecordForSpecificItemWithDefaultValue( "decode", rwItem, res, res);
-            case "address": {
-                return "@".concat( res.substring(0, 12), "...");
-                }
-            case "number":
-            case "bigint": {
-                return res;
-                }
-            case "bool": {
-                return res ? "True" : "False";
-                }
-            default: {
-                return res;
-                }
-            }   
-        });
+        else if (typeof cur == "bigint") return acc.concat( colorOutput( `${cur}`, "cyan", true ), " " );
+        else if (typeof cur == "boolean") return acc.concat( colorOutput( (cur) ? "True" : "False", "cyan", true ), " " );
+        else if (typeof cur == "number") return acc.concat( colorOutput( `${cur}`, "cyan", true ), " " );
+        return acc.concat( colorOutput( cur, "cyan", true ), " " );
+        }, "[ " ), " ]" );
     }
 
 /// Fonction qui parse un objet rwRecord à la recherche d'un "item" et renvoie une valeur si présent, ou une valeur par défaut defValue sinon
@@ -198,3 +330,25 @@ export function colorOutput( text: string, color?: string, hide?: boolean ) : st
     if (!hide) console.log(output);
     return output;
     }
+
+export function displayAccountTable( accountList: Address[] ) {
+    colorOutput( "*".padEnd(60, "*"), "yellow");
+    colorOutput( ("*".concat(" ".padStart(9, " "), "List of avaibable wallets @hardhat testnet" ).padEnd(59, " ")).concat("*"), "yellow");
+
+    accountList.map( (add: Address, i : number ) => {    
+        if (i == 0) colorOutput( ("*".concat(" ".padStart(2, " "), `${Account["A0"]}: `.concat(add), " T2G Owner" ).padEnd(59, " ")).concat("*"), "cyan");
+        if (i > 0 && i < 10) {
+            colorOutput( ("*".concat(" ".padStart(2, " "), `${Account[<string>("A".concat(i))]}: `.concat(add), " Wallet" ).padEnd(59, " ")).concat("*"), "yellow");
+            }
+        if (i == 10) colorOutput( ("*".concat(" ".padStart(2, " "), `${Account["AA"]}: `.concat(add), " T2G Root" ).padEnd(59, " ")).concat("*"), "cyan");
+        if (i == 11) colorOutput( ("*".concat(" ".padStart(2, " "), `${Account["AE"]}: `.concat(add), " EUR SC" ).padEnd(59, " ")).concat("*"), "cyan");
+        if (i == 12) colorOutput( ("*".concat(" ".padStart(2, " "), `${Account["AF"]}: `.concat(add), " PoolSC" ).padEnd(59, " ")).concat("*"), "cyan");
+        if (i == 13) colorOutput( ("*".concat(" ".padStart(2, " "), `${Account["AH"]}: `.concat(add), " HoneySC" ).padEnd(59, " ")).concat("*"), "cyan");
+        if (i == 14) colorOutput( ("*".concat(" ".padStart(2, " "), `${Account["AN"]}: `.concat(add), " NektarSC" ).padEnd(59, " ")).concat("*"), "cyan");
+        if (i == 15) colorOutput( ("*".concat(" ".padStart(2, " "), `${Account["AP"]}: `.concat(add), " PollenSC" ).padEnd(59, " ")).concat("*"), "cyan");
+        return <Address>add;
+        })
+
+    colorOutput( ("*".concat(" ".padStart(2, " "), "@0, @A & @AE : T2G dApp set, Other @x ready for testings" ).padEnd(59, " ")).concat("*"), "yellow");
+    colorOutput( "*".padEnd(60, "*"), "yellow");
+}

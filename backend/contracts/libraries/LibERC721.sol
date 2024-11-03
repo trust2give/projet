@@ -23,12 +23,15 @@ library LibERC721 {
 
     /**
      * @dev Define the status of ERC721 Token that is stored
-     * T2G Specific enum type
+     * T2G Specific enum type, which values depends on the token
+     * Honey  : draft / validated / active / burnt / canceled
+     * Pollen : draft / validated / certified / active / burnt / canceled
      */
     enum Statusoftoken {
         None,
         draft,
         validated,
+        certified,
         active,
         burnt,
         canceled
@@ -36,18 +39,45 @@ library LibERC721 {
 
     /**
      * @dev Define the data specific structure of ERC721 Token that is stored
-     * T2G Specific struct type
+     * T2G Specific struct type, which attributes depends on the token
+     * Honey  : token / state / created / updated / value / valueUnit [CoinUnit] / rate / hash 
+     * Pollen : token / state / created / updated / value / valueUnit [SizeUnit] / uri / sector / 
      */
     struct TokenStruct {
         Typeoftoken token;
         Statusoftoken state;
-        string date;
-        uint256 value;      // Either a quantity or an amoung depending on the type of token
-        uint8 valueUnit;    // Either a T2GTypes.CoinUnit or T2GTypes.sizeUnit depending on the type of Token
-        uint8 rate;         // Percentage value (optional) for Honey applicable to amount dedicated to Gift versus Project Funding
-        string[2] uri;      // Uri links to BEGES documents that certify the value for Pollen
-        string[3] hash;     // hash of recorded transactions of stablecoin transfers
+        uint256 created;        // Timestamp : creation time of the new Token
+        uint256 updated;        // Timestamp : last update time of the Token before it turns "Active"
+        uint256 value;          // Either a quantity or an amoung depending on the type of token
+        }
+
+    struct TokenFundSpecific {
+        T2GTypes.CoinUnit valueUnit;    // Either a T2GTypes.CoinUnit or T2GTypes.sizeUnit depending on the type of Token
+        string[] hash;                  // hash of recorded transactions of stablecoin transfers
+        uint8 rate;                     // Percentage value (optional) for Honey applicable to amount dedicated to Gift versus Project Funding
+        }
+
+    struct TokenRewardSpecific {
+        uint8 valueUnit;        // Either a T2GTypes.CoinUnit or T2GTypes.sizeUnit depending on the type of Token
+        string label;
+        }
+
+    struct TokenRWASpecific {
+        T2GTypes.sizeUnit valueUnit;        // Either a T2GTypes.CoinUnit or T2GTypes.sizeUnit depending on the type of Token
+        T2GTypes.GainSource source;
+        T2GTypes.GainScope scope;
+        T2GTypes.GainType gain; 
+        string[] uri;          // Uri links to BEGES documents that certify the value for Pollen
+        }
+
+    struct TokenEntitySpecific {
+        string name;
+        string uid;
+        T2GTypes.EntityType entity;
         T2GTypes.BusinessSector sector;
+        T2GTypes.UnitType unitType;
+        T2GTypes.UnitSize unitSize;
+        T2GTypes.countries country;
         }
 
     struct TokenIdCard {
@@ -69,12 +99,17 @@ library LibERC721 {
         mapping(address owner => mapping(uint256 index => uint256)) ownedTokens;
         mapping(uint256 => uint256) ownedTokensIndex;
         mapping(uint256 tokenId => uint256) allTokensIndex;
-        // Partie spécifique aux Tokens de la dApp
-        mapping(uint256 tokenId => TokenStruct) token;
-        // Pour les Honay
+
+        // Token structures (common parts and specific ones)
+        mapping(uint256 tokenId => TokenStruct) token;                      // common to all tokens
+        mapping(uint256 tokenId => TokenFundSpecific) fund;                 // specific to fund tokens (Honey)
+        mapping(uint256 tokenId => TokenRewardSpecific) reward;             // specific to reward tokens (Nektar)
+        mapping(uint256 tokenId => TokenEntitySpecific) entity;             // specific to rwa tokens (pollen)
+        mapping(uint256 tokenId => TokenRWASpecific) rwa;                   // specific to rwa tokens (pollen)
         mapping(uint256 tokenId => mapping (uint256 => bool)) whitelist;
         mapping(uint256 tokenId => mapping (uint256 => bool)) blacklist;
-        uint256[88] _gaps; // Cette variable n'est pas utilisée 
+
+        uint256[88] _gaps; // Not used. YTBD what is it for in the scope of ERC721 token?
     }
 
     function layout() internal pure returns (Layout storage l) {
@@ -82,6 +117,27 @@ library LibERC721 {
         assembly {
             l.slot := slot
         }
+    }
+
+    /**
+     * @dev additional function to parse & decode data structure 
+     * NEW : T2G specific
+     */
+
+    function parseDataBytesToTokenStruct(bytes memory _data) public pure returns (TokenStruct memory) {
+        (TokenStruct memory result) = abi.decode(_data, (TokenStruct));
+        //
+        return result;
+    }
+
+    /**
+     * @dev additional function to parse & decode data structure 
+     * NEW : T2G specific
+     */
+
+    function parseDataBytesToTokenEntitySpecific(bytes memory _data) public pure returns (TokenEntitySpecific memory) {
+        (TokenEntitySpecific memory result) = abi.decode(_data, (TokenEntitySpecific));
+        return result;
     }
 
     /**
@@ -110,12 +166,36 @@ library LibERC721 {
     }
 
     /**
-     * @dev Returns the details of the `tokenId`. Does NOT revert if token doesn't exist
+     * @dev Returns the common details of the `tokenId`. Does NOT revert if token doesn't exist
      * NEW: T2G specific
      */
-    function _tokenFeatures(uint256 tokenId) internal view returns (TokenStruct memory) {
+    function _tokenCommonFeatures(uint256 tokenId) internal view returns (TokenStruct memory) {
         return layout().token[tokenId];
-    }
+        }
+
+    /**
+     * @dev Returns the Fund specific details of the `tokenId`. Does NOT revert if token doesn't exist
+     * NEW: T2G specific
+     */
+    function _tokenFundFeatures(uint256 tokenId) internal view returns (TokenFundSpecific memory) {
+        return layout().fund[tokenId];
+        }
+
+    /**
+     * @dev Returns the Rwa specific details of the `tokenId`. Does NOT revert if token doesn't exist
+     * NEW: T2G specific
+     */
+    function _tokenRwaFeatures(uint256 tokenId) internal view returns (TokenRWASpecific memory) {
+        return layout().rwa[tokenId];
+        }
+
+    /**
+     * @dev Returns the entity specific details of the `tokenId`. Does NOT revert if token doesn't exist
+     * NEW: T2G specific
+     */
+    function _tokenEntityFeatures(uint256 tokenId) internal view returns (TokenEntitySpecific memory) {
+        return layout().entity[tokenId];
+        }
 
     /**
      * @dev Returns the approved address for `tokenId`. Returns 0 if `tokenId` is not minted.
@@ -356,15 +436,6 @@ library LibERC721 {
         _safeMint(to, tokenId, "");
     }
 
-    /**
-     * @dev additional function to parse & decode data structure 
-     * NEW : T2G specific
-     */
-
-    function parseDataBytesToTokenStruct(bytes memory _data) public pure returns (TokenStruct memory) {
-        (TokenStruct memory result) = abi.decode(_data, (TokenStruct));
-        return result;
-    }
 
     /**
      * @dev Same as {xref-ERC721-_safeMint-address-uint256-}[`_safeMint`], with an additional `data` parameter which is

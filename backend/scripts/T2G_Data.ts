@@ -1,57 +1,48 @@
-import { FacetCutAction } from "./utils/diamond";
-import { diamondCore } from "./deploy";
+import { contractRecord, diamondCore, NULL_ADDRESS } from "./T2G_utils";
 
-/// Variable globale qui représente l'état des actions de déploiement à
-/// réaliser pour réaliser la mise à jour de l'architecture ERC2535
-/// de la dApp Trust2Give
-/// Combinaisons possibles :
-/// Diamond : name: <null> || "nom_contract" => Si le nom de Smart Contract Diamond est remplacé par un autre spécifique
-///   - action: FacetCutAction.Add && address: <null> => Création d'un nouveau Diamond
-///   - action: <null> && address: "0xabc..."  => Référencement d'un Diamond déployé
-/// DiamondCutFacet || DiamondCutFacet : contract déployés si Diamond déployé et créés quand Diamond recréé
-///   - name: <null> || "nom_contract" => le nom de Smart Contract Diamond est remplacé par un autre spécifique
-/// DiamondInit: address: <null> || "0xabc..."  => Référencement d'un DiamondInit Déployé 
-///   Adresse à mettre à jour manuellement, à chaque nouveau déploiement de diamond
+/// Variables globales qui représentent l'état des smart contracts en déploiement à
+/// réaliser pour réaliser la mise à jour de l'architecture ERC2535 de la dApp Trust2Give
+/// 
+/// Diamond : name: "nom_contract" => Si le nom de Smart Contract Diamond est remplacé par un autre spécifique
+/// DiamondLoupeFacet || DiamondCutFacet : contract déployés si Diamond déployé et créés quand Diamond recréé
+/// DiamondInit: Référencement d'un DiamondInit Déployé 
 /// facetNames: [] liste des smartcontracts du diamond qui consituent la business logique
-///   Pour chaque facet:
-///   - name: <null> || "nom_contract" => le nom de Smart Contract de la facet
-///   - action: FacetCutAction.Add || FacetCutAction.Replace || FacetCutAction.Remove || <null>
+///   Pour chaque facet / contract
+///   - name: "nom_contract" => le nom de Smart Contract de la facet
 ///   - argInit : boolean qui indique si le constructeur attend aucun input (false) ou l'adresse du T2G_Root (true)
 ///   - addReader : boolen qui indique si le contract contient la méthode get_<Nom Contrat> pour avoir l'addresse propres du SC
-///  
-/*
+///   - beacon: false si le smart contract ne contient pas de fonction beacon ou le nom de cette fonction
+///  ContractSet: [] liste des smart contracts mock-up. Pour le moment restreint à un simulateur de StableCoin ERC20 pour le POC
+
+/// En cas de modification dans la structure du Diamant ERC2535 (ajout de facet), il faut:
+/// 1. compléter la liste de facteNames avec le nouveau contrat (ci-dessous)
+/// 2. dupliquer un script / créer un script "T2G_Interact<Contrat>.ts" à partir d'un des contract existants 
+/// 3. Créer un tableau rw<Contract>List qui représente la description des fonctions du smart contract 
+/// 4. Mettre à jour la variable du script Menu.ts : < smart : menuRecord[] > et ajouter la référence au nouveau contrat et l'appel à la fonction du script
+
+/// ATTENTION : Deux fichiers JSON sont créés et à ne pas effacer : ContractSet.JSON et T2G_Root.JSON dans le dossier de script
+/// Ces deux fichiers sauvegardent les contenus des structures ContractSet & DiamondNames lors des opérations de déploiement
+/// Pour retrouver les addresses des derniers contracts déployés T2G_Root et EUR (Contract StableCoin Mock-up)
+
+export const contractSet : contractRecord[] = [
+  { name: "EUR", address: "0x5fbdb2315678afecb367f032d93f642f64180aa3", argInit: false, addReader: false, beacon: false },
+  ]
+
+export const facetNames : contractRecord[] = [
+  { name: 'OwnershipFacet', address: NULL_ADDRESS, argInit: false, addReader: false, beacon: false },
+  { name: 'ERC721Facet', address: NULL_ADDRESS, argInit: false, addReader: false, beacon: 'beacon_ERC721Facet' },
+  { name: 'T2G_NektarFacet', address: NULL_ADDRESS, argInit: true, addReader: true, beacon: 'beacon_NektarFacet' },
+  { name: 'T2G_PollenFacet', address: NULL_ADDRESS, argInit: true, addReader: true, beacon: 'beacon_PollenFacet' },
+  { name: 'T2G_HoneyFacet', address: NULL_ADDRESS, argInit: true, addReader: true, beacon: 'beacon_HoneyFacet' },
+  { name: 'T2G_PoolFacet', address: NULL_ADDRESS, argInit: true, addReader: true, beacon: 'beacon_PoolFacet' },
+  { name: 'T2G_SyndicFacet', address: NULL_ADDRESS, argInit: true, addReader: true, beacon: 'beacon_SyndicFacet' }
+  ]
+
 export const diamondNames : diamondCore = {
-    Stablecoin: { name: "EUR", action: FacetCutAction.Add, address: "" },
-    Diamond: { name: "T2G_root", action: FacetCutAction.Add, address: "" },
-    DiamondCutFacet: { },
-    DiamondLoupeFacet: { },
-    DiamondInit: { address: "" },
-    facetNames: [
-      { name: 'OwnershipFacet', argInit: false, action: FacetCutAction.Add, beacon: 'beacon_OwnershipFacet' },
-      { name: 'ERC721Facet', argInit: false, action: FacetCutAction.Add, beacon: 'beacon_ERC721Facet' },
-      { name: 'T2G_NektarFacet', argInit: true, action: FacetCutAction.Add, addReader: true, beacon: 'beacon_NektarFacet' },
-      { name: 'T2G_PollenFacet', argInit: true, action: FacetCutAction.Add, addReader: true, beacon: 'beacon_PollenFacet' },
-      { name: 'T2G_HoneyFacet', argInit: true, action: FacetCutAction.Add, addReader: true, beacon: 'beacon_HoneyFacet' },
-      { name: 'T2G_PoolFacet', argInit: true, action: FacetCutAction.Add, addReader: true, beacon: 'beacon_PoolFacet' }
-      ]
+    Diamond: { name: "T2G_root", address: NULL_ADDRESS, argInit: false, addReader: false, beacon: 'beacon_T2G_Root' },
+    DiamondCutFacet: { name: "DiamondCutFacet", address: NULL_ADDRESS, argInit: false, addReader: false, beacon: false },
+    DiamondLoupeFacet: { name: "DiamondLoupeFacet", address: NULL_ADDRESS, argInit: false, addReader: false, beacon: false },
+    DiamondInit: { name: "DiamondInit", address: NULL_ADDRESS, argInit: false, addReader: false, beacon: false },
     }
 
-    */
-export const diamondNames : diamondCore = {
-      Stablecoin: { name: "EUR", address: "0x5fbdb2315678afecb367f032d93f642f64180aa3" },
-      Diamond: { name: "T2G_root", address: "0x9fe46736679d2d9a65f0992f2272de9f3c7fa6e0" },
-      DiamondCutFacet: { },
-      DiamondLoupeFacet: { },
-      DiamondInit: { address: "0xdc64a140aa3e981100a9beca4e685f962f0cf6c9" },
-      facetNames: [
-      { name: 'OwnershipFacet', argInit: false, beacon: 'beacon_OwnershipFacet' },
-      { name: 'ERC721Facet', argInit: false, beacon: 'beacon_ERC721Facet' },
-      { name: 'T2G_NektarFacet', argInit: true, addReader: true, beacon: 'beacon_NektarFacet' },
-      { name: 'T2G_PollenFacet', argInit: true, addReader: true, beacon: 'beacon_PollenFacet' },
-      { name: 'T2G_HoneyFacet', argInit: true, action: FacetCutAction.Replace, addReader: true, beacon: 'beacon_HoneyFacet' },
-      { name: 'T2G_PoolFacet', argInit: true, action: FacetCutAction.Replace, addReader: true, beacon: 'beacon_PoolFacet' }
-        ]
-      }
-
-      //0x6e0a5725dd4071e46356bd974e13f35dbf9ef367
 export const tokenCredential = { name: "Trust2Give Decentralized App", symbol: "T2G" } 

@@ -1,10 +1,10 @@
-//const hre = require("hardhat");
-import { diamondNames, tokenCredential } from "./T2G_Data";
-import { deployDiamond } from "./deploy";
+const hre = require("hardhat");
+import { diamondNames, tokenCredential, contractSet, facetNames } from "./T2G_Data";
+import { deployDiamond, getOrDeployContract, deployLoupeDiamond, deployWithDiamondCut, deployFacets } from "./deploy";
 import { Address } from "viem";
-import { rwRecord } from "./InteractWithContracts";
-import { colorOutput } from "./T2G_utils";
-
+import { colorOutput, cutRecord, NULL_ADDRESS, regex, menuRecord, Account } from "./T2G_utils";
+import { FacetCutAction } from "./utils/diamond";
+import { writeLastFacetJSONfile, writeLastDiamondJSONfile, writeLastContractJSONfile } from "./InteractWithContracts";
 
 /******************************************************************************\
 * Author: Franck Dervillez <franck.dervillez@trust2give.com>, Twitter/Github: @fdervillez
@@ -16,9 +16,113 @@ import { colorOutput } from "./T2G_utils";
 /// taskkill /f /pid ####
 /// npx hardhat node
 /// npx hardhat run .\scripts\DeployContracts.ts --network localhost
+  
+/*
+ * This function carries out the actions related to Facets / Diamond or Contracts to manage
+ * It returns a truple [ @diamond, @contract, cut object] depending on the FacetCutAction values
+ * @diamond = new @ of T2G_Root or NULL_ADDRESS otherwise
+ * @contract = new @ of EUR contract or NULL_ADDRESS otherwise
+ * cut object = [{cutfacet}] or NULL_ADDRESS
+ */
 
-export async function DeployContracts(accountList: Address[], item : rwRecord) {
+export async function DeployContracts(accountList: Address[], answer : string, smart : menuRecord[]) {
   colorOutput("Enter DeployContracts Application", "cyan")
-  const diamond = await deployDiamond(diamondNames, tokenCredential)
-  return diamond
-}
+  
+  const trace : boolean = false;
+
+  var cut : cutRecord[] = [];
+  var choice: FacetCutAction;
+  var initFunc = NULL_ADDRESS;
+  var initAddress = NULL_ADDRESS;
+  var facetList = smart.filter((item) => (item.diamond == Account.AA && item.contract != diamondNames.Diamond.name));
+
+  var commands : string[] = answer.split(' ');
+  if (trace) console.log( "commands::", commands, commands.length );
+  
+  // command[0] => "Facet", "Contract" or "Diamond"
+  // command[1] => "Add", "Replace", "Remove"
+  // command[2+] => space separated contract name list 
+try {
+  
+  if (commands.length > 2) {
+    
+    switch (commands[1]) {
+      case "Add": {
+        choice = FacetCutAction.Add;
+        break;
+        }
+      case "Replace": {
+        choice = FacetCutAction.Replace;
+        break;
+        }
+      case "Remove": {
+        choice = FacetCutAction.Remove;
+        break;
+        }
+      default:
+        return [ NULL_ADDRESS, NULL_ADDRESS ];
+      }
+
+      
+      switch (commands[0]) {
+      case "Diamond": {
+          if (choice != FacetCutAction.Add) throw("Bad action <Remove> for Diamond Smart Contract ERC 2535 - Only Add possible")          
+          // [ diamondAddress, diamondCutAddress, initFunc, initAddress ] 
+          const deployed = await deployDiamond( diamondNames, tokenCredential );
+          diamondNames.Diamond.address = deployed[0];
+          diamondNames.DiamondCutFacet.address = deployed[1];
+          diamondNames.DiamondInit.address = deployed[3];
+          initFunc = deployed[2];
+          // We need to write down the new address in a json file
+          colorOutput( "Diamond Root @[".concat(deployed[0], "] CutFacet @[", deployed[1], "] Init @[", deployed[3]), "green");
+          }
+      case "Loupe": {
+          cut = await deployLoupeDiamond( diamondNames, <FacetCutAction>choice, cut);
+
+          await deployWithDiamondCut(diamondNames.Diamond.address, cut, initFunc, diamondNames.DiamondInit.address);
+
+          diamondNames.DiamondLoupeFacet.address = cut[cut.length - 1].facetAddress;
+          colorOutput( "Diamond Root @[".concat(diamondNames.DiamondLoupeFacet.address, "]"), "green");
+          await writeLastDiamondJSONfile();
+          if (commands[0] == "Loupe") break;
+          }
+      case "Facet": {
+        // In this case, the changes to facet is directly keyed in by the user and is not the result of Diamond Changes
+        // Checks that there is an existing Diamond otherwise revert
+        if (!String(diamondNames.Diamond.address).match(regex)) 
+          throw "Trying to manage facets without Diamond deployed yet :: no root address found!";
+
+        const facetsToChange : menuRecord[] = (commands[0] == "Facet") ? facetList.filter((item) => commands.includes(<string>item.contract)) : facetList;
+        //console.log(facetsToChange, facetList, smart)
+
+        var writeList : Object = {};
+
+        for (const facet : menuRecord of facetsToChange) {
+          //console.log("Facet found", facet.contract)
+
+          const constructor : boolean = (facet.instance.abi.filter((item) => item.type == "constructor").map((item) => item.inputs).length > 0)
+
+          cut = await deployFacets( diamondNames.Diamond.address, <string>facet.contract, <FacetCutAction>choice, constructor, cut);
+          writeList[facet.contract] = (<cutRecord>cut.slice().pop()).facetAddress;
+          //console.log(writeList, cut, constructor)
+          }
+        await deployWithDiamondCut( diamondNames.Diamond.address, cut, initFunc, initAddress );      
+
+        await writeLastFacetJSONfile( writeList, diamondNames.Diamond.address );
+
+        break;
+        }
+      case "Contract": {
+        if (trace) console.log("Contract found", contractSet, choice);
+        contractSet[0].address = await getOrDeployContract( contractSet[0], <string>contractSet[0].name, <FacetCutAction>choice );
+        // We need to write down the new address in a json file
+        writeLastContractJSONfile();
+        }
+      default:
+      }    
+    }
+    return;
+  } catch (error) {
+    console.error(error);    
+    }
+  }

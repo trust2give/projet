@@ -103,7 +103,7 @@ contract T2G_NektarFacet {
 
     function nektar(uint256 _tokenId) 
         external isT2GOwnerOrNektarOwner(_tokenId) isNektar(_tokenId) view returns (LibERC721.Typeoftoken , LibERC721.Statusoftoken, uint256) {
-        LibERC721.TokenStruct memory data = LibERC721._tokenFeatures(_tokenId);
+        LibERC721.TokenStruct memory data = LibERC721._tokenCommonFeatures(_tokenId);
         return (data.token, data.state, data.value);
         }
 
