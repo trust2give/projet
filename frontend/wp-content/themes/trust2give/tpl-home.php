@@ -44,7 +44,7 @@ Template Name: Homepage
     </div>
     <div class="w-full sm:w-3/5 sm:mx-auto bg-world py-24 text-center shadow-lg h-96 font-bold">
         <span class="text-green text-4xl">Où en sommes nous aujourd'hui ?</span>
-        <div class="text-green text-xl">
+        <div class="text-green text-2xl">
             <ul class="flex align-items-center mt-8">
                 <li class="flex flex-col w-1/3">
                     <span>36.3MD</span>
@@ -74,7 +74,7 @@ Template Name: Homepage
                     
                     if ($post_query->have_posts()) {    
                         while ($post_query->have_posts()) : $post_query->the_post(); ?>
-                            <h2 class="text-center text-xl text-green mb-10"><?php echo the_title(); ?></h2>
+                            <h2 class="text-center text-2xl text-green mb-10"><?php echo the_title(); ?></h2>
                             <?php echo the_content(); ?>
                         <?php endwhile;
                         wp_reset_postdata();
@@ -115,7 +115,7 @@ Template Name: Homepage
                     Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
                 </p>
             <li class="shadow-lg sm:w-64 p-4">
-                <img class="mx-auto mb-2" src="<?php echo bloginfo('template_url'); ?>/assets/img/impact.png" width="60" alt="">
+                <img class="mx-auto " src="<?php echo bloginfo('template_url'); ?>/assets/img/impact.png" width="60" alt="">
                 <h3>Impact</h3>
                 <p class="text-sm">
                     TransparenceLorem ipsum dolor sit amet, consectetur adipiscing elit, 
