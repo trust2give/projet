@@ -8,7 +8,7 @@
 <body>
 	<nav class="relative px-4 py-4 flex justify-between items-center bg-indigo-300">
 		<a href="/">
-            <img src="<?php bloginfo('template_url');?>/assets/img/logo.png" class="Trust2Give">
+            <img src="<?php bloginfo('template_url');?>/assets/img/logo.png" alt="Trust2Give" class="w-48">
 		</a>
 		<div class="lg:hidden">
 			<button class="navbar-burger flex items-center text-blue-600 p-3">
@@ -88,7 +88,7 @@
 					<a class="block px-4 py-3 mb-2 leading-loose text-xs text-center text-white font-semibold bg-blue-600 hover:bg-blue-700  rounded-xl" href="#">Sign Up</a>
 				</div>
 				<p class="my-4 text-xs text-center text-gray-400">
-					<span>Copyright © 2021 cccccc</span>
+					<span>Copyright © 2021</span>
 				</p>
 			</div>
 		</nav>
