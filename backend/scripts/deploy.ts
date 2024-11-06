@@ -88,8 +88,12 @@ export async function deployDiamond( diamonds: diamondCore, token: { name: strin
     }
 
 
-
-export async function deployFacets( diamond: Address , name: string, action: FacetCutAction, constructor: boolean,  cut: cutRecord[]  ) : Promise<cutRecord[]> {
+// Function used to deploy a specific smart contract facets "name"
+// Behavior depends on action value : Add, Replace or Remove from the diamond smart contract
+// Constructor represents the possible inputs array to pass to the constructor, mainly addresses of either Diamond Root (_root) or StableCoin Smart Contract (_stableCoin)
+// Adds up the eventual changes to apply to the diamond architecture through the cut[] array
+// Return the cut[] to pass to DiamondCutFacet smart contract
+export async function deployFacets( diamond: Address , name: string, action: FacetCutAction, constructor: Array<any>,  cut: cutRecord[]  ) : Promise<cutRecord[]> {
     const publicClient = await hre.viem.getPublicClient();
     const [deployWallet] = await hre.viem.getWalletClients();
 
@@ -102,8 +106,8 @@ export async function deployFacets( diamond: Address , name: string, action: Fac
             }
         case FacetCutAction.Add:
         case FacetCutAction.Replace: {
-            if (constructor) {
-                facet = await hre.viem.deployContract( <string>name, [ diamond ], { client: { wallet: deployWallet }, });
+            if (constructor.length > 0) {
+                facet = await hre.viem.deployContract( <string>name, constructor, { client: { wallet: deployWallet }, });
                 }
             else {
                 facet = await hre.viem.deployContract(<string>name);

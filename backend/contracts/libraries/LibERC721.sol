@@ -48,11 +48,12 @@ library LibERC721 {
         Statusoftoken state;
         uint256 created;        // Timestamp : creation time of the new Token
         uint256 updated;        // Timestamp : last update time of the Token before it turns "Active"
-        uint256 value;          // Either a quantity or an amoung depending on the type of token
+        uint256 value;              // Represent the quantity of a single token  
+        T2GTypes.sizeUnit size;     // Represents the scale / unit of the quantity if stated as a weight
+        T2GTypes.CoinUnit unit;     // Represents the scale / unit of the value is stated as a currency
         }
 
     struct TokenFundSpecific {
-        T2GTypes.CoinUnit valueUnit;    // Either a T2GTypes.CoinUnit or T2GTypes.sizeUnit depending on the type of Token
         string[] hash;                  // hash of recorded transactions of stablecoin transfers
         uint8 rate;                     // Percentage value (optional) for Honey applicable to amount dedicated to Gift versus Project Funding
         }
@@ -63,7 +64,6 @@ library LibERC721 {
         }
 
     struct TokenRWASpecific {
-        T2GTypes.sizeUnit valueUnit;        // Either a T2GTypes.CoinUnit or T2GTypes.sizeUnit depending on the type of Token
         T2GTypes.GainSource source;
         T2GTypes.GainScope scope;
         T2GTypes.GainType gain; 
@@ -80,10 +80,17 @@ library LibERC721 {
         T2GTypes.countries country;
         }
 
+    // Represents the value and features of the different tokens of T2GTypes
+    // these values can be managed and updated by the T2GOwner (name / symbol / logo)
+    // of by the stakeholders of the CELLS (value, size, unit)
+    // They represents the values given to any new token when minting.
     struct TokenIdCard {
         string name;
         string symbol;
         string logo;
+        uint256 value;              // Represent the quantity of a single token  
+        T2GTypes.sizeUnit size;     // Represents the scale / unit of the quantity if stated as a weight
+        T2GTypes.CoinUnit unit;     // Represents the scale / unit of the value is stated as a currency
         }
 
     bytes32 internal constant STORAGE_SLOT = keccak256("diamond.storage.erc721");

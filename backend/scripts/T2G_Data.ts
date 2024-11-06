@@ -1,4 +1,5 @@
-import { contractRecord, diamondCore, NULL_ADDRESS } from "./T2G_utils";
+import { contractRecord, diamondCore, NULL_ADDRESS, menuRecord, Account } from "./T2G_utils";
+import { TokenEntitySpecific } from "./T2G_Types";
 
 /// Variables globales qui représentent l'état des smart contracts en déploiement à
 /// réaliser pour réaliser la mise à jour de l'architecture ERC2535 de la dApp Trust2Give
@@ -46,3 +47,32 @@ export const diamondNames : diamondCore = {
     }
 
 export const tokenCredential = { name: "Trust2Give Decentralized App", symbol: "T2G" } 
+
+/// SMART OBJECT
+/// Array to append when a new contract is to be deployed along with the T2G_Data.ts file
+/// Please be aware not to use a tag value which is similar to other keyword used. 
+/// Nor similar to any function name of the facets to interact with. Make it unique.
+
+export var smart : menuRecord[] = [ 
+  //{ tag: "Deploy", contract: undefined, diamond: undefined, args: [], instance: undefined, events: undefined }, 
+  { tag: "EUR", contract: "EUR", diamond: Account.AE, args: [], instance: undefined, events: undefined },
+  { tag: "Honey", contract: "T2G_HoneyFacet", diamond: Account.AA, args: [], instance: undefined, events: undefined },
+  { tag: "Diamond", contract: "T2G_root", diamond: Account.AA, args: [], instance: undefined, events: undefined },
+  { tag: "Loupe", contract: "DiamondLoupeFacet", diamond: Account.AA, args: [], instance: undefined, events: undefined },
+  { tag: "Erc721", contract: "ERC721Facet", diamond: Account.AA, args: [], instance: undefined, events: undefined }, 
+  { tag: "Pool", contract: "T2G_PoolFacet", diamond: Account.AA, args: [], instance: undefined, events: undefined },
+  { tag: "Nektar", contract: "T2G_NektarFacet", diamond: Account.AA, args: [], instance: undefined, events: undefined }, 
+  { tag: "Pollen", contract: "T2G_PollenFacet", diamond: Account.AA, args: [], instance: undefined, events: undefined },
+  { tag: "Syndication", contract: "T2G_SyndicFacet",  diamond: Account.AA, args: [], instance: undefined, events: undefined } 
+  ];
+
+export const encodeInterfaces = {
+  T2G_PollenFacet: [
+    { function: "pollen", output: "pollenFeaturesABI" }, 
+    { function: "updatePollenRwa", _data: "TokenRWASpecificABI" }, 
+    { function: "updatePollenEntity", _data: "TokenEntitySpecificABI" }
+    ],
+  T2G_HoneyFacet: [{ function: "honey", output: "honeyFeaturesABI" }]
+  //T2G_PollenFacet: [{ function: "pollen", _data: "TokenEntitySpecific" }]
+  }
+  

@@ -1,10 +1,13 @@
 const hre = require("hardhat");
 import { readLastContractSetJSONfile, writeLastContractJSONfile, InteractWithContracts, writeLastDiamondJSONfile, readLastDiamondJSONfile, readLastFacetJSONfile, writeLastFacetJSONfile } from "./InteractWithContracts";
-import { Address } from "viem";
-import { colorOutput, regex, regex2, regex3, Account, Value, NULL_ADDRESS, displayAccountTable, rwRecord, rwType, listOfEnums, menuRecord, senderValue } from "./T2G_utils";
+import { AbiFunction, Address, getAbiItem } from "viem";
+import { colorOutput, regex, regex2, regex3, Account, Value, NULL_ADDRESS, displayAccountTable, rwRecord, rwType, menuRecord, accountIndex, enumOrValue } from "./T2G_utils";
 import { DeployContracts,  } from "./DeployContracts";
 import * as readline from 'readline';
-import { contractSet, diamondNames } from "./T2G_Data";
+import { contractSet, diamondNames, facetNames, smart, encodeInterfaces } from "./T2G_Data";
+import { listOfEnums, TokenEntitySpecific, dataDecodeABI } from "./T2G_Types";
+import { encodeAbiParameters, decodeAbiParameters } from 'viem'
+import { bigint } from "hardhat/internal/core/params/argumentTypes";
 
 /*******************************************************************************************\
 * Author: Franck Dervillez <franck.dervillez@trust2give.com>, Twitter/Github: @fdervillez
@@ -43,14 +46,18 @@ import { contractSet, diamondNames } from "./T2G_Data";
 type  menuState = {
     inputs?: "None" | "Function" | "Sender" | "Args" | "OK" = "None",
     deploy?: boolean,
+    object?: boolean,
     index?: number,
+    subIndex?: number,
     tag?: string,
     help?: string,
     level?: string,
     promptText?: string,
     preset?: string,
     sender?: Account,
-    item?: rwRecord
+    item?: rwRecord,
+    subItem?: Array<any>,
+    pad?: number
     }
 
 /// Function that fetch the new instances of each smart contract
@@ -63,8 +70,8 @@ export async function updateInstances( accountList: Address[] ) {
     for( const item of smart ) {
         if (level == undefined || level == "" || level == item.tag) {
             if ((item.contract != undefined) || (item.diamond != undefined)) {
-                    var root = (item.diamond == Account.AA) ? accountList[10] : (item.diamond == Account.AE) ? accountList[11] : undefined;
-                    item.instance = await hre.viem.getContractAt( item.contract, (root != undefined) ? root : accountList[10], { client: { wallet: wallets[senderValue(globalState.sender)] } } );
+                    var root = (item.diamond == Account.AA) ? accountList[10] : (item.diamond == Account.AB) ? accountList[11] : undefined;
+                    item.instance = await hre.viem.getContractAt( item.contract, (root != undefined) ? root : accountList[10], { client: { wallet: wallets[accountIndex(<Account>globalState.sender)] } } );
                     item.events = await publicClient.getContractEvents({ abi: item.instance.abi, address: (root != undefined) ? root : accountList[10], })
                     }
             }
@@ -78,63 +85,88 @@ function setState( newState: menuState, item?: rwRecord) {
 
 export var globalState : menuState = {};
 
-/// SMART OBJECT
-/// Array to append when a new contract is to be deployed along with the T2G_Data.ts file
-/// Please be aware not to use a tag value which is similar to other keyword used. 
-/// Nor similar to any function name of the facets to interact with. Make it unique.
-
-export var smart : menuRecord[] = [ 
-    { tag: "Deploy", contract: undefined, diamond: undefined, args: [], instance: undefined, events: undefined }, 
-    { tag: "EUR", contract: "EUR", diamond: Account.AE, args: [], instance: undefined, events: undefined },
-    { tag: "Honey", contract: "T2G_HoneyFacet", diamond: Account.AA, args: [], instance: undefined, events: undefined },
-    { tag: "Diamond", contract: "T2G_root", diamond: Account.AA, args: [], instance: undefined, events: undefined },
-    { tag: "Loupe", contract: "DiamondLoupeFacet", diamond: Account.AA, args: [], instance: undefined, events: undefined },
-    { tag: "Erc721", contract: "ERC721Facet", diamond: Account.AA, args: [], instance: undefined, events: undefined }, 
-    { tag: "Pool", contract: "T2G_PoolFacet", diamond: Account.AA, args: [], instance: undefined, events: undefined },
-    { tag: "Nektar", contract: "T2G_NektarFacet", diamond: Account.AA, args: [], instance: undefined, events: undefined }, 
-    { tag: "Pollen", contract: "T2G_PollenFacet", diamond: Account.AA, args: [], instance: undefined, events: undefined },
-    { tag: "Syndication", contract: "T2G_SyndicFacet",  diamond: Account.AA, args: [], instance: undefined, events: undefined } 
-    ];
-
+export var accountRefs: Object = {};
 
 async function main() {
 
-    colorOutput( "*".padEnd(60, "*"), "cyan");
-    colorOutput( ("*".concat(" ".padStart(5, " "), "Welcome to the Trust2Give dApp Interaction Menu" ).padEnd(59, " ")).concat("*"), "cyan");
-    colorOutput( ("*".concat(" ".padStart(7, " "), "This application allow to interact and test" ).padEnd(59, " ")).concat("*"), "cyan");
-    colorOutput( ("*".concat(" ".padStart(10, " "), "Author: franck.dervillez@trust2give.fr" ).padEnd(59, " ")).concat("*"), "cyan");
-    colorOutput( "*".padEnd(60, "*"), "cyan");
+    const width = 70;
+    var ABIformat = [];
+
+    colorOutput( "*".padEnd(width, "*"), "cyan");
+    colorOutput( ("*".concat(" ".padStart(5, " "), "Welcome to the Trust2Give dApp Interaction Menu" ).padEnd(width - 1, " ")).concat("*"), "cyan");
+    colorOutput( ("*".concat(" ".padStart(7, " "), "This application allow to interact and test" ).padEnd(width - 1, " ")).concat("*"), "cyan");
+    colorOutput( ("*".concat(" ".padStart(10, " "), "Author: franck.dervillez@trust2give.fr" ).padEnd(width - 1, " ")).concat("*"), "cyan");
+    colorOutput( "*".padEnd(width, "*"), "cyan");
 
     // We get the list of available accounts from hardhat testnet
     const accounts = await hre.ethers.getSigners();
-    const accountList: Address[] = accounts.map( (add, i : number ) => {    
-        return <Address>add.address;
-        }).toSpliced(10);
+
+    var rank = 0;
+    for (const wallet of accounts.toSpliced(10)) {
+        accountRefs = Object.assign( accountRefs, Object.fromEntries(new Map([ [`@${rank}`, { name: `Wallet ${rank}`, address: wallet.address} ] ])));
+        rank++;
+        }
+    
+    const addAccount = (ref: object, rank: number, name: string, addr: Address) : Object => {
+        const indice = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        return Object.assign( ref, Object.fromEntries(new Map([ [ `@${indice.substring(rank,rank + 1)}`, { name: name, address: addr } ] ])));
+        }
+
+    const account = ( rank: number ) : Address => {
+        const indice = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        type refKeys = keyof typeof accountRefs;
+        if (rank != undefined && rank > -1 && rank < 36) return accountRefs[<refKeys>`@${indice.substring(rank,rank + 1)}`].address;
+        return NULL_ADDRESS;
+        }
+    
+    const accountList = () : Address[] => {
+        var list: Address[] = [];
+        for (const item of Object.values(accountRefs)) {
+            list.push(item.address);
+            }
+        return list;
+        }
     
     // We complete the list with possible two other address: T2G_Root & EUR contracts
     // since they can be selected as Account.AA & Account.AE options
 
-    setState( { inputs: "None", deploy: false, index: 0, tag: "", help: "", level: "", promptText: "Smart Contract (<Help>, <Accounts> or <Contact Name>) >> ", preset: "" }, <rwRecord>{});
+    setState( { inputs: "None", 
+                deploy: false, 
+                object: false, 
+                index: 0, 
+                subIndex: 0,
+                tag: "", 
+                help: "", 
+                level: "", 
+                promptText: "Smart Contract (<Help>, <Accounts> or <Contact Name>) >> ", 
+                preset: "", 
+                pad: 10,
+                subItem: [] }, 
+                <rwRecord>{});
 
     await readLastDiamondJSONfile();
     await readLastContractSetJSONfile();
     
     // Get the "Get_T2G_XXXFacet()" readers for fetching real addresses.
-    accountList.push( diamondNames.Diamond.address );
-    accountList.push( contractSet[0].address );
-    accountList.push( await readLastFacetJSONfile( "T2G_PoolFacet", accountList[10]) );
-    accountList.push( await readLastFacetJSONfile( "T2G_HoneyFacet", accountList[10]) );
-    accountList.push( await readLastFacetJSONfile( "T2G_NektarFacet", accountList[10]) );
-    accountList.push( await readLastFacetJSONfile( "T2G_PollenFacet", accountList[10]) );
+    accountRefs = addAccount( accountRefs, 10, diamondNames.Diamond.name, diamondNames.Diamond.address );
+    accountRefs = addAccount( accountRefs, 11, contractSet[0].name, contractSet[0].address );
 
-    await updateInstances( accountList );    
-  
-    colorOutput( ("*".concat(" ".padStart(2, " "), `${Account["AA"]}: `.concat(accountList[10]), " T2G Root" ).padEnd(59, " ")).concat("*"), "cyan");
-    colorOutput( ("*".concat(" ".padStart(2, " "), `${Account["AE"]}: `.concat(accountList[11]), " EUR SC" ).padEnd(59, " ")).concat("*"), "cyan");
-    colorOutput( ("*".concat(" ".padStart(2, " "), `${Account["AF"]}: `.concat(accountList[12]), " PoolSC" ).padEnd(59, " ")).concat("*"), "cyan");
-    colorOutput( ("*".concat(" ".padStart(2, " "), `${Account["AH"]}: `.concat(accountList[13]), " HoneySC" ).padEnd(59, " ")).concat("*"), "cyan");
-    colorOutput( ("*".concat(" ".padStart(2, " "), `${Account["AN"]}: `.concat(accountList[14]), " NektarSC" ).padEnd(59, " ")).concat("*"), "cyan");
-    colorOutput( ("*".concat(" ".padStart(2, " "), `${Account["AP"]}: `.concat(accountList[15]), " PollenSC" ).padEnd(59, " ")).concat("*"), "cyan");
+    colorOutput( ("*".concat(" ".padStart(2, " "), `${Account["AA"]}: `.concat(account(10)), " T2G Root" ).padEnd(width - 1, " ")).concat("*"), "cyan");
+    colorOutput( ("*".concat(" ".padStart(2, " "), `${Account["AB"]}: `.concat(account(11)), " EUR SC" ).padEnd(width - 1, " ")).concat("*"), "cyan");
+
+    rank = 12;
+    type AccountKeys = keyof typeof Account;
+    const indice = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    for (const facet of facetNames) {
+        if (smart.findIndex((item) => item.contract == facet.name) > -1) {
+            const newAddress = await readLastFacetJSONfile( facet.name, account(10)); 
+            accountRefs = addAccount( accountRefs, rank, facet.name, newAddress );
+            colorOutput( ("*".concat(" ".padStart(2, " "), `${Account[<AccountKeys>`A${indice.substring(rank,rank + 1)}`]}: `.concat(account(rank)), " ", facet.name ).padEnd(width - 1, " ")).concat("*"), "cyan");
+            rank++;
+            }
+        }
+
+    await updateInstances( accountList() );    
     
     const rl : readline.Interface = readline.createInterface({
         input: process.stdin,
@@ -154,20 +186,16 @@ async function main() {
         rl.on('line', async (line) => {
         var answer : string = line.trim();
         
-        if ((globalState.inputs == "None") && (smart.some((el: menuRecord) => el.tag == answer))) {            
-            // Check whether Deploy option is selected or not
-            setState( { deploy: <boolean>(answer == smart[0].tag ) });
-            setState( { level: !globalState.deploy ? answer : "", inputs: globalState.deploy ? "None" : "Function" });
-            
-            if (globalState.deploy) setState( { tag: "" }, <rwRecord>{});
-            else {
-                record = <menuRecord>smart.find((el: menuRecord ) => el.tag == globalState.level);
-                Choices = record.instance.abi.filter( (item) => (item.type == "function")).map((item) => item.name);
-                }            
+        if ((globalState.inputs == "None") && (answer == "Deploy")) setState( { deploy: true, object: false, index: 0, subIndex: 0, level: "", inputs: "None", tag: "", subItem: [] }, <rwRecord>{});
+        else if ((globalState.inputs == "None") && (smart.some((el: menuRecord) => el.tag == answer))) {            
+            setState( { deploy: false, object: false, level: answer, inputs: "Function" });            
+            record = <menuRecord>smart.find((el: menuRecord ) => el.tag == globalState.level);
+            Choices = record.instance.abi.filter( (item) => (item.type == "function")).map((item) => item.name);
             }
         else if ((globalState.inputs == "Function") && (Choices.some((el : string) => el == answer))) {      
             const rwRec = (name : string) : rwRecord => {
                 const fct = record.instance.abi.filter((item) => (item.type == "function" && item.name == answer))[0];
+                
                 return <rwRecord>{ 
                     rwType: (fct.stateMutability == "view" || fct.stateMutability == "pure") ? rwType.READ : rwType.WRITE,
                     contract: record.contract,
@@ -176,11 +204,11 @@ async function main() {
                     values: [],
                     outcome: fct.outputs };
                     }             
-            setState( { inputs: "Sender", tag: answer }, rwRec(answer));
+            setState( { inputs: "Sender", object: false, tag: answer, index: 0, subIndex: 0 }, rwRec(answer));
             }
-        else if (answer == "Accounts")  displayAccountTable(accountList);
+        else if (answer == "Accounts")  displayAccountTable(accountRefs, width);
         else if (answer == "State")  console.log(globalState);
-        else if (answer == "back") setState( { inputs: "None", tag: "", level: "" }, <rwRecord>{});
+        else if (answer == "back") setState( { inputs: "None", object: false, tag: "", level: "" }, <rwRecord>{});
         else if (answer == "Help") {
             if (globalState.level == "") setState( { help: "Avalaible Smart Contract Keywords [".concat( smart.map( (el) => el.tag ).join("| "), "]\n") });
             else setState( { help: "Avalaible Function Keywords [".concat( Choices.join("| "), "]\n") });
@@ -189,37 +217,35 @@ async function main() {
         
         // In the case when Deploy is selected
         if (globalState.deploy) {
-            if (answer == "back") setState( { inputs: "None", deploy: false, tag: "", level: "" }, <rwRecord>{});
+            if (answer == "back") setState( { inputs: "None", deploy: false, object: false, tag: "", level: "" }, <rwRecord>{});
             else if (answer == "Help") {
                 setState( { help: "Command template : <Contract> <Action> <List of Smart Contract> \n where Contract = {Facet/Contract/Diamond} action = {Add/Replace/Remove} {[contractName ContractName...]} ]\n" });
                 colorOutput(<string>globalState.help, "yellow");
                 }
             else {
-                await DeployContracts( accountList, answer, smart );
+                await DeployContracts( accountList(), answer, smart );
 
-                accountList[10] = diamondNames.Diamond.address;
-                accountList[11] = contractSet[0].address;
-                /*accountList[12] = await readLastFacetJSONfile( "T2G_PoolFacet", accountList[10]);
-                accountList[13] = await readLastFacetJSONfile( "T2G_HoneyFacet", accountList[10]);
-                accountList[14] = await readLastFacetJSONfile( "T2G_NektarFacet", accountList[10]);
-                accountList[15] = await readLastFacetJSONfile( "T2G_PollenFacet", accountList[10]);
-            
-                await updateInstances( accountList );   */
+                accountRefs = addAccount( accountRefs, 10, diamondNames.Diamond.name, diamondNames.Diamond.address );
+                accountRefs = addAccount( accountRefs, 11, contractSet[0].name, contractSet[0].address );
+                        
+                //await updateInstances( accountList() );
                 }
             }
         // In the case when contract are selected. 
         // Checks if contract and function are set up. If so, key in the values for sender and inputs
         else {
+            type refKeys = keyof typeof accountRefs;
+
             switch (globalState.inputs) {
                 case "Sender": {
-                    if (!Object.values(Account).includes(<Account>answer)) break;
+                    if (!Object.keys(accountRefs).includes(answer)) break;
                     else {
                         if (globalState.sender != <Account>answer) {
                             globalState.sender = <Account>answer;
-                            await updateInstances( accountList );  
+                            await updateInstances( accountList() );  
                             }
 
-                        setState( { inputs: (globalState.item.args.length > 0) ? "Args" : "OK", index: 0 });
+                        setState( { inputs: (globalState.item.args.length > 0) ? "Args" : "OK", object: false, index: 0, subIndex: 0, subItem: [] });
                         answer = "";
                         }
                     break;
@@ -228,42 +254,45 @@ async function main() {
                     try {
                         var index: number = <number>globalState.index;
                         var item: rwRecord = globalState.item;
-                        console.log( item.args[index] )
                         switch (item.args[index].type) {
                             case "address": { 
                                 if (answer.match(regex)) item.values[index++] = answer;
-                                else if (Object.values(Account).includes(<Account>answer)) {
-                                    if (<Account>answer == Account.AA) item.values[index++] = accountList[10];
-                                    else if (<Account>answer == Account.AE) item.values[index++] = accountList[11];
-                                    else if (<Account>answer == Account.AF) item.values[index++] = accountList[12];
-                                    else if (<Account>answer == Account.AH) item.values[index++] = accountList[13];
-                                    else if (<Account>answer == Account.AN) item.values[index++] = accountList[14];
-                                    else if (<Account>answer == Account.AP) item.values[index++] = accountList[15];
-                                    else item.values[index++] = accountList[Number(answer.substring(1))];
+                                else if (Object.keys(accountRefs).includes(answer)) {
+                                    item.values[index++] = <{name: string, address: Address }>accountRefs[<refKeys>answer].address;
                                     }
                                 break;
                                 } 
                             case "string": { item.values[index++] = String(answer); break; }                  
                             case "uint8": { 
-                                const parse = <string>item.args[index].internalType.split(' ');
-                                if (parse[0] == "enum") {
-                                    const parseEnum = parse[1].split('.');
-                                    const val : string = (parseEnum.length > 1) ? parseEnum[1] : parseEnum[0];
-                                    if (!Number.isNaN(answer) && Number(answer) < 2**8) item.values[index++] = Number(answer); 
-                                    else {
-                                        const rank = (<string[]>listOfEnums[val]).findIndex((item) => item == answer);
-                                        if (rank > -1 ) item.values[index++] = Number(rank);
-                                        }
-                                    }
-                                else if (parse[0] == "uint8") {
-                                    if (!Number.isNaN(answer) && Number(answer) < 2**8)  {
-                                        item.values[index++] = Number(answer); 
-                                        }
-                                    }                                      
+                                const val = enumOrValue( item.args, index, answer );
+                                if (val != undefined) item.values[index++] = val;
                                 break; 
                                 }                  
                             case "uint256": { item.values[index++] = BigInt(answer); break; }                  
-                            case "bytes": { item.values[index++] = answer; break; }                  
+                            case "bytes": { 
+                                // we are in the case when an encoded complex struct is to be passed
+                                // It may require additionnal sub-inputs to get
+                                if (globalState.object) {
+                                    var subValue = undefined;
+                                    switch (ABIformat[0].components[<number>globalState.subIndex].type) {
+                                        case "uint8": { subValue = enumOrValue( ABIformat[0].components, <number>globalState.subIndex, answer ); break; }
+                                        case "string": { subValue = answer; break; }
+                                        case "string[]": { subValue = answer.split(";"); break; }
+                                        case "uint256": { subValue = BigInt(answer); break; }
+                                        default:
+                                        }
+                                    if (subValue != undefined) {
+                                        globalState.subItem?.push(subValue);
+                                        setState( { subIndex: <number>globalState.subIndex + 1 });
+                                        }
+                                    }
+                                if (globalState.subIndex >= ABIformat[0].components.length) {
+                                    const encodedData = encodeAbiParameters( ABIformat, [globalState.subItem] );
+                                    item.values[index++] = encodedData; 
+                                    setState( { object: false, subIndex: 0, subItem: [] });
+                                    }
+                                break; 
+                                }                  
                             case "bytes4": { 
                                 if (answer.match(regex3)) item.values[index++] = answer;
                                 break; 
@@ -291,7 +320,7 @@ async function main() {
                 }
             // Checks whether input conditions are met or not. If so then call up smart contract function
             if (globalState.inputs == "OK") {
-                await InteractWithContracts( <rwRecord>globalState.item, <Account>globalState.sender, accountList, [ record, smart[1] ] );
+                await InteractWithContracts( <rwRecord>globalState.item, <Account>globalState.sender, accountRefs, accountList(), [ record, smart[1] ], <number>globalState.pad );
                 setState( { inputs: "Function", tag: "" }, <rwRecord>{});
                 }
             }
@@ -314,9 +343,31 @@ async function main() {
             }
         case "Args": {
             const index = <number>globalState.index;
-            if (index < globalState.item.args.length)
-                var args = globalState.item.args[index];
-                setState({ promptText: "Arg".concat( ` [${index}] - ${args.name} [${args.type}] `), preset: "@" });
+            const subIndex = <number>globalState.subIndex;
+            if (index < (<rwRecord>globalState.item).args.length) {
+                var argPointer = (<rwRecord>globalState.item).args[index];
+                // Check if we are requesting simple type inputs or (bytes memory _data) -like input
+                if (argPointer.type == "bytes" && argPointer.name == "_data") {
+                    if (subIndex == 0) {
+                        if ((<rwRecord>globalState.item).contract in encodeInterfaces) {
+                            type encKeys = keyof typeof encodeInterfaces;
+                            const encodeInput = encodeInterfaces[<encKeys>(<rwRecord>globalState.item).contract].find((item) => item.function == (<rwRecord>globalState.item).function);
+                            // We check that the related function is concerned or not by the abi.encode
+                            if (encodeInput != undefined) {
+                                if ("_data" in encodeInput) {
+                                    if (encodeInput._data in dataDecodeABI) {
+                                        type decKeys = keyof typeof dataDecodeABI;
+                                        ABIformat =  dataDecodeABI[<decKeys>encodeInput._data];
+                                        setState( { object: true, subItem: [] });
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    setState({ promptText: "Arg".concat( ` [${index} / ${subIndex}] - ${argPointer.name} [${ABIformat[0].name} ${ABIformat[0].components[subIndex].name}]`), preset: "@" });
+                    } 
+                else setState({ promptText: "Arg".concat( ` [${index}] - ${argPointer.name} [${argPointer.type}] `), preset: "@" });
+               }
             break;                
             }
         default:

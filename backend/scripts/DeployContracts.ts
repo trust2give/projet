@@ -100,9 +100,23 @@ try {
         for (const facet : menuRecord of facetsToChange) {
           //console.log("Facet found", facet.contract)
 
-          const constructor : boolean = (facet.instance.abi.filter((item) => item.type == "constructor").map((item) => item.inputs).length > 0)
 
-          cut = await deployFacets( diamondNames.Diamond.address, <string>facet.contract, <FacetCutAction>choice, constructor, cut);
+          var inputArray = [];
+          const constructor = (facet.instance.abi.filter((item) => item.type == "constructor"))
+          if (constructor.length > 0)
+            // the constructor of the smart contract requires inputs
+            inputArray = ("inputs" in constructor[0]) ? constructor[0].inputs.map((item: Object) => {
+                // We fill in the input with the required address
+                if (item.name == "_root" && item.type == "address") {
+                  return diamondNames.Diamond.address;
+                  }
+                else if (item.name == "_stableCoin" && item.type == "address") {
+                  return contractSet[0].address ;
+                  }
+                return;
+                }) : [];
+
+          cut = await deployFacets( diamondNames.Diamond.address, <string>facet.contract, <FacetCutAction>choice, inputArray, cut);
           writeList[facet.contract] = (<cutRecord>cut.slice().pop()).facetAddress;
           //console.log(writeList, cut, constructor)
           }
