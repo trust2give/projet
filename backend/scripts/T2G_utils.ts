@@ -164,6 +164,16 @@ export function parseAndDisplayInputAndOutputs( pointer : Array<any>, values : A
                 else if (["False", "false", "Faux", "faux", "0", "-1"].includes(arg)) return "False";
                 return pointer[i].name.concat( ": ", "<Wrong>".concat(arg));
                 }
+            case "string[]": {
+                return arg.reduce( ( acc, cur) => {
+                    return acc.concat(cur, ` |`);
+                    }, "[" );
+                }    
+            case "uint256[]": {
+                return arg.reduce( ( acc, cur) => {
+                    return acc.concat(`${cur} |`);
+                    }, "[" );
+                }
             case "tuple[]": {
                 return arg.reduce( ( acc, cur) => {
                     return acc.concat(stringify(cur), " |\n");
@@ -172,7 +182,7 @@ export function parseAndDisplayInputAndOutputs( pointer : Array<any>, values : A
         default:
             return pointer[i].name.concat( ": ", arg);            
         }   
-    }).join("|\n");
+    }).join("]\n");
 
     return dispArgs;
     }

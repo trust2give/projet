@@ -75,7 +75,8 @@ try {
           initFunc = deployed[2];
           // We need to write down the new address in a json file
           colorOutput( "Diamond Root @[".concat(deployed[0], "] CutFacet @[", deployed[1], "] Init @[", deployed[3]), "green");
-          }
+          await writeLastFacetJSONfile( {}, diamondNames.Diamond.address );
+        }
       case "Loupe": {
           cut = await deployLoupeDiamond( diamondNames, <FacetCutAction>choice, cut);
 
@@ -84,7 +85,7 @@ try {
           diamondNames.DiamondLoupeFacet.address = cut[cut.length - 1].facetAddress;
           colorOutput( "Diamond Root @[".concat(diamondNames.DiamondLoupeFacet.address, "]"), "green");
           await writeLastDiamondJSONfile();
-          if (commands[0] == "Loupe") break;
+          break;
           }
       case "Facet": {
         // In this case, the changes to facet is directly keyed in by the user and is not the result of Diamond Changes
@@ -92,14 +93,13 @@ try {
         if (!String(diamondNames.Diamond.address).match(regex)) 
           throw "Trying to manage facets without Diamond deployed yet :: no root address found!";
 
-        const facetsToChange : menuRecord[] = (commands[0] == "Facet") ? facetList.filter((item) => commands.includes(<string>item.contract)) : facetList;
+        const facetsToChange : menuRecord[] = (commands[0] == "Facet") ? facetList.filter((item) => commands.includes(<string>item.contract)) : [];
         //console.log(facetsToChange, facetList, smart)
 
         var writeList : Object = {};
 
         for (const facet : menuRecord of facetsToChange) {
           //console.log("Facet found", facet.contract)
-
 
           var inputArray = [];
           const constructor = (facet.instance.abi.filter((item) => item.type == "constructor"))
@@ -118,7 +118,6 @@ try {
 
           cut = await deployFacets( diamondNames.Diamond.address, <string>facet.contract, <FacetCutAction>choice, inputArray, cut);
           writeList[facet.contract] = (<cutRecord>cut.slice().pop()).facetAddress;
-          //console.log(writeList, cut, constructor)
           }
         await deployWithDiamondCut( diamondNames.Diamond.address, cut, initFunc, initAddress );      
 

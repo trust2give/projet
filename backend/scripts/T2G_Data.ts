@@ -69,6 +69,7 @@ export var smart : menuRecord[] = [
 export const encodeInterfaces = {
   T2G_PollenFacet: [
     { function: "pollen", output: "pollenFeaturesABI" }, 
+    { function: "getMyPollenList", output: "pollenListABI" }, 
     { function: "updatePollenRwa", _data: "TokenRWASpecificABI" }, 
     { function: "updatePollenEntity", _data: "TokenEntitySpecificABI" }
     ],

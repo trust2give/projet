@@ -56,7 +56,10 @@ export async function readLastFacetJSONfile( facetName: string, diamond: Address
 export async function writeLastFacetJSONfile( facets: Object, diamond: Address ) {
     const jsonString = fs.readFileSync('./scripts/T2G_Facets.json', 'utf-8');
     const FacetRecord : facetRecord = JSON.parse(jsonString);
-    if (FacetRecord.diamond != diamond) throw("Bad Record Name for Diamond Address recovery :: ".concat(FacetRecord.diamond));
+    if (FacetRecord.diamond != diamond) {
+        if (Object.keys(facets).length == 0) FacetRecord.diamond = diamond;
+        else throw("Bad Record Name for Diamond Address recovery :: ".concat(FacetRecord.diamond));
+        }
 
     for ( const facet of Object.keys(facets)) {
         FacetRecord.facets[facet] = facets[facet];
@@ -154,16 +157,29 @@ export async function InteractWithContracts(rwItem : rwRecord, from: Account, ac
                 // We check that the related function is concerned or not by the abi.encode
                 if (decodeOutput != undefined) {
                     if ("output" in decodeOutput) {
-                        // encode is applied to structs.
-                        // We check that the abi definition of the struct is present.
+                        // encode is applied to structs and outcomes
+                        // We check that the abi definition of the struct or outcome is present.
                         if (decodeOutput.output in dataDecodeABI) {
+                            // to avoid warning in typescript code
                             type decKeys = keyof typeof dataDecodeABI;
+                            // We get the abi format of the outcome or struct
                             const ABIformat =  dataDecodeABI[<decKeys>decodeOutput.output];
                             const values : Array<any> = decodeAbiParameters( ABIformat, result[0] );
-                            beacon = "\n[".concat( Object.entries(values[0]).map((item) => {
-                                const abi = ABIformat[0].components.find((el) => el.name == item[0])
-                                return "\n".concat(parseAndDisplayInputAndOutputs( abi.components, Object.values(item[1]), accountRefs, accountList, pad ));
-                                }).join("|"), "\n]");
+                            // values is a an array of the outcomes
+                            
+                            beacon = values.map((val) => {
+                                if (Array.isArray(val)) {
+                                    return "\n".concat(parseAndDisplayInputAndOutputs( ABIformat, [val], accountRefs, accountList, pad ));
+                                    }
+                                else if (typeof val == "object") {
+                                    return "\n[".concat( Object.entries(val).map((item) => {
+                                        if ("components" in ABIformat[0]) {
+                                            const abi = ABIformat[0].components.find((el) => el.name == item[0])
+                                            return "\n".concat(parseAndDisplayInputAndOutputs( abi.components, Object.values(item[1]), accountRefs, accountList, pad ));
+                                        }
+                                    }).join("|"), "\n]");
+                                }
+                            }).join("|"), "\n]";
                             decodeFlag = true;
                             }
                         }
@@ -180,7 +196,7 @@ export async function InteractWithContracts(rwItem : rwRecord, from: Account, ac
         colorOutput(log);
 
     } catch (error) {
-        console.log(error)
+        //console.log(error)
         const errorLabel : Array<any> = Object.entries(<errorFrame>error);
         const errorDisplay : string = errorLabel.reduce( (last, item) => {
             switch (item[0]) {

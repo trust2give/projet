@@ -64,6 +64,9 @@ library LibERC721 {
         }
 
     struct TokenRWASpecific {
+        uint256 total;
+        T2GTypes.sizeUnit unit;     // Represents the scale / unit of the quantity if stated as a weight
+        bytes32 id;
         T2GTypes.GainSource source;
         T2GTypes.GainScope scope;
         T2GTypes.GainType gain; 
