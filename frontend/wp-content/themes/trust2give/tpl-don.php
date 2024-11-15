@@ -6,10 +6,10 @@ Template Name: Donation Page
 get_header();
 ?>
 
-<div class="container mx-auto px-4 py-8">
+<div class="container mx-auto">
     <!-- SVG Image -->
-    <div class="w-full flex justify-center mb-8">
-        <img src="<?php bloginfo('template_url'); ?>/assets/img/mains.svg" alt="Mains" class="w-full max-w-4xl" width="400">
+    <div class="w-full flex justify-center mb-8 bg-gradient-to-b from-indigo-300">
+        <img src="<?php bloginfo('template_url'); ?>/assets/img/mains.svg" alt="Mains" class="w-1/3 max-w-4xl">
     </div>
 
     <!-- Page Title -->
