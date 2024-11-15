@@ -51,10 +51,14 @@ library LibERC721 {
         uint256 value;              // Represent the quantity of a single token  
         T2GTypes.sizeUnit size;     // Represents the scale / unit of the quantity if stated as a weight
         T2GTypes.CoinUnit unit;     // Represents the scale / unit of the value is stated as a currency
+        bytes32 owner;              // Represents the Id of the related entity / fundez for token
+        bytes32 asset;              // Represents the Id of the related asset for token
         }
 
     struct TokenFundSpecific {
-        string[] hash;                  // hash of recorded transactions of stablecoin transfers
+        uint256 value;              // Represent the quantity of a single token  
+        T2GTypes.CoinUnit unit;     // Represents the scale / unit of the value is stated as a currency
+        bytes32 hash0;                  // hash of recorded transactions of stablecoin transfers
         uint8 rate;                     // Percentage value (optional) for Honey applicable to amount dedicated to Gift versus Project Funding
         }
 
@@ -64,18 +68,22 @@ library LibERC721 {
         }
 
     struct TokenRWASpecific {
-        uint256 total;
-        T2GTypes.sizeUnit unit;     // Represents the scale / unit of the quantity if stated as a weight
-        bytes32 id;
+        Statusoftoken state;
+        uint256 value;
+        T2GTypes.sizeUnit size;     // Represents the scale / unit of the quantity if stated as a weight
         T2GTypes.GainSource source;
         T2GTypes.GainScope scope;
         T2GTypes.GainType gain; 
-        string[] uri;          // Uri links to BEGES documents that certify the value for Pollen
+        bytes32 report1;          // Uri links to BEGES documents that certify the value for Pollen
+        bytes32 report2;          // Uri links to BEGES documents that certify the value for Pollen
         }
 
     struct TokenEntitySpecific {
+        Statusoftoken state;
         string name;
         string uid;
+        string email;
+        string postal;
         T2GTypes.EntityType entity;
         T2GTypes.BusinessSector sector;
         T2GTypes.UnitType unitType;
@@ -111,11 +119,11 @@ library LibERC721 {
         mapping(uint256 tokenId => uint256) allTokensIndex;
 
         // Token structures (common parts and specific ones)
-        mapping(uint256 tokenId => TokenStruct) token;                      // common to all tokens
-        mapping(uint256 tokenId => TokenFundSpecific) fund;                 // specific to fund tokens (Honey)
-        mapping(uint256 tokenId => TokenRewardSpecific) reward;             // specific to reward tokens (Nektar)
-        mapping(uint256 tokenId => TokenEntitySpecific) entity;             // specific to rwa tokens (pollen)
-        mapping(uint256 tokenId => TokenRWASpecific) rwa;                   // specific to rwa tokens (pollen)
+        mapping(uint256 tokenId => TokenStruct) token;                     // common to all tokens
+        mapping(bytes32 fundId => TokenFundSpecific) fund;                 // specific to fund tokens (Honey)
+        mapping(uint256 rewardId => TokenRewardSpecific) reward;           // specific to reward tokens (Nektar)
+        mapping(bytes32 entityId => TokenEntitySpecific) entity;           // specific to rwa tokens (pollen)
+        mapping(bytes32 rwaId => TokenRWASpecific) rwa;                    // specific to rwa tokens (pollen)
         mapping(uint256 tokenId => mapping (uint256 => bool)) whitelist;
         mapping(uint256 tokenId => mapping (uint256 => bool)) blacklist;
 
@@ -187,24 +195,24 @@ library LibERC721 {
      * @dev Returns the Fund specific details of the `tokenId`. Does NOT revert if token doesn't exist
      * NEW: T2G specific
      */
-    function _tokenFundFeatures(uint256 tokenId) internal view returns (TokenFundSpecific memory) {
-        return layout().fund[tokenId];
+    function _tokenFundFeatures(bytes32 fundId) internal view returns (TokenFundSpecific memory) {
+        return layout().fund[fundId];
         }
 
     /**
      * @dev Returns the Rwa specific details of the `tokenId`. Does NOT revert if token doesn't exist
      * NEW: T2G specific
      */
-    function _tokenRwaFeatures(uint256 tokenId) internal view returns (TokenRWASpecific memory) {
-        return layout().rwa[tokenId];
+    function _tokenRwaFeatures(bytes32 rwaId) internal view returns (TokenRWASpecific memory) {
+        return layout().rwa[rwaId];
         }
 
     /**
      * @dev Returns the entity specific details of the `tokenId`. Does NOT revert if token doesn't exist
      * NEW: T2G specific
      */
-    function _tokenEntityFeatures(uint256 tokenId) internal view returns (TokenEntitySpecific memory) {
-        return layout().entity[tokenId];
+    function _tokenEntityFeatures(bytes32 entityId) internal view returns (TokenEntitySpecific memory) {
+        return layout().entity[entityId];
         }
 
     /**
@@ -213,6 +221,25 @@ library LibERC721 {
     function _getApproved(uint256 tokenId) internal view returns (address) {
         return layout().tokenApprovals[tokenId];
     }
+
+    /**
+     * @dev Returns the list of pollen Ids that are related to a specific _entity Id
+     */
+    function _getPollenEntityIds( bytes32 _entity ) internal view returns (uint256[] memory) {
+        uint256[] memory _list;
+
+        return _list;
+        }
+
+    /**
+     * @dev Returns the list of pollen Ids that are related to a specific _gain Id
+     */
+    function _getPollenGainIds( bytes32 _rwa ) internal view returns (uint256[] memory) {
+        uint256[] memory _list;
+
+        return _list;
+        }
+
 
     /**
      * @dev Returns whether `spender` is allowed to manage `owner`'s tokens, or `tokenId` in

@@ -43,6 +43,7 @@ contract T2G_HoneyFacet {
     error HoneyInvalidStatus(uint256 tokenId);
     error HoneyInvalidValueUnit(uint256 tokenId, T2GTypes.CoinUnit unit);
     error HoneyInvalidBalance(address owner, uint256 balance);
+    error InvalidHashTransaction();
 
     event HoneySetWhiteList(uint256 tokenId, T2GTypes.BusinessSector _sector);
     event HoneySetBlackList(uint256 tokenId, T2GTypes.BusinessSector _sector);
@@ -51,7 +52,7 @@ contract T2G_HoneyFacet {
     event HoneyRootAddressSet( address root );
     event HoneyReview( address owner );
     event HoneyCreated( address owner, uint256 tokenId );
-
+    event FundCreated(bytes32 fundId );
     event HoneyTrace( address _root, address _honey, address _sc, uint256 _token, address _owner );
 
     struct honeyFeatures {
@@ -125,6 +126,27 @@ contract T2G_HoneyFacet {
         return DiamondLoupeFacet(LibERC721.layout().root).facetAddress(bytes4(abi.encodeWithSignature("beacon_HoneyFacet()")));
         }
 
+     /// @notice Update features relates to the funding for a possible honey
+     /// @param _data the data for the new created fund
+     /// @dev MODIFIER : checks first that msg.sender is T2G owner. Otherwise revert EntityInvalidSender error
+     /// @dev this function act as a setter and overwrites an existing content with new values
+     /// @dev the Id is worked out from the trasaction hash of the stablecoin transaction 
+     /// @return the Id of the created fund
+    
+    function setFund( bytes memory _data ) external isT2GOwner returns (bytes32) {
+        LibERC721.TokenFundSpecific memory result = abi.decode(_data, (LibERC721.TokenFundSpecific));
+        
+        if ((result.hash0.length == 0) || (result.hash0 == 0x0)) revert InvalidHashTransaction();
+
+        LibERC721.layout().fund[result.hash0].hash0 = result.hash0;
+        LibERC721.layout().fund[result.hash0].value = result.value;
+        LibERC721.layout().fund[result.hash0].unit = result.unit;
+        LibERC721.layout().fund[result.hash0].rate = result.rate;
+                
+        emit FundCreated( result.hash0 );
+        return result.hash0;
+        }
+
      /// @notice returns the features of a specific Honey, given its tokenId 
      /// @param _tokenId token Id
      /// @dev MODIFIER : checks first that msg.sender is either the T2G owner or the token owner. Otherwise revert HoneyInvalidOwner error
@@ -140,7 +162,7 @@ contract T2G_HoneyFacet {
         if (!LibOwners._isAllowed(msg.sender, T2GTypes.R_VIEWS )) revert HoneyInvalidOwner(msg.sender);
 
         LibERC721.TokenStruct memory data = LibERC721._tokenCommonFeatures(_tokenId);
-        LibERC721.TokenFundSpecific memory fund = LibERC721._tokenFundFeatures(_tokenId);
+        LibERC721.TokenFundSpecific memory fund = LibERC721._tokenFundFeatures(data.asset);
         honeyFeatures memory _result = honeyFeatures( data, fund );
         return (abi.encode(_result));
         }
@@ -153,17 +175,14 @@ contract T2G_HoneyFacet {
      /// @notice YTBD: Until approval, the Honey Token can be burned and canceled.
      /// @notice YTBD: Once status is active, the Honey Token can no longer be burned.T2G Owner can transfer the amount from This contract to the pool.
      /// @param _to address of the new Honey token owner
-     /// @param _value the value of the amount given
-     /// @param _unit the unit of the amount given
-     /// @param _rate the percentage of the amount dedicated to gift
-     /// @param _tx the transaction Hash of the transaction of value sent by _to address
+     /// @param _entity bytes32 Id of entity bound to the Honey
+     /// @param _fund the transaction Hash of the transaction of value sent by _to address
      /// @dev MODIFIER : checks first that msg.sender is T2G owner. Otherwise revert HoneyInvalidSender error
      /// @dev MODIFIER : checks then that future owner of new token has already signed up to the T2G app and is not banned. Otherwise revert HoneyInvalidOwner error
      /// @dev checks then that tokenId does not refer to no already existing token (of any type).
      /// @dev once cheks are OK and Honey token minted, then sets the approval flags that allow either the owner or the T2G owner to manage the token
 
-    function mintHoney(address _to, uint256 _value, T2GTypes.CoinUnit _unit, uint8 _rate, string memory _tx) 
-        external isT2GOwner {
+    function mintHoney(address _to, bytes32 _entity, bytes32 _fund) external isT2GOwner returns (uint256 _id) {
         LibERC721.TokenStruct memory _data;
 
         if (!LibOwners._isAllowed(_to, T2GTypes.R_GIVES)) revert HoneyInvalidOwner(_to);
@@ -177,7 +196,9 @@ contract T2G_HoneyFacet {
         EUR _eurSC = EUR(LibOwners.syndication().scAddress);
         uint256 _balance = _eurSC.balanceOf(LibERC721.layout().root);
 
-        if (_balance < _value) revert HoneyInvalidBalance( _to, _balance);
+        LibERC721.TokenFundSpecific memory fund = LibERC721._tokenFundFeatures(_fund);
+
+        if (_balance < fund.value) revert HoneyInvalidBalance( _to, _balance);
 
         try _eurSC.approve(_honey, _balance) returns (bool) {
 
@@ -187,37 +208,22 @@ contract T2G_HoneyFacet {
             _data.state = LibERC721.Statusoftoken.draft;
             _data.created = block.timestamp;
             _data.updated = _data.created;
-            _data.value = _value;
-            _data.unit = _unit;
+            _data.value = fund.value;
+            _data.unit = fund.unit;
+            _data.owner = _entity;
+            _data.asset = _fund;
 
             LibERC721._safeMint(_to, _tokenId, abi.encode(_data));
             LibERC721._approve(msg.sender, _tokenId, _to);
             LibERC721._setApprovalForAll(_to, msg.sender, true);
 
-            LibERC721.layout().fund[_tokenId].hash.push(_tx);
-            LibERC721.layout().fund[_tokenId].rate = _rate;
-
             emit HoneyCreated( _to, _tokenId );
-
+            return _tokenId;
             } catch Error(string memory reason) {   // catch failing revert() and require()
                 revert HoneyFailedApproval( _tokenId, _to, _honey, reason );
             } catch (bytes memory reason) {         // catch failing assert()
                 revert HoneyFailedApproval( _tokenId, _to, _honey, string(reason) );
             }
-        }
-
-     /// @notice Append a new Tx Hash to a Honey Token
-     /// @param _owner address of the new Honey token owner
-     /// @param _tokenId the Id gien to the new Honey Token
-     /// @param _tx the list of Tx Hashs
-     /// @dev MODIFIER : checks first that msg.sender is T2G owner. Otherwise revert HoneyInvalidSender error
-     /// @dev Checks then that future owner of new token has already signed up to the T2G app and is known. Otherwise revert HoneyInvalidOwner error
-     /// @dev YTBD checks then that tokenId does not refer to no already existing token (of any type). Otherwise revert HoneyInvalidTokenId error
-     /// @dev YTBD once cheks are OK and Honey token minted, then sets the approval flags that allow either the owner or the T2G owner to manage the token
-
-    function addHoneyTxHash( address _owner, uint256 _tokenId, string memory _tx ) external isT2GOwner {
-        if (!LibOwners._isAllowed(_owner, T2GTypes.R_GIVES )) revert HoneyInvalidOwner(_owner);
-        LibERC721.layout().fund[_tokenId].hash.push(_tx);
         }
 
      /// @notice Updates either the white or the black list related to a specific Honey Token. Emits a HoneySetBlackList event in case of success
