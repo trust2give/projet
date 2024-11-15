@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="0 0 100 100">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: url(#linear-gradient);
+      }
+
+      .cls-1, .cls-2, .cls-3, .cls-4 {
+        stroke-width: 0px;
+      }
+
+      .cls-2 {
+        fill: #000;
+      }
+
+      .cls-3 {
+        fill: url(#linear-gradient-2);
+      }
+
+      .cls-4 {
+        fill: url(#linear-gradient-3);
+      }
+    </style>
+    <linearGradient id="linear-gradient" x1="79.8" y1="-1615.5" x2="39.5" y2="-1692.7" gradientTransform="translate(0 -1601.3) scale(1 -1)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00ffa3"/>
+      <stop offset="1" stop-color="#dc1fff"/>
+    </linearGradient>
+    <linearGradient id="linear-gradient-2" x1="62.1" y1="-1606.7" x2="21.8" y2="-1683.9" gradientTransform="translate(0 -1601.3) scale(1 -1)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00ffa3"/>
+      <stop offset="1" stop-color="#dc1fff"/>
+    </linearGradient>
+    <linearGradient id="linear-gradient-3" x1="71" y1="-1611.2" x2="30.7" y2="-1688.5" gradientTransform="translate(0 -1601.3) scale(1 -1)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00ffa3"/>
+      <stop offset="1" stop-color="#dc1fff"/>
+    </linearGradient>
+  </defs>
+  <rect class="cls-2" x="1.5" y="2" width="97" height="96.1" rx="10.5" ry="10.5"/>
+  <path class="cls-1" d="M25.2,64.8c.5-.5,1.2-.7,1.7-.7h58.5c1.2,0,1.7,1.4.9,2.1l-11.5,11.6c-.5.5-1.2.7-1.7.7H14.7c-1.2,0-1.7-1.4-.9-2.3l11.5-11.4h0Z"/>
+  <path class="cls-3" d="M25.2,22.1c.5-.5,1.2-.7,1.7-.7h58.5c1.2,0,1.7,1.4.9,2.1l-11.5,11.6c-.5.5-1.2.7-1.7.7H14.7c-1.2,0-1.7-1.4-.9-2.1l11.5-11.6h0Z"/>
+  <path class="cls-4" d="M74.8,43.4c-.5-.5-1.2-.7-1.7-.7H14.7c-1.2,0-1.7,1.4-.9,2.1l11.6,11.6c.5.5,1.2.7,1.7.7h58.5c1.2,0,1.7-1.4.9-2.1l-11.6-11.6h-.1Z"/>
+</svg>
