@@ -40,6 +40,45 @@ export const listOfEnums = {
     TypeCountries
     }
 
+type abiData = {
+    name: string,
+    type: string,
+    internalType?: string
+    }
+
+type abiItem = {
+    components: abiData[],
+    name: string,
+    type: string
+    }
+
+const nameAbiData : abiData = { name: 'name', type: 'string', };
+const emailAbiData : abiData = { name: 'email', type: 'string', };
+const postalAbiData : abiData = { name: 'postal', type: 'string', };
+const uidAbiData : abiData = { name: 'uid', type: 'string', };
+const entityAbiData : abiData = { name: 'entity', type: 'uint8', internalType: "enum LibERC721.TypeofEntityType", };
+const sectorAbiData : abiData = { name: 'sector', type: 'uint8', internalType: "enum LibERC721.TypeofSector", };
+const unitTypeAbiData : abiData = { name: 'unitType', type: 'uint8', internalType: "enum LibERC721.TypeofUnitType", };
+const unitSizeAbiData : abiData = { name: 'unitSize', type: 'uint8', internalType: "enum LibERC721.TypeofUnitSize", };
+const countryAbiData : abiData = { name: 'country', type: 'uint8', internalType: "enum LibERC721.TypeCountries", };
+const sourceAbiData : abiData = { name: 'source', type: 'uint8', internalType: "enum LibERC721.TypeofGainSource", };
+const scopeAbiData : abiData = { name: 'country', type: 'uint8', internalType: "enum LibERC721.TypeCountries", };
+const gainAbiData : abiData = { name: 'country', type: 'uint8', internalType: "enum LibERC721.TypeCountries", };
+const stateAbiData : abiData = { name: 'state', type: 'uint8', internalType: "enum LibERC721.Statusoftoken", };
+const tokenAbiData : abiData = { name: 'token', type: 'uint8', internalType: "enum LibERC721.Typeoftoken", };
+const sizeAbiData : abiData = { name: 'size', type: 'uint8', internalType: "enum LibERC721.TypeofsizeUnit", };
+const unitAbiData : abiData = { name: 'unit', type: 'uint8', internalType: "enum LibERC721.TypeofUnit", };
+const createdAbiData : abiData = { name: 'created', type: 'uint256', };
+const updatedAbiData : abiData = { name: 'updated', type: 'uint256', };
+const valueAbiData : abiData = { name: 'value', type: 'uint256' };
+const rateAbiData : abiData = { name: 'rate', type: 'uint8', };
+const ownerAbiData : abiData = { name: 'owner', type: 'uint256', internalType: "bytes32" };
+const assetAbiData : abiData = { name: 'owner', type: 'uint256', internalType: "bytes32" };
+const report1AbiData : abiData = { name: 'report1', type: 'uint256', internalType: "bytes32" };
+const report2AbiData : abiData = { name: 'report2', type: 'uint256', internalType: "bytes32" };
+const hash0AbiData : abiData = { name: 'hash0', type: 'uint256', internalType: "bytes32" };
+
+/*
 export interface TokenEntitySpecific {
     name: string,
     uid: string,
@@ -49,99 +88,91 @@ export interface TokenEntitySpecific {
     unitSize: keyof typeof TypeofUnitSize,
     country: keyof typeof TypeCountries
     }
+*/
+
+const TokenStruct: abiItem = {
+    components: [
+        tokenAbiData,
+        stateAbiData,
+        createdAbiData,
+        updatedAbiData,
+        valueAbiData,
+        sizeAbiData,
+        unitAbiData,
+        ownerAbiData,
+        assetAbiData
+        ],
+    name: 'TokenStruct',
+    type: 'tuple',
+    }
+
+const TokenEntitySpecific: abiItem = {
+    components: [
+        stateAbiData,
+        nameAbiData, 
+        uidAbiData,
+        emailAbiData,
+        postalAbiData,
+        entityAbiData,
+        sectorAbiData,
+        unitTypeAbiData,
+        unitSizeAbiData,
+        countryAbiData,
+        ],
+    name: 'TokenEntitySpecific',
+    type: 'tuple',
+    }
+
+const TokenRWASpecific: abiItem = {
+    components: [
+        stateAbiData,
+        valueAbiData,
+        sizeAbiData,
+        sourceAbiData,
+        scopeAbiData,
+        gainAbiData,
+        report1AbiData,
+        report2AbiData
+        ],
+    name: 'TokenRWASpecific',
+    type: 'tuple',
+    }
+
+const TokenFundSpecific: abiItem = {
+    components: [
+        valueAbiData,
+        unitAbiData,
+        hash0AbiData,
+        rateAbiData
+        ],
+    name: 'TokenFundSpecific',
+    type: 'tuple',
+    }
+
+const pollenFeatures: abiItem = {
+    components: [
+        TokenStruct,
+        TokenEntitySpecific,
+        TokenRWASpecific,
+        ],
+    name: 'pollenFeatures',
+    type: 'tuple',
+    }
+
+const honeyFeaures: abiItem = {
+    components: [ 
+        TokenStruct, 
+        TokenFundSpecific,
+        ],
+    name: 'honeyFeatures',
+    type: 'tuple',
+    }
 
 export const dataDecodeABI = {
-pollenListABI: [ { name: "", type: 'uint256[]' }, ],
-TokenRWASpecificABI: [{
-        components: [
-            { name: 'source', type: 'uint8', internalType: "enum LibERC721.TypeofGainSource", },
-            { name: 'scope', type: 'uint8', internalType: "enum LibERC721.TypeofGainScope", },
-            { name: 'gain', type: 'uint8', internalType: "enum LibERC721.TypeofGainType", },
-            { name: 'uri', type: 'string[]', }, 
-            ],
-        name: 'TokenRWASpecific',
-        type: 'tuple',
-    },],
-TokenEntitySpecificABI: [{
-        components: [
-            { name: 'name', type: 'string', }, 
-            { name: 'uid', type: 'string', },
-            { name: 'entity', type: 'uint8', internalType: "enum LibERC721.TypeofEntityType", },
-            { name: 'sector', type: 'uint8', internalType: "enum LibERC721.TypeofSector", },
-            { name: 'unitType', type: 'uint8', internalType: "enum LibERC721.TypeofUnitType", },
-            { name: 'unitSize', type: 'uint8', internalType: "enum LibERC721.TypeofUnitSize", },
-            { name: 'country', type: 'uint8', internalType: "enum LibERC721.TypeCountries", },
-            ],
-        name: 'TokenRWASpecific',
-        type: 'tuple',
-    },],
-pollenFeaturesABI : [{
-        components: [
-        {
-            components: [
-            { name: 'token', type: 'uint8', internalType: "enum LibERC721.Typeoftoken", },
-            { name: 'state', type: 'uint8', internalType: "enum LibERC721.Statusoftoken", },
-            { name: 'created', type: 'uint256', },
-            { name: 'updated', type: 'uint256', },
-            { name: 'value', type: 'uint256', },
-            { name: 'size', type: 'uint8', internalType: "enum LibERC721.TypeofsizeUnit", },
-            { name: 'unit', type: 'uint8', internalType: "enum LibERC721.TypeofUnit", },
-            ],
-            name: 'TokenStruct',
-            type: 'tuple',
-        },
-        {
-            components: [
-                { name: 'name', type: 'string', }, 
-                { name: 'uid', type: 'string', },
-                { name: 'entity', type: 'uint8', internalType: "enum LibERC721.TypeofEntityType", },
-                { name: 'sector', type: 'uint8', internalType: "enum LibERC721.TypeofSector", },
-                { name: 'unitType', type: 'uint8', internalType: "enum LibERC721.TypeofUnitType", },
-                { name: 'unitSize', type: 'uint8', internalType: "enum LibERC721.TypeofUnitSize", },
-                { name: 'country', type: 'uint8', internalType: "enum LibERC721.TypeCountries", },
-                ],
-            name: 'TokenEntitySpecific',
-            type: 'tuple',
-        },
-        {
-            components: [
-                { name: 'source', type: 'uint8', internalType: "enum LibERC721.TypeofGainSource", },
-                { name: 'scope', type: 'uint8', internalType: "enum LibERC721.TypeofGainScope", },
-                { name: 'gain', type: 'uint8', internalType: "enum LibERC721.TypeofGainType", },
-                { name: 'uri', type: 'string[]', }, 
-                ],
-            name: 'TokenRWASpecific',
-            type: 'tuple',
-        },
-        ],
-        name: 'pollenFeatures',
-        type: 'tuple',
-        },],
-    honeyFeaturesABI : [{
-        components: [
-        {
-            components: [
-            { name: 'token', type: 'uint8', internalType: "enum LibERC721.Typeoftoken", },
-            { name: 'state', type: 'uint8', internalType: "enum LibERC721.Statusoftoken", },
-            { name: 'created', type: 'uint256', },
-            { name: 'updated', type: 'uint256', },
-            { name: 'value', type: 'uint256', },
-            { name: 'size', type: 'uint8', internalType: "enum LibERC721.TypeofsizeUnit", },
-            { name: 'unit', type: 'uint8', internalType: "enum LibERC721.TypeofUnit", },
-            ],
-            name: 'TokenStruct',
-            type: 'tuple',
-        },
-        {
-            components: [
-                { name: 'hash', type: 'string[]', }, 
-                { name: 'rate', type: 'uint8', },
-                ],
-            name: 'TokenFundSpecific',
-            type: 'tuple',
-        },
-        ],
-        name: 'honeyFeatures',
-        type: 'tuple',
-    },]
+    pollenListABI: [ { name: "", type: 'uint256[]' }, ],
+    TokenRWASpecificABI: [ TokenRWASpecific,],
+    TokenEntitySpecificABI: [ TokenEntitySpecific,],
+    TokenFundSpecificABI: [ TokenFundSpecific ],
+    pollenFeaturesABI : [ pollenFeatures ],
+    honeyFeaturesABI : [ honeyFeaures ]
     };

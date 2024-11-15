@@ -1,5 +1,5 @@
 import { contractRecord, diamondCore, NULL_ADDRESS, menuRecord, Account } from "./T2G_utils";
-import { TokenEntitySpecific } from "./T2G_Types";
+//import { TokenEntitySpecific } from "./T2G_Types";
 
 /// Variables globales qui représentent l'état des smart contracts en déploiement à
 /// réaliser pour réaliser la mise à jour de l'architecture ERC2535 de la dApp Trust2Give
@@ -36,6 +36,7 @@ export const facetNames : contractRecord[] = [
   { name: 'T2G_PollenFacet', address: NULL_ADDRESS, argInit: true, addReader: true, beacon: 'beacon_PollenFacet' },
   { name: 'T2G_HoneyFacet', address: NULL_ADDRESS, argInit: true, addReader: true, beacon: 'beacon_HoneyFacet' },
   { name: 'T2G_PoolFacet', address: NULL_ADDRESS, argInit: true, addReader: true, beacon: 'beacon_PoolFacet' },
+  { name: 'T2G_EntityFacet', address: NULL_ADDRESS, argInit: true, addReader: true, beacon: 'beacon_EntityFacet' },
   { name: 'T2G_SyndicFacet', address: NULL_ADDRESS, argInit: true, addReader: true, beacon: 'beacon_SyndicFacet' }
   ]
 
@@ -63,17 +64,24 @@ export var smart : menuRecord[] = [
   { tag: "Pool", contract: "T2G_PoolFacet", diamond: Account.AA, args: [], instance: undefined, events: undefined },
   { tag: "Nektar", contract: "T2G_NektarFacet", diamond: Account.AA, args: [], instance: undefined, events: undefined }, 
   { tag: "Pollen", contract: "T2G_PollenFacet", diamond: Account.AA, args: [], instance: undefined, events: undefined },
+  { tag: "Entity", contract: "T2G_EntityFacet", diamond: Account.AA, args: [], instance: undefined, events: undefined },
   { tag: "Syndication", contract: "T2G_SyndicFacet",  diamond: Account.AA, args: [], instance: undefined, events: undefined } 
   ];
 
 export const encodeInterfaces = {
   T2G_PollenFacet: [
-    { function: "pollen", output: "pollenFeaturesABI" }, 
     { function: "getMyPollenList", output: "pollenListABI" }, 
-    { function: "updatePollenRwa", _data: "TokenRWASpecificABI" }, 
-    { function: "updatePollenEntity", _data: "TokenEntitySpecificABI" }
+    { function: "pollen", output: "pollenFeaturesABI" }, 
+    { function: "setGHGGain", _data: "TokenRWASpecificABI" },     
     ],
-  T2G_HoneyFacet: [{ function: "honey", output: "honeyFeaturesABI" }]
+  T2G_EntityFacet: [
+    { function: "entity", output: "TokenEntitySpecificABI" }, 
+    { function: "setEntity", _data: "TokenEntitySpecificABI" },     
+    ],
+  T2G_HoneyFacet: [
+    { function: "setFund", _data: "TokenFundSpecificABI" },     
+    { function: "honey", output: "honeyFeaturesABI" }
+    ]
   //T2G_PollenFacet: [{ function: "pollen", _data: "TokenEntitySpecific" }]
   }
   
