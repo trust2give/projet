@@ -26,28 +26,34 @@ import { contractRecord, diamondCore, NULL_ADDRESS, menuRecord, Account } from "
 /// Pour retrouver les addresses des derniers contracts déployés T2G_Root et EUR (Contract StableCoin Mock-up)
 
 export const contractSet : contractRecord[] = [
-  { name: "EUR", address: "0x5fbdb2315678afecb367f032d93f642f64180aa3", argInit: false, addReader: false, beacon: false },
+  { name: "EUR", address: NULL_ADDRESS, beacon: false, get: 'get_EUR', wallet: false },
   ]
 
 export const facetNames : contractRecord[] = [
-  { name: 'OwnershipFacet', address: NULL_ADDRESS, argInit: false, addReader: false, beacon: false },
-  { name: 'ERC721Facet', address: NULL_ADDRESS, argInit: false, addReader: false, beacon: 'beacon_ERC721Facet' },
-  { name: 'T2G_NektarFacet', address: NULL_ADDRESS, argInit: true, addReader: true, beacon: 'beacon_NektarFacet' },
-  { name: 'T2G_PollenFacet', address: NULL_ADDRESS, argInit: true, addReader: true, beacon: 'beacon_PollenFacet' },
-  { name: 'T2G_HoneyFacet', address: NULL_ADDRESS, argInit: true, addReader: true, beacon: 'beacon_HoneyFacet' },
-  { name: 'T2G_PoolFacet', address: NULL_ADDRESS, argInit: true, addReader: true, beacon: 'beacon_PoolFacet' },
-  { name: 'T2G_EntityFacet', address: NULL_ADDRESS, argInit: true, addReader: true, beacon: 'beacon_EntityFacet' },
-  { name: 'T2G_SyndicFacet', address: NULL_ADDRESS, argInit: true, addReader: true, beacon: 'beacon_SyndicFacet' }
+  { name: 'OwnershipFacet', address: NULL_ADDRESS, beacon: false, get: false, wallet: false },
+  { name: 'ERC721Facet', address: NULL_ADDRESS, beacon: 'beacon_ERC721Facet', get: false, wallet: false },
+  { name: 'T2G_NektarFacet', address: NULL_ADDRESS, beacon: 'beacon_NektarFacet', get: 'get_T2G_NektarFacet', wallet: false },
+  { name: 'T2G_PollenFacet', address: NULL_ADDRESS, beacon: 'beacon_PollenFacet', get: 'get_T2G_PollenFacet', wallet: 'wallet_PollenFacet' },
+  { name: 'T2G_HoneyFacet', address: NULL_ADDRESS, beacon: 'beacon_HoneyFacet', get: 'get_T2G_HoneyFacet', wallet: 'wallet_HoneyFacet' },
+  { name: 'T2G_PoolFacet', address: NULL_ADDRESS, beacon: 'beacon_PoolFacet', get: 'get_T2G_PoolFacet', wallet: "wallet_PoolFacet" },
+  { name: 'T2G_EntityFacet', address: NULL_ADDRESS, beacon: 'beacon_EntityFacet', get: 'get_T2G_EntityFacet', wallet: false },
+  { name: 'T2G_SyndicFacet', address: NULL_ADDRESS, beacon: 'beacon_SyndicFacet', get: 'get_T2G_SyndicFacet', wallet: false }
   ]
 
 export const diamondNames : diamondCore = {
-    Diamond: { name: "T2G_root", address: NULL_ADDRESS, argInit: false, addReader: false, beacon: 'beacon_T2G_Root' },
-    DiamondCutFacet: { name: "DiamondCutFacet", address: NULL_ADDRESS, argInit: false, addReader: false, beacon: false },
-    DiamondLoupeFacet: { name: "DiamondLoupeFacet", address: NULL_ADDRESS, argInit: false, addReader: false, beacon: false },
-    DiamondInit: { name: "DiamondInit", address: NULL_ADDRESS, argInit: false, addReader: false, beacon: false },
+    Diamond: { name: "T2G_root", address: NULL_ADDRESS, beacon: 'beacon_T2G_Root', get: false, wallet: "wallet_T2G_root" },
+    DiamondCutFacet: { name: "DiamondCutFacet", address: NULL_ADDRESS, beacon: false, get: false, wallet: false },
+    DiamondLoupeFacet: { name: "DiamondLoupeFacet", address: NULL_ADDRESS, beacon: false, get: false, wallet: false },
+    DiamondInit: { name: "DiamondInit", address: NULL_ADDRESS, beacon: false, get: false, wallet: false },
     }
 
-export const tokenCredential = { name: "Trust2Give Decentralized App", symbol: "T2G" } 
+export const tokenCredential = { 
+  name: "Trust2Give Decentralized App", 
+  symbol: "T2G",
+  seeds: [
+    "legal winner thank year wave sausage worth useful legal winner thank yellow"    
+  ] 
+  } 
 
 /// SMART OBJECT
 /// Array to append when a new contract is to be deployed along with the T2G_Data.ts file
@@ -55,8 +61,7 @@ export const tokenCredential = { name: "Trust2Give Decentralized App", symbol: "
 /// Nor similar to any function name of the facets to interact with. Make it unique.
 
 export var smart : menuRecord[] = [ 
-  //{ tag: "Deploy", contract: undefined, diamond: undefined, args: [], instance: undefined, events: undefined }, 
-  { tag: "EUR", contract: "EUR", diamond: Account.AE, args: [], instance: undefined, events: undefined },
+  { tag: "EUR", contract: "EUR", diamond: Account.AB, args: [], instance: undefined, events: undefined },
   { tag: "Honey", contract: "T2G_HoneyFacet", diamond: Account.AA, args: [], instance: undefined, events: undefined },
   { tag: "Diamond", contract: "T2G_root", diamond: Account.AA, args: [], instance: undefined, events: undefined },
   { tag: "Loupe", contract: "DiamondLoupeFacet", diamond: Account.AA, args: [], instance: undefined, events: undefined },
@@ -72,6 +77,7 @@ export const encodeInterfaces = {
   T2G_PollenFacet: [
     { function: "getMyPollenList", output: "pollenListABI" }, 
     { function: "pollen", output: "pollenFeaturesABI" }, 
+    { function: "rwa", output: "TokenRWASpecificABI" }, 
     { function: "setGHGGain", _data: "TokenRWASpecificABI" },     
     ],
   T2G_EntityFacet: [
@@ -79,6 +85,7 @@ export const encodeInterfaces = {
     { function: "setEntity", _data: "TokenEntitySpecificABI" },     
     ],
   T2G_HoneyFacet: [
+    { function: "fund", output: "TokenFundSpecificABI" }, 
     { function: "setFund", _data: "TokenFundSpecificABI" },     
     { function: "honey", output: "honeyFeaturesABI" }
     ]

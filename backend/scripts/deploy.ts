@@ -2,6 +2,7 @@ import hre from "hardhat";
 import { FacetCutAction, getSelectors } from "./utils/diamond";
 import { Address, encodeFunctionData } from "viem";
 import { colorOutput, regex, NULL_ADDRESS, cutRecord, contractRecord, diamondCore } from "./T2G_utils";
+import { diamondNames, tokenCredential, contractSet, facetNames } from "./T2G_Data";
 
 
 export async function getOrDeployContract( contract : contractRecord, name: string, action: FacetCutAction | undefined ) : Promise<Address> {
@@ -17,16 +18,16 @@ export async function getOrDeployContract( contract : contractRecord, name: stri
     else throw("Wrong action for EUR Contract ".concat(contract.address));
     }
 
-export async function deployLoupeDiamond( diamonds: diamondCore, action: FacetCutAction, cut: cutRecord[] ) : Promise<Array<any>> { 
+export async function deployLoupeDiamond( action: FacetCutAction, cut: cutRecord[] ) : Promise<Array<any>> { 
     var diamondLoupe; // on récupère l'instance DiamonLoupeFacet
-    var loupeName : string = (diamonds.DiamondLoupeFacet.name || "DiamondLoupeFacet");
+    var loupeName : string = (diamondNames.DiamondLoupeFacet.name || "DiamondLoupeFacet");
 
     switch (action) {
         case (FacetCutAction.Replace): {
-            colorOutput(`Replace ${loupeName} @: ${diamonds.DiamondLoupeFacet.address}`, "magenta");    
+            colorOutput(`Replace ${loupeName} @: ${diamondNames.DiamondLoupeFacet.address}`, "magenta");    
             } 
         case (FacetCutAction.Add): {
-            colorOutput(`Add ${loupeName} @: ${diamonds.DiamondLoupeFacet.address}`, "magenta");    
+            colorOutput(`Add ${loupeName} @: ${diamondNames.DiamondLoupeFacet.address}`, "magenta");    
 
             diamondLoupe = await hre.viem.deployContract( loupeName );                
             break;
@@ -45,19 +46,17 @@ export async function deployLoupeDiamond( diamonds: diamondCore, action: FacetCu
     }
 
 
-export async function deployDiamond( diamonds: diamondCore, token: { name: string, symbol: string } ) : Promise<Array<any>> {
+export async function deployDiamond() : Promise<any> {
     const [deployWallet] = await hre.viem.getWalletClients();
     
     var diamond; // on récupère l'instance T2G_Root
     var diamondCutFacet; // on récupère l'instance DiamondCutFacet
     var diamondInit;
 
-    var CutName : string = (diamonds.DiamondCutFacet.name || "DiamondCutFacet");
+    var CutName : string = (diamondNames.DiamondCutFacet.name || "DiamondCutFacet");
 
     var initFunc = NULL_ADDRESS;
-    var initAddress = NULL_ADDRESS;
-
-    var diamName : string = (diamonds.Diamond.name || "Diamond");
+    var diamName : string = (diamondNames.Diamond.name || "Diamond");
 
     // On est dans le cas où on créé un nouveau T2G_Root
 
@@ -76,15 +75,15 @@ export async function deployDiamond( diamonds: diamondCore, token: { name: strin
 
     colorOutput(`Add DiamondInit @: ${diamondInit.address}`, "magenta");    
 
-    initFunc = encodeFunctionData({
+    diamondNames.Diamond.address = diamond.address;
+    diamondNames.DiamondCutFacet.address = diamondCutFacet.address;
+    diamondNames.DiamondInit.address = diamondInit.address;
+
+    return encodeFunctionData({
         abi: diamondInit.abi,
         functionName: "init",
-        args: [ token.name, token.symbol, diamond.address ]
+        args: [ tokenCredential.name, tokenCredential.symbol, diamond.address ]
         });
-
-    initAddress = diamondInit.address;
-
-    return [diamond.address, diamondCutFacet.address, initFunc, initAddress ]
     }
 
 
@@ -93,19 +92,20 @@ export async function deployDiamond( diamonds: diamondCore, token: { name: strin
 // Constructor represents the possible inputs array to pass to the constructor, mainly addresses of either Diamond Root (_root) or StableCoin Smart Contract (_stableCoin)
 // Adds up the eventual changes to apply to the diamond architecture through the cut[] array
 // Return the cut[] to pass to DiamondCutFacet smart contract
-export async function deployFacets( diamond: Address , name: string, action: FacetCutAction, constructor: Array<any>,  cut: cutRecord[]  ) : Promise<cutRecord[]> {
+export async function deployFacets( name: string, action: FacetCutAction, constructor: Array<any>,  cut: cutRecord[]  ) : Promise<cutRecord[]> {
     const publicClient = await hre.viem.getPublicClient();
     const [deployWallet] = await hre.viem.getWalletClients();
 
     var facet;
     switch (action) {
         case FacetCutAction.Remove: {
-            facet = await hre.viem.getContractAt( <string>name, (diamond) );        
+            facet = await hre.viem.getContractAt( <string>name, (diamondNames.Diamond.address) );        
             cut.push({ facetAddress: NULL_ADDRESS, action: action, functionSelectors: getSelectors(facet) });
             break;
             }
         case FacetCutAction.Add:
         case FacetCutAction.Replace: {
+            //console.log("args deploy", constructor, name, deployWallet );
             if (constructor.length > 0) {
                 facet = await hre.viem.deployContract( <string>name, constructor, { client: { wallet: deployWallet }, });
                 }
@@ -114,6 +114,9 @@ export async function deployFacets( diamond: Address , name: string, action: Fac
                 }
 
             cut.push({ facetAddress: facet.address, action: action, functionSelectors: getSelectors(facet) });
+
+            //console.log("args deploy", cut );
+
             break;
             }
         case undefined: {
@@ -124,7 +127,7 @@ export async function deployFacets( diamond: Address , name: string, action: Fac
             }
         }
 
-    colorOutput(`${name} - Action ${action} @: ${diamond}`, "green");    
+    colorOutput(`${name} - Action ${action} @: ${diamondNames.Diamond.address}`, "green");    
 
     const eventLogs = await  publicClient.getContractEvents({
         abi: facet.abi,
@@ -138,16 +141,16 @@ export async function deployFacets( diamond: Address , name: string, action: Fac
     return cut;
     }
 
-export async function deployWithDiamondCut( diamondAddress: Address, cut : cutRecord[], initFunc: `0x${string}`, initAddress: Address ) : Promise<Address> {
+export async function deployWithDiamondCut( cut : cutRecord[], initFunc: `0x${string}`, initAddress: Address ) : Promise<Address> {
     const publicClient = await hre.viem.getPublicClient();
     const [deployWallet] = await hre.viem.getWalletClients();
 
-    const diamondCut = await hre.viem.getContractAt("IDiamondCut", diamondAddress);
+    const diamondCut = await hre.viem.getContractAt("IDiamondCut", diamondNames.Diamond.address);
 
     //console.log("initFunc structure :", cut);
 
     const { request } = await publicClient.simulateContract({
-        address: diamondAddress,
+        address: diamondNames.Diamond.address,
         abi: diamondCut.abi,
         functionName: "diamondCut",
         args: [
@@ -162,5 +165,5 @@ export async function deployWithDiamondCut( diamondAddress: Address, cut : cutRe
 
     colorOutput(`Transaction Hash : ${tx}`, "green");
 
-    return diamondAddress;
+    return diamondNames.Diamond.address;
     }

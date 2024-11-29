@@ -12,6 +12,7 @@ contract EUR is ERC20, ERC20Burnable {
 
     
     constructor() ERC20("EUR StableCoin for T2G Mock-up", "EUR") {
+        emit EurTrace( "Constructor", msg.sender, address(0), address(0), 100_000_000_000 * 10**18);
         _mint(msg.sender, 100_000_000_000 * 10**18 );
     }
 
@@ -21,6 +22,10 @@ contract EUR is ERC20, ERC20Burnable {
      
     function get_EUR() public view returns (address) {
         return address(this);
+        }
+
+    function get_Caller() public view returns (address) {
+        return address(msg.sender);
         }
 
     function transferFrom( address sender, address recipient, uint256 amount) public override returns (bool) {

@@ -6,7 +6,7 @@ import { diamondNames, contractSet, encodeInterfaces } from "./T2G_Data";
 import { colorOutput, parseAndDisplayInputAndOutputs, accountIndex, Account,
          displayAddress, displayContract, NULL_ADDRESS, contractRecord,
          diamondCore, regex, regex2, rwRecord, rwType, errorFrame, menuRecord } from "./T2G_utils";
-import { encodeAbiParameters, decodeAbiParameters, parseAbiParameters  } from 'viem'
+import { decodeAbiParameters  } from 'viem'
 
 /// npx hardhat node
 /// npx hardhat run .\scripts\InteractWithContracts.ts --network localhost
@@ -21,8 +21,7 @@ export interface facetRecord {
 
 export async function readLastContractSetJSONfile() : Promise<contractRecord[]> {
     const jsonString = fs.readFileSync('./scripts/ContractSet.json', 'utf-8');
-    const Items : contractRecord[] = JSON.parse(jsonString);
-    const item : contractRecord = <contractRecord>Items.pop();
+    const item : contractRecord = JSON.parse(jsonString);
     if (item.name != "EUR") throw("Bad Record Name for EUR StableCoin Address recovery :: ".concat(item.name));
     //colorOutput("Recall Last EUR Smart Contract Record >> ".concat(JSON.stringify(item)), "cyan");
     contractSet[0] = <contractRecord>item;
@@ -30,11 +29,7 @@ export async function readLastContractSetJSONfile() : Promise<contractRecord[]> 
     }
 
 export async function writeLastContractJSONfile( ) {
-    const jsonString = fs.readFileSync('./scripts/ContractSet.json', 'utf-8');
-    const Items : contractRecord[] = JSON.parse(jsonString);
-    Items.push(contractSet[0]);
-    
-    let JsonFile = JSON.stringify(Items);
+    let JsonFile = JSON.stringify(contractSet[0]);
     //colorOutput("Save last EUR Contract Record >> ".concat(JSON.stringify(contractSet[0])), "cyan");
     fs.writeFile('./scripts/ContractSet.json', JsonFile, (err) => {
         if (err) {
@@ -86,7 +81,7 @@ export async function writeLastDiamondJSONfile( ) {
         });
     }
       
-export async function readLastDiamondJSONfile() : Promise<diamondCore> {
+export async function readLastDiamondJSONfile() {
     const jsonString = fs.readFileSync('./scripts/T2G_Root.json', 'utf-8');
     const DiamondCore : diamondCore = JSON.parse(jsonString);
     if (DiamondCore.Diamond.name != "T2G_root") throw("Bad Record Name for T2G_Root Address recovery :: ".concat(DiamondCore.Diamond.name));
@@ -94,54 +89,70 @@ export async function readLastDiamondJSONfile() : Promise<diamondCore> {
     diamondNames.DiamondInit = <contractRecord>DiamondCore.DiamondInit;
     diamondNames.DiamondCutFacet = <contractRecord>DiamondCore.DiamondCutFacet;
     diamondNames.DiamondLoupeFacet = <contractRecord>DiamondCore.DiamondLoupeFacet;
-    return diamondNames;
     }
     
-export async function InteractWithContracts(rwItem : rwRecord, from: Account, accountRefs : Object, accountList: Address[], facets: menuRecord[], pad: number ) {
+export async function InteractWithContracts(rwItem : rwRecord, from: Account, accountRefs : Object, facets: menuRecord[], pad: number ) {
     const wallets = await hre.viem.getWalletClients();
     const publicClient = await hre.viem.getPublicClient();
 
-    const sender: number = accountIndex(from);
-    console.log("Enter InteractWithContracts app")
+    var sender: number | undefined = await accountIndex(accountRefs, from, true);
+    if (sender == undefined) sender = 0;
+
+    console.log("Enter InteractWithContracts app", sender)
 
     // On transcrit les arguments s'ils existent : type Account
     const newArgs = rwItem.values;
-    // On format les valeurs pour affichage en stdout                                        
-    const dispArgs = parseAndDisplayInputAndOutputs( rwItem.args, newArgs, accountRefs, accountList, pad );
+    // On format les valeurs pour affichage en stdout 
+    //console.log(rwItem, accountRefs, facets, "\n")                                       
+    const dispArgs = parseAndDisplayInputAndOutputs( rwItem.args, newArgs, accountRefs, 10 );
+    //console.log("sortie", dispArgs)
+    type refKeys = keyof typeof accountRefs;
 
-    var log : string  = displayAddress( facets[0].instance.address, "yellow", accountRefs, accountList, pad );
+    //console.log( label, from, sender, accountRefs, dispArgs )
+
+    var log : string  = displayAddress( facets[0].instance.address, "yellow", accountRefs, pad );
     log = log.concat( ":", displayContract(rwItem.contract, "cyan", 15), "::" );
-    log = log.concat( displayAddress( accountList[sender], "magenta", accountRefs, accountList, pad ));
+    log = log.concat( displayAddress( <Address>(accountRefs[<refKeys><string>from].address), "magenta", accountRefs, pad ));
     log = log.concat( ":: ", ("label" in rwItem) ? <string>rwItem.label : rwItem.function );
     log = log.concat( "[ ", colorOutput(dispArgs, "blue", true)," ] >> " );
 
     try {
         if (rwItem.rwType == rwType.WRITE) {
 
+            //console.log("Estimate")
+            
             const gas = await publicClient.estimateContractGas({ address: facets[0].instance.address, abi: facets[0].instance.abi, functionName: rwItem.function, args: newArgs });
 
             colorOutput(`Estimated Gas :: ${gas}`, "blue");
 
+            //console.log("entrée", rwItem.function, newArgs, wallets[sender])
+
             const method = await facets[0].instance.write[rwItem.function](newArgs, wallets[sender] );
+
+            //console.log("sortie", method)
 
             const eventFacetLogs = await publicClient.getContractEvents({ abi: facets[0].instance.abi, address: facets[0].instance.address, })
             const eventSCLogs = await publicClient.getContractEvents({ abi: facets[1].instance.abi, address: facets[1].instance.address, })
-            
+
+            //console.log("event", eventFacetLogs, eventSCLogs)
+
             log = log.concat( colorOutput( (typeof method === "object") ? method.reduce( (acc, cur) => { return cur.concat(acc, "|")} ) : "[Tx:".concat( method.substring(0, 6), "..]"), "green", true ));
 
             for ( const event of eventFacetLogs) {
                 if (event.transactionHash == method) {
                     const EvtInputs = facets[0].instance.abi.filter((item) => item.type == "event" && item.name == event.eventName)[0].inputs; //.map((item) => item.inputs);
-                    const dispEvents = parseAndDisplayInputAndOutputs( EvtInputs, Object.values(event.args), accountRefs, accountList, pad );
+                    const dispEvents = parseAndDisplayInputAndOutputs( EvtInputs, Object.values(event.args), accountRefs, pad );
                     log = log.concat( colorOutput( "\n >> Event ".concat( event.eventName, dispEvents, " "), "yellow", true ));                
-                    }
+                    //console.log(event.args)               
+                }
                 }
 
             for ( const event of eventSCLogs) {
                 const EvtInputs = facets[1].instance.abi.filter((item) => item.type == "event" && item.name == event.eventName)[0].inputs; //.map((item) => item.inputs);
-                const dispEvents = parseAndDisplayInputAndOutputs( EvtInputs, Object.values(event.args), accountRefs, accountList, pad );
-                log = log.concat( colorOutput( "\n >> Event ".concat( event.eventName, dispEvents, " "), "yellow", true ));                
-            }
+                const dispEvents = parseAndDisplayInputAndOutputs( EvtInputs, Object.values(event.args), accountRefs, pad );
+                log = log.concat( colorOutput( "\n >> Event ".concat( event.eventName, dispEvents, " "), "yellow", true )); 
+                //console.log(event.args)               
+                }
             } 
         else if (rwItem.rwType == rwType.READ) {
             const raw : any = await facets[0].instance.read[rwItem.function]( newArgs, wallets[sender] );
@@ -169,13 +180,14 @@ export async function InteractWithContracts(rwItem : rwRecord, from: Account, ac
                             
                             beacon = values.map((val) => {
                                 if (Array.isArray(val)) {
-                                    return "\n".concat(parseAndDisplayInputAndOutputs( ABIformat, [val], accountRefs, accountList, pad ));
-                                    }
+                                    return "\n".concat(parseAndDisplayInputAndOutputs( ABIformat, [val], accountRefs, pad ));
+                                }
                                 else if (typeof val == "object") {
                                     return "\n[".concat( Object.entries(val).map((item) => {
                                         if ("components" in ABIformat[0]) {
                                             const abi = ABIformat[0].components.find((el) => el.name == item[0])
-                                            return "\n".concat(parseAndDisplayInputAndOutputs( abi.components, Object.values(item[1]), accountRefs, accountList, pad ));
+                                            if ("components" in abi) return "\n".concat(parseAndDisplayInputAndOutputs( abi.components, Object.values(item[1]), accountRefs, pad ));
+                                            else return "\n".concat(parseAndDisplayInputAndOutputs( [ abi ], [ item[1] ], accountRefs, pad ));
                                         }
                                     }).join("|"), "\n]");
                                 }
@@ -186,7 +198,7 @@ export async function InteractWithContracts(rwItem : rwRecord, from: Account, ac
                     }
                 }
             // For the results not concerned by the encode function
-            if (!decodeFlag) beacon = parseAndDisplayInputAndOutputs( rwItem.outcome, result, accountRefs, accountList, pad );
+            if (!decodeFlag) beacon = parseAndDisplayInputAndOutputs( rwItem.outcome, result, accountRefs, pad );
 
             if (Array.isArray(beacon)) log = log.concat( "\n[ ", colorOutput( beacon.join("|\n"), "green", true )," ]" );
             else log = log.concat( colorOutput( (typeof beacon === "object") ? beacon.reduce( (acc, cur) => { return cur.concat(acc)}, "|\n" ) : <string>beacon, "green", true) );
@@ -196,7 +208,7 @@ export async function InteractWithContracts(rwItem : rwRecord, from: Account, ac
         colorOutput(log);
 
     } catch (error) {
-        //console.log(error)
+        console.log(error)
         const errorLabel : Array<any> = Object.entries(<errorFrame>error);
         const errorDisplay : string = errorLabel.reduce( (last, item) => {
             switch (item[0]) {
@@ -206,8 +218,8 @@ export async function InteractWithContracts(rwItem : rwRecord, from: Account, ac
                 case "args": {
                     return last.concat( colorOutput( item[1].reduce( ( acc, cur) => {
                         if (typeof cur == "string") {
-                            if (cur.match(regex)) return acc.concat( displayAddress( cur, "yellow", accountRefs, accountList, pad ), " " );
-                            if (cur.match(regex2)) return acc.concat( displayAddress( cur, "cyan", accountRefs, accountList, pad ), " " );
+                            if (cur.match(regex)) return acc.concat( displayAddress( cur, "yellow", accountRefs, pad ), " " );
+                            if (cur.match(regex2)) return acc.concat( displayAddress( cur, "cyan", accountRefs, pad ), " " );
                             }
                         else if (typeof cur == "bigint") return acc.concat( colorOutput( `${cur}`, "cyan", true ), " " );
                         else if (typeof cur == "boolean") return acc.concat( colorOutput( (cur) ? "True" : "False", "cyan", true ), " " );
@@ -216,7 +228,7 @@ export async function InteractWithContracts(rwItem : rwRecord, from: Account, ac
                         }, "[ " ), "blue", true), " ]" );
                     }
                 case "contractAddress": {
-                    return last.concat( colorOutput( displayAddress( item[1], "yellow", accountRefs, accountList, pad ), "yellow", true) );
+                    return last.concat( colorOutput( displayAddress( item[1], "yellow", accountRefs, pad ), "yellow", true) );
                     }
                 case "functionName": {
                     return last.concat( "[", colorOutput( item[1], "magenta", true), "] " );

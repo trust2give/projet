@@ -3,6 +3,8 @@
 pragma solidity ^0.8.18;
 
 import {T2GTypes} from "./Types.sol";
+//import "https://github.com/OpenZeppelin/openzeppelin-solidity/contracts/utils/BIP39.sol";
+//import "@OpenZeppelin/openzeppelin-solidity/contracts/utils/BIP39.sol";
 
 library LibOwners {
 
@@ -33,9 +35,10 @@ library LibOwners {
 
     struct Syndication {
         address root;               // @ for the T2G_Root of ERC2535. Duplicate with Layout.
-        address scAddress;          // @ for the Smart Contract that mock-up the Stable Coin transactions
         uint256 totalRegistered;    // last index of registered users
         uint256 totalBanned;        // last index of banned users
+        mapping(address => address) boundWallet;
+        mapping(address => bytes32) boundKey;
         mapping(address => bool) registered;
         mapping(address => bool) banned;
         mapping(address => uint256) timestamp;
@@ -50,6 +53,19 @@ library LibOwners {
             l.slot := slot
             }
         }
+
+    /*function generatePrivateKey(string memory _seedPhrase) public pure returns (bytes32) {
+        // Derive the master key using BIP39
+        bytes32 masterKey = BIP39.deriveMasterKey(_seedPhrase, 256);
+        // Extract the 32-byte private key
+        bytes32 privateKey = masterKey[:32];
+        return privateKey;
+    }*/
+
+    function generateAddress(bytes memory publicKey) internal pure returns (bytes20) {
+        bytes32 keccakHash = keccak256(publicKey);
+        return bytes20(keccakHash);
+    }
 
     /**
      * @dev Returns whether the address is registered or not.
@@ -118,7 +134,7 @@ library LibOwners {
                 syndication().rights[user] = _profile;
                 // We update & record the time 
                 syndication().timestamp[user] = block.timestamp;
-
+ 
                 emit SyndNewRegistered(user, syndication().timestamp[user]);
                 }
             else if (!_isBanned(user)) emit SyndAlreadyRegistered( user );

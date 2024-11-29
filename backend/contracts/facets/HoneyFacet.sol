@@ -2,6 +2,7 @@
 pragma solidity ^0.8.18;
 
 import {LibERC721} from "../libraries/LibERC721.sol";
+import {LibHoney} from "../libraries/LibHoney.sol";
 import {ERC721Errors} from "../libraries/Errors.sol";
 import {T2GTypes} from "../libraries/Types.sol";
 import { LibDiamond } from "../libraries/LibDiamond.sol";
@@ -33,20 +34,26 @@ import {T2GTypes} from "../libraries/Types.sol";
 
 contract T2G_HoneyFacet {
 
-    error HoneyFailedTransfer(uint256 tokenId, address owner, address honey, string reason);
-    error HoneyFailedApproval(uint256 tokenId, address owner, address honey, string reason);
+    //string constant seed = "honey trust truth ability flower drive early earn achieve address air amount";
+    bytes32 constant privKey = 0xdf57089febbacf7ba0bc227dafbffa9fc08a93fdc68e1e42411a14efcf23656e;
+    //bytes constant pubKey =  "0210cb8d7f0112f88e56e17050691c55f023075e825c67d67ffbd42a74242330ba";
+    address constant wallet = 0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199;
+
+    error HoneyFailedTransfer(uint256 tokenId, address owner, bytes32 fund, string reason);
+    error HoneyFailedApproval(address owner, address honey, string reason);
     error HoneyInvalidTokenId(uint256 tokenId);
     error HoneyInvalidOwner(address owner);
     error HoneyInvalidSender(address sender);
     error HoneyInvalidAmount(address sender);
     error HoneyInvalidContractAddress(string facet);
-    error HoneyInvalidStatus(uint256 tokenId);
+    error HoneyInvalidStatus(bytes32 tokenId);
     error HoneyInvalidValueUnit(uint256 tokenId, T2GTypes.CoinUnit unit);
     error HoneyInvalidBalance(address owner, uint256 balance);
     error InvalidHashTransaction();
-
-    event HoneySetWhiteList(uint256 tokenId, T2GTypes.BusinessSector _sector);
-    event HoneySetBlackList(uint256 tokenId, T2GTypes.BusinessSector _sector);
+    error ERC20InsufficientAllowance(address,uint256,uint256);
+    
+    event HoneySetWhiteList(bytes32 fundId, T2GTypes.BusinessSector _sector);
+    event HoneySetBlackList(bytes32 fundId, T2GTypes.BusinessSector _sector);
     event HoneyActive( uint256 tokenId);
     event HoneyAmountTransfer( uint256 tokenId, address pool, uint256 value);
     event HoneyRootAddressSet( address root );
@@ -54,6 +61,7 @@ contract T2G_HoneyFacet {
     event HoneyCreated( address owner, uint256 tokenId );
     event FundCreated(bytes32 fundId );
     event HoneyTrace( address _root, address _honey, address _sc, uint256 _token, address _owner );
+    event EurTrace( string _from, address _sender, address _sc, address _to,uint256 _amount );
 
     struct honeyFeatures {
         LibERC721.TokenStruct general;
@@ -65,36 +73,10 @@ contract T2G_HoneyFacet {
         _;
         }
 
-    modifier isT2GOwnerOrHoneyOwner(uint256 _tokenId) {
-        if (msg.sender != LibDiamond.contractOwner() && msg.sender != LibERC721._ownerOf(_tokenId)) {
-                revert HoneyInvalidSender(msg.sender);
-                }
-        _;
-        }
-
     modifier isHoney(uint256 _tokenId) {
         if (!LibERC721._tokenOfType( _tokenId, LibERC721.Typeoftoken.Honey )) {
             revert HoneyInvalidTokenId(_tokenId);
             }
-        _;
-        }
-
-    modifier isDraft(uint256 _tokenId) {
-        if (LibERC721.layout().token[_tokenId].state != LibERC721.Statusoftoken.draft) {
-            revert HoneyInvalidStatus(_tokenId);
-            }
-        _;
-        }
-
-    modifier isValidated(uint256 _tokenId) {
-        if (LibERC721.layout().token[_tokenId].state != LibERC721.Statusoftoken.validated) {
-            revert HoneyInvalidStatus(_tokenId);
-            }
-        _;
-        }
-
-    modifier isRootValid {
-        if (LibERC721.layout().root == address(0)) revert HoneyInvalidContractAddress("Root");
         _;
         }
 
@@ -105,11 +87,12 @@ contract T2G_HoneyFacet {
             emit HoneyRootAddressSet( _root );
             }
         else if (_root != LibERC721.layout().root) revert HoneyInvalidContractAddress("Root");
-        if (LibOwners.syndication().scAddress == address(0)) {
-            LibOwners.syndication().scAddress = _stableCoin;
+
+        if (_stableCoin != address(0)) {
+            LibOwners.syndication().boundWallet[address(0)] = _stableCoin;
+            LibOwners.syndication().boundKey[address(0)] = bytes32(0);
             emit HoneyRootAddressSet( _stableCoin );
             }
-        else if (_stableCoin != LibOwners.syndication().scAddress) revert HoneyInvalidContractAddress("StableCoin");
         }
 
      /// @notice checks that the deployed contract is alive and returns its version
@@ -122,8 +105,18 @@ contract T2G_HoneyFacet {
      /// @dev All Facet in T2G application must implement this function of type "get_<Contract Name>()
      /// @return Address of the current instance of contract
      
-    function get_T2G_HoneyFacet() public view returns (address) {
+    function get_T2G_HoneyFacet() external view returns (address) {
         return DiamondLoupeFacet(LibERC721.layout().root).facetAddress(bytes4(abi.encodeWithSignature("beacon_HoneyFacet()")));
+        }
+
+    function wallet_HoneyFacet() external pure returns ( address _wallet, bytes32 _key ) {
+        //byes32 _key = generatePrivateKey( seed );
+        _wallet = wallet; //address( bytes20(keccak256( bytes(pubKey) )));
+        _key = privKey;
+        }
+
+    function isHoneyType(uint256 _tokenId) external view returns (bool) {
+        return (LibERC721._tokenOfType( _tokenId, LibERC721.Typeoftoken.Honey ));
         }
 
      /// @notice Update features relates to the funding for a possible honey
@@ -138,6 +131,7 @@ contract T2G_HoneyFacet {
         
         if ((result.hash0.length == 0) || (result.hash0 == 0x0)) revert InvalidHashTransaction();
 
+        LibERC721.layout().fund[result.hash0].state = LibERC721.Statusoftoken.draft;
         LibERC721.layout().fund[result.hash0].hash0 = result.hash0;
         LibERC721.layout().fund[result.hash0].value = result.value;
         LibERC721.layout().fund[result.hash0].unit = result.unit;
@@ -147,6 +141,23 @@ contract T2G_HoneyFacet {
         return result.hash0;
         }
 
+     /// @notice returns the features of a specific fund, given its rwaId 
+     /// @param _fundId token Id
+     /// @dev MODIFIER : checks first that msg.sender is either the T2G owner or the token owner. Otherwise revert HoneyInvalidSender error
+     /// @return TokenFundSpecific object in abi encoded data format
+
+    function fund(bytes32 _fundId) external view returns ( bytes memory ) {
+        // We check first that the msg.sender if allowed and has the rights to view the pollen
+        if (!LibOwners._isAllowed(msg.sender, T2GTypes.R_VIEWS )) revert HoneyInvalidSender(msg.sender);
+        return (abi.encode(LibHoney._fund(_fundId)));
+        }
+    
+    function getFunds() external view returns (bytes32[] memory _fundId) {
+        if (!LibOwners._isAllowed(msg.sender, T2GTypes.R_VIEWS)) revert HoneyInvalidOwner(msg.sender);        
+        uint256[] memory _ids = LibHoney.isStateAtomic( bytes32(0), LibERC721.Statusoftoken.None );
+
+        }
+
      /// @notice returns the features of a specific Honey, given its tokenId 
      /// @param _tokenId token Id
      /// @dev MODIFIER : checks first that msg.sender is either the T2G owner or the token owner. Otherwise revert HoneyInvalidOwner error
@@ -154,17 +165,14 @@ contract T2G_HoneyFacet {
      /// @dev IMPORTANT : no checks is done if tokenId is null.
      /// @return tuple (type of token, status of token, creation stamp, amount tied to token, unit of amount, rate applicable to project)
 
-    function honey(uint256 _tokenId) 
-        external isT2GOwnerOrHoneyOwner(_tokenId) isHoney(_tokenId) 
-        view returns (bytes memory) {
+    function honey(uint256 _tokenId) external isHoney(_tokenId) view returns (bytes memory) {
 
         // We check first that the msg.sender if allowed and has the rights to view the pollen
+        if (msg.sender != LibDiamond.contractOwner() && msg.sender != LibERC721._ownerOf(_tokenId)) revert HoneyInvalidSender(msg.sender);
         if (!LibOwners._isAllowed(msg.sender, T2GTypes.R_VIEWS )) revert HoneyInvalidOwner(msg.sender);
 
         LibERC721.TokenStruct memory data = LibERC721._tokenCommonFeatures(_tokenId);
-        LibERC721.TokenFundSpecific memory fund = LibERC721._tokenFundFeatures(data.asset);
-        honeyFeatures memory _result = honeyFeatures( data, fund );
-        return (abi.encode(_result));
+        return (abi.encode(honeyFeatures( data, LibHoney._fund(data.asset) )));
         }
 
      /// @notice Mints one Honey Token for a specific owner address.
@@ -182,88 +190,67 @@ contract T2G_HoneyFacet {
      /// @dev checks then that tokenId does not refer to no already existing token (of any type).
      /// @dev once cheks are OK and Honey token minted, then sets the approval flags that allow either the owner or the T2G owner to manage the token
 
-    function mintHoney(address _to, bytes32 _entity, bytes32 _fund) external isT2GOwner returns (uint256 _id) {
-        LibERC721.TokenStruct memory _data;
-
-        if (!LibOwners._isAllowed(_to, T2GTypes.R_GIVES)) revert HoneyInvalidOwner(_to);
-        
-        // We need to get the next _TokenId value available
-        uint256 _tokenId = LibERC721.layout().allTokens.length;
+    function mintHoney(address _to, bytes32 _entity, bytes32 _fund) external isT2GOwner {
+        if (!LibOwners._isAllowed(_to, T2GTypes.R_GIVES)) revert HoneyInvalidOwner(_to);        
 
         // We neet to check that the StableCoin balance of T2G_Owner wallet has suffisant amount to cover up the Honey amount
+        address _honey = this.get_T2G_HoneyFacet();
+        address _root = LibERC721.layout().root;
+        EUR _stable = EUR(LibOwners.syndication().boundWallet[address(0)]);
 
-        address _honey = get_T2G_HoneyFacet();
-        EUR _eurSC = EUR(LibOwners.syndication().scAddress);
-        uint256 _balance = _eurSC.balanceOf(LibERC721.layout().root);
+        uint256 _balance = _stable.balanceOf(LibOwners.syndication().boundWallet[_root]);
 
-        LibERC721.TokenFundSpecific memory fund = LibERC721._tokenFundFeatures(_fund);
+        emit HoneyTrace( address(this), _stable.get_Caller(), address(_stable), _balance, LibOwners.syndication().boundWallet[_root] );
 
-        if (_balance < fund.value) revert HoneyInvalidBalance( _to, _balance);
+        if (_balance < LibHoney._fund(_fund).value) return; // revert HoneyInvalidBalance( _to, _balance);
 
-        try _eurSC.approve(_honey, _balance) returns (bool) {
+        if (_stable.approve(_honey, _balance)) {
+            // We mint and need to get the next _TokenId value available
+            uint256 _tokenId = LibHoney._mint(_to, _entity, _fund); 
 
-            emit HoneyTrace( address(this), _honey, address(_eurSC), _tokenId, _to );
+            // Once we have minted the right number of Honey, we turn active the entity and fund related to them
+            LibERC721.layout().entity[_entity].state = LibERC721.Statusoftoken.active;
+            LibERC721.layout().fund[_fund].state = LibERC721.Statusoftoken.active;
 
-            _data.token = LibERC721.Typeoftoken.Honey;
-            _data.state = LibERC721.Statusoftoken.draft;
-            _data.created = block.timestamp;
-            _data.updated = _data.created;
-            _data.value = fund.value;
-            _data.unit = fund.unit;
-            _data.owner = _entity;
-            _data.asset = _fund;
-
-            LibERC721._safeMint(_to, _tokenId, abi.encode(_data));
-            LibERC721._approve(msg.sender, _tokenId, _to);
-            LibERC721._setApprovalForAll(_to, msg.sender, true);
-
-            emit HoneyCreated( _to, _tokenId );
-            return _tokenId;
-            } catch Error(string memory reason) {   // catch failing revert() and require()
-                revert HoneyFailedApproval( _tokenId, _to, _honey, reason );
-            } catch (bytes memory reason) {         // catch failing assert()
-                revert HoneyFailedApproval( _tokenId, _to, _honey, string(reason) );
+            emit HoneyTrace( address(this), _honey, address(_stable), _tokenId, _to );
+            } 
+        else {   // catch failing revert() and require()
+            revert HoneyFailedApproval( _to, _honey,"" );
             }
         }
 
      /// @notice Updates either the white or the black list related to a specific Honey Token. Emits a HoneySetBlackList event in case of success
-     /// @param _tokenId the Id of the HoneyId
+     /// @param _fundId the Id of the Fund Id
      /// @param _sector sector identifier to be updated in the whilelist
-     /// @param _blacklist flag that selects the black list (true) or the white liste (false)
-     /// @param _remove flag that add (false) or remove (true) the sector to the black list
+     /// @param _eligible flag that selects the black list (true) or the white liste (false)
      /// @dev MODIFIER : checks first that msg.sender is T2G owner or token owner. Otherwise revert HoneyInvalidSender error
      /// @dev MODIFIER : checks then that tokenId refers to no already existing Honey token. Otherwise revert HoneyInvalidTokenId error
      /// @dev IMPORTANT : no checks is done on the _sector value which is to be in the range of BusinessSector values.
 
-    function setBlackOrWhiteList( uint256 _tokenId, T2GTypes.BusinessSector _sector, bool _blacklist, bool _remove ) 
-        external isT2GOwnerOrHoneyOwner(_tokenId) isHoney(_tokenId) {
-        if (_blacklist) {
-            LibERC721.layout().blacklist[_tokenId][uint256(_sector)] = _remove ? false : true;            
-            emit HoneySetBlackList(_tokenId, _sector);
-            }
-        else {
-            LibERC721.layout().whitelist[_tokenId][uint256(_sector)] = _remove ? false : true;        
-            emit HoneySetWhiteList(_tokenId, _sector);
-            }
+    function setBlackOrWhiteList( address _owner, bytes32 _fundId, T2GTypes.BusinessSector _sector, bool _eligible ) external {
+        if (!LibOwners._isAllowed(_owner, T2GTypes.R_GIVES)) revert HoneyInvalidOwner(_owner);        
+        uint256[] memory _honeyIds = LibHoney.isStateAtomic(_fundId, LibERC721.Statusoftoken.draft );
+
+        if (msg.sender != LibDiamond.contractOwner() && msg.sender != LibERC721._ownerOf(_honeyIds[0])) {
+                revert HoneyInvalidSender(msg.sender);
+                }
+
+        LibERC721.layout().bwList[_fundId][uint256(_sector)] = _eligible;            
+        if (_eligible) emit HoneySetWhiteList(_fundId, _sector);
+        else emit HoneySetBlackList(_fundId, _sector);
         }
 
      /// @notice returns either the white or the black list of sectors related to a specific Honey Token.
-     /// @param _tokenId the Id of the HoneyId
-     /// @param _blacklist flag that selects the black list (true) or the white liste (false)
+     /// @param _fundId the Id of the Fund Id
      /// @dev MODIFIER : checks first that msg.sender is T2G owner or token owner. Otherwise revert HoneyInvalidSender error
      /// @dev MODIFIER : checks then that tokenId refers to no already existing Honey token. Otherwise revert HoneyInvalidTokenId error
      /// @return Array of flags [bool] the array size equals the range of BusinessSector values
 
-    function getBlackOrWhiteList( uint256 _tokenId, bool _blacklist ) 
-        external isT2GOwnerOrHoneyOwner(_tokenId) isHoney(_tokenId) view returns ( bool[] memory) {
+    function getBlackOrWhiteList( bytes32 _fundId ) external view returns ( bool[] memory) {
         bool[] memory memoryArray = new bool[](uint(type(T2GTypes.BusinessSector).max));
+  
         for(uint i = 0; i < uint(type(T2GTypes.BusinessSector).max); i++) {
-            if (_blacklist) {
-                memoryArray[i] = LibERC721.layout().blacklist[_tokenId][i];
-                }
-            else {
-                memoryArray[i] = LibERC721.layout().whitelist[_tokenId][i];
-                }
+            memoryArray[i] = LibERC721.layout().bwList[_fundId][uint256(i)];
             }
         return memoryArray;    
         }
@@ -275,7 +262,7 @@ contract T2G_HoneyFacet {
      /// @notice Emits a {HoneyActive} event when successful
      /// @notice Until approval, the Honey Token can be burned and canceled.
      /// @notice Once status is active, the Honey Token can no longer be burned.T2G Owner can transfer the value from This contract to the pool.
-     /// @param _tokenId the Id given to the Honey Token
+     /// @param _fundId the Id of the Fund Id
      /// @param _owner address of the owner of the token. 
      /// @dev MODIFIER : checks first that msg.sender is T2G owner. Otherwise revert HoneyInvalidSender error
      /// @dev MODIFIER : checks then that _owner has already signed up to the T2G app and is not banned. Otherwise revert HoneyInvalidOwner error
@@ -284,37 +271,37 @@ contract T2G_HoneyFacet {
      /// @dev MODIFIER : checks then that tokenId refers to one Draft Honey token. Otherwise revert HoneyInvalidStatus error
      /// @dev YTBD : once cheks are OK, then sets the status of Honey Token to Active.
 
-    function approveHoney( uint256 _tokenId, address _owner ) 
-        external isT2GOwner isHoney(_tokenId) isDraft(_tokenId) {
-        
+    function approveHoney( bytes32 _fundId, address _owner ) external isT2GOwner {
         if (!LibOwners._isAllowed(_owner, T2GTypes.R_GIVES)) revert HoneyInvalidOwner(_owner);
-        if (_owner != LibERC721._ownerOf(_tokenId)) revert HoneyInvalidOwner(_owner);
+
+        uint256[] memory _honeyIds = LibHoney.isStateAtomic(_fundId, LibERC721.Statusoftoken.draft );
+        if (_owner != LibERC721._ownerOf(_honeyIds[0])) revert HoneyInvalidOwner(_owner);
 
         // We transfer the amount represented by the Honey Token to the HoneyFacet@ to endorse it
 
-        EUR _eurSC = EUR(LibOwners.syndication().scAddress);
-        address _honey = get_T2G_HoneyFacet();
+        EUR _stable = EUR(LibOwners.syndication().boundWallet[address(0)]);
+        address _honey = LibOwners.syndication().boundWallet[this.get_T2G_HoneyFacet()];
+        address _root = LibOwners.syndication().boundWallet[address(this)];
 
-        emit HoneyTrace( address(this), _honey, address(_eurSC), _tokenId, _owner );
+        emit HoneyTrace( _root, _honey, address(_stable), _honeyIds[0], _owner );
         
-        try  _eurSC.transfer( _honey, LibERC721.layout().token[_tokenId].value ) returns (bool) {
-            LibERC721.layout().token[_tokenId].state = LibERC721.Statusoftoken.validated;
-            } catch Error(string memory reason) {
-                // catch failing revert() and require()
-                revert HoneyFailedTransfer( _tokenId, _owner, _honey, reason );
-            } catch (bytes memory reason) {
-                // catch failing assert()
-                revert HoneyFailedTransfer( _tokenId, _owner, _honey, string(reason) );
+        for (uint256 i = 0; i < _honeyIds.length; i++) {
+            if (_stable.transferFrom( _root, _honey, LibERC721.layout().token[_honeyIds[i]].value )) {
+                emit HoneyTrace( _root, _honey, _stable.get_Caller(), _honeyIds[0], _owner );
+                LibERC721.layout().token[_honeyIds[i]].state = LibERC721.Statusoftoken.validated;
+                } 
+            else { // catch failing revert() and require()
+                revert HoneyFailedTransfer( _honeyIds[i], _owner, _fundId, "" );
                 }
-        
-        //if (_balance < _value) revert HoneyInvalidBalance( _to, _balance);
+            }
+        LibERC721.layout().fund[_fundId].state = LibERC721.Statusoftoken.validated;
         }
 
      /// @notice Transfers the amount of native coin related to an active Honey Token to the contract pool.
      /// @notice Only the T2G Owner can run this function on behalf of the owner of the token, 
      /// @notice Both TokenId and Owner address are to be given as inputs to prevent any undesired or malicious action.
      /// @notice Emits a {HoneyAmountTransfer} event when successful
-     /// @param _tokenId the Id given to the Honey Token
+     /// @param _fundId the Id of the Fund Id
      /// @param _owner address of the owner of the token. 
      /// @dev MODIFIER : checks first that msg.sender is T2G owner. Otherwise revert HoneyInvalidSender error
      /// @dev MODIFIER : checks then that _owner is the token owner. Otherwise revert HoneyInvalidOwner error
@@ -322,35 +309,38 @@ contract T2G_HoneyFacet {
      /// @dev MODIFIER : checks then that tokenId refers to one Active Honey token. Otherwise revert HoneyInvalidStatus error
      /// @dev Once cheks are OK, then send a transfer call from this contract to the T2G_PoolFacet contract
 
-    function transferToPool(uint256 _tokenId, address _owner) 
-        external isT2GOwner isHoney(_tokenId) isValidated(_tokenId) isRootValid {
-        // On récupère le montant de don associé Token
-        LibERC721.TokenStruct memory data = LibERC721._tokenCommonFeatures(_tokenId);
-        address _root = T2G_PoolFacet(LibERC721.layout().root).get_T2G_PoolFacet();
-        EUR _eurSC = EUR(LibOwners.syndication().scAddress);
-        address _honey = get_T2G_HoneyFacet();
+    function transferToPool(bytes32 _fundId, address _owner) external isT2GOwner {
 
         if (!LibOwners._isAllowed(_owner, T2GTypes.R_GIVES)) revert HoneyInvalidOwner(_owner);
-        if (_owner != LibERC721._ownerOf(_tokenId)) revert HoneyInvalidOwner(_owner);
+        uint256[] memory _honeyIds = LibHoney.isStateAtomic(_fundId, LibERC721.Statusoftoken.validated );
+        if (_owner != LibERC721._ownerOf(_honeyIds[0])) revert HoneyInvalidOwner(_owner);
 
+        if (LibERC721.layout().root == address(0)) revert HoneyInvalidContractAddress("Root");
+
+        address _root = T2G_PoolFacet(LibERC721.layout().root).get_T2G_PoolFacet();
         if (_root == address(0)) revert HoneyInvalidContractAddress("PoolFacet");
-        // On authorise le T2G_PoolFacet contract à agir sur le Token de Owner
-        LibERC721._approve( _root, _tokenId, _owner);
-        // POC (Only) Check that unit is T2GSC otherwise revert
-        // T2G (YTBD) check unit related to value and turn it into T2GSC is possible
-        if (T2GTypes.CoinUnit(LibERC721.layout().token[_tokenId].unit) != T2GTypes.CoinUnit.T2GSC) 
-            revert HoneyInvalidValueUnit(_tokenId, T2GTypes.CoinUnit(LibERC721.layout().token[_tokenId].unit));
 
-        try  _eurSC.transferFrom( _honey, _root, data.value ) returns (bool) {
-            LibERC721.layout().token[_tokenId].state = LibERC721.Statusoftoken.active;
-            emit HoneyAmountTransfer( _tokenId, _root, data.value );
-            } catch Error(string memory reason) {
-                // catch failing revert() and require()
-                revert HoneyFailedTransfer( _tokenId, _owner, _honey, reason );
-            } catch (bytes memory reason) {
-                // catch failing assert()
-                revert HoneyFailedTransfer( _tokenId, _owner, _honey, string(reason) );
+        EUR _stable = EUR(LibOwners.syndication().boundWallet[address(0)]);
+        address _honey = LibOwners.syndication().boundWallet[this.get_T2G_HoneyFacet()];
+
+        for (uint256 i = 0; i < _honeyIds.length; i++) {
+            // On récupère le montant de don associé Token
+            LibERC721.TokenStruct memory data = LibERC721._tokenCommonFeatures(_honeyIds[i]);
+            // On authorise le T2G_PoolFacet contract à agir sur le Token de Owner
+            LibERC721._approve( _root, _honeyIds[i], _owner);
+            // POC (Only) Check that unit is T2GSC otherwise revert
+            if (T2GTypes.CoinUnit(LibERC721.layout().token[_honeyIds[i]].unit) != T2GTypes.CoinUnit.T2GSC) 
+                revert HoneyInvalidValueUnit(_honeyIds[i], T2GTypes.CoinUnit(LibERC721.layout().token[_honeyIds[i]].unit));
+            
+            emit HoneyTrace( _root, _honey, address(_stable), data.value, _owner );
+            
+            if (_stable.transferFrom( _honey, _root, data.value )) {
+                //LibERC721.layout().token[_honeyIds[i]].state = LibERC721.Statusoftoken.active;
+                emit HoneyAmountTransfer( _honeyIds[i], _root, data.value );
                 }
+            else revert HoneyFailedTransfer( _honeyIds[i], _owner, _fundId, "reason" );
+            }
+
         }
 
      /// @notice Burns / Cancels a draft Honey Token. For security reasons. 
@@ -374,7 +364,7 @@ contract T2G_HoneyFacet {
         if (_owner != LibERC721._ownerOf(_tokenId)) revert HoneyInvalidOwner(_owner);
 
         // We check that the status is not active, canceled ot burnt, otherwise revert
-        if (LibERC721.layout().token[_tokenId].state > LibERC721.Statusoftoken.validated) revert HoneyInvalidStatus(_tokenId);
+        //if (LibERC721.layout().token[_tokenId].state > LibERC721.Statusoftoken.validated) revert HoneyInvalidStatus(bytes32(0));
 
         //LibERC721._burn(_tokenId);
         LibERC721.layout().token[_tokenId].state = LibERC721.Statusoftoken.canceled;

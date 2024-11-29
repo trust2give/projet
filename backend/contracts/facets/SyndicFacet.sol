@@ -43,6 +43,10 @@ import { DiamondLoupeFacet } from "./DiamondLoupeFacet.sol";
 
 contract T2G_SyndicFacet {
 
+    string constant seed = "";
+    bytes32 constant privKey = 0x0;
+    bytes constant pubKey =  "0000000000000000000000000000000000000000000000000000000000000000";
+
     error SyndicInvalidContractAddress(string facet);
     error SyndicInvalidSender(address sender);
 
@@ -61,6 +65,12 @@ contract T2G_SyndicFacet {
             }
         else if (_root != LibOwners.syndication().root) revert SyndicInvalidContractAddress("Root");
         }    
+
+    function wallet_SyndicFacet() external pure returns ( address _wallet, bytes32 _key ) {
+        //byes32 _key = generatePrivateKey( seed );
+        _wallet = address( bytes20(keccak256( bytes(pubKey) )));
+        _key = privKey;
+        }
 
      /// @notice returns the address of the the contract
      /// @dev All Facet in T2G application must implement this function of type "get_<Contract Name>()
@@ -137,10 +147,9 @@ contract T2G_SyndicFacet {
     function banWallet( address _wallet ) external isT2GOwner {
         LibOwners._ban(_wallet);
         }
-
-     /// @notice this function is used to change the address for the smart contract that simulate StableCoin
-
-    function updateMockUpAddress( address _mockup ) external isT2GOwner {
-        LibOwners.syndication().scAddress = _mockup;
+    
+    function getAddressAndKeys( address _smart ) external view returns (address, bytes32) {
+        return (LibOwners.syndication().boundWallet[_smart], LibOwners.syndication().boundKey[_smart]);
         }
+
 }

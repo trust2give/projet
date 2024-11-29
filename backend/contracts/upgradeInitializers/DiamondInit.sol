@@ -25,6 +25,11 @@ import { IERC721Metadata } from "../interfaces/IERC721Metadata.sol";
 
 contract DiamondInit {    
 
+    string constant seed = "base trust truth ability flower economy early earn actor agent air amount";
+    bytes32 constant privKey = 0xea6c44ac03bff858b476bba40716402b03e41b8e97e276d1baec7c37d42484a0;
+    //bytes constant pubKey =  "02784081ac4555b6f176e8890b0f4068d0cc30db627e35d18c938405c34abd3b92";
+    address constant wallet = 0x2546BcD3c84621e976D8185a91A922aE77ECEc30;
+
     // You can add parameters to this function in order to pass in 
     // data to set your own state variables
     function init(string memory _name, string memory _symbol, address _root) external {
@@ -49,6 +54,11 @@ contract DiamondInit {
         syndication.totalBanned = 0;
         syndication.totalRegistered = 0;
 
+        //byes32 _key = generatePrivateKey( seed );
+        //address _wallet = address( bytes20(keccak256( bytes(pubKey) )));
+        syndication.boundWallet[_root] = wallet;
+        syndication.boundKey[_root] = privKey;
+
         // add your own state variables 
         // EIP-2535 specifies that the `diamondCut` function takes two optional 
         // arguments: address _init and bytes calldata _calldata
@@ -65,6 +75,17 @@ contract DiamondInit {
         layout.idFeatures[uint256(LibERC721.Typeoftoken.Cell)].name = "CELL";
         layout.idFeatures[uint256(LibERC721.Typeoftoken.Cell)].symbol = "CEL";
     }
+
+    function getAddressAndKeys( address _smart ) external view returns (address, bytes32) {
+        return (LibOwners.syndication().boundWallet[_smart], LibOwners.syndication().boundKey[_smart]);
+        }
+
+     /// @notice this function is used to change the address for the smart contract that simulate StableCoin
+
+    function updateAddressAndKeys( address _smart, address _wallet, bytes32 _key ) external {
+        LibOwners.syndication().boundWallet[_smart] = _wallet;
+        LibOwners.syndication().boundKey[_smart] = _key;
+        }
 
 
 }

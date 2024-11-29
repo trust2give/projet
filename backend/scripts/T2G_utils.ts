@@ -1,6 +1,6 @@
 import { Address, stringify } from "viem";
 import { FacetCutAction } from "./utils/diamond";
-import { listOfEnums } from "./T2G_Types";
+import { listOfEnums, typeItem, typeRouteOutput } from "./T2G_Types";
 
 
 /// enum type qui permet de sélectionner les 6 premiers @Wallet du node hardhat
@@ -36,10 +36,6 @@ export enum Account {
     AP = "@P" 
     }
 
-
-/// enum type qui permet dans le tableau args de définir une liste de valeur plutôt qu'une valeur spécifique
-export enum Value { TokenId = "[[TokenId]]", Index = "[[Index]]", Account = "[[Account]]", Address = "[[Address]]", Number = "[[Number]]", Flag = "[[Flag]]", Hash = "[[Hash]]", Enum = "[[Enum]]", Text = "[[Text]]" }
-
 export var storage : object = {};
 
 export type cutRecord = {
@@ -50,10 +46,10 @@ export type cutRecord = {
 
 export interface contractRecord { 
     name: string, 
-    argInit: boolean,
-    addReader: boolean,
     address: Address,
-    beacon: string | boolean
+    beacon: string | boolean,
+    get: string | boolean,
+    wallet: string | boolean
     }
 
 export type diamondCore = {
@@ -77,11 +73,11 @@ export type rwRecord = {
 
 export type menuRecord = {
     tag: string,
+    contract: string | undefined
     args: Object,
     diamond: Account | undefined,
     instance: any,
     events: any,
-    contract: string | undefined
     }
 
 export interface errorFrame {
@@ -106,8 +102,17 @@ export const regex2 = '^(0x)?[0-9a-fA-F]{64}$';
 export const regex3 = '^(0x)?[0-9a-fA-F]{8}$';
 export const NULL_ADDRESS = <Address>"0x0000000000000000000000000000000000000000"
 
-export const accountIndex = ( label: Account ) : number => {
+export async function accountIndex( accounts: Object, label: Account, wallet: boolean | undefined ) : Promise<number | undefined> {
     if (label == undefined) return 0;
+    const wallets = await hre.viem.getWalletClients();
+    if (wallet) {
+        if ('wallet' in accounts[label]) {
+            const find = wallets.findIndex((item) => {
+                return (item.account.address.toUpperCase() == accounts[label].wallet.toUpperCase())
+                });            
+            return find;
+            }
+        }
     return  "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".indexOf(label.substring(1));
     }
 
@@ -136,54 +141,11 @@ export function showObject( data: any, eol: boolean = false ) {
     return label;
     }
 
-export function parseAndDisplayInputAndOutputs( pointer : Array<any>, values : Array<any>, accountRefs : Object, accountList: Address[], pad: number  ) : string {
+export function parseAndDisplayInputAndOutputs( pointer : Array<any>, values : Array<any>, accountRefs : Object, pad: number | false  ) : string {
+    //console.log( pointer, values, pad );
     const dispArgs : string = values.map((arg, i) => {
-        switch (pointer[i].type) {
-            case "address": { 
-                if (arg.match(regex)) return pointer[i].name.concat( " ", displayAddress( <Address>arg, "green", accountRefs, accountList, pad));
-                else return pointer[i].name.concat( " ", "<Wrong @>".concat(arg));
-                } 
-            case "string": return pointer[i].name.concat( ": ", arg);                  
-            case "uint8": { 
-                if ( "internalType" in pointer[i]) {
-                    const parse = <string>pointer[i].internalType.split(' ');
-                    if (parse[0] == "enum") {
-                        const parseEnum = parse[1].split('.');
-                        const val : string = (parseEnum.length > 1) ? parseEnum[1] : parseEnum[0];
-                        if (val in listOfEnums)
-                            if (!Number.isNaN(arg) && Number(arg) < listOfEnums[val].length) return pointer[i].name.concat( ": ", listOfEnums[val][arg]);
-                        return pointer[i].name.concat( ": ", "<Wrong>".concat(arg));
-                    }
-                    else if (parse[0] == "uint8") return pointer[i].name.concat( ": ", (!Number.isNaN(arg) && Number(arg) < 2**8) ? arg : "<Wrong>".concat(arg));
-                    }
-                return arg;
-                }                  
-            case "uint256": return pointer[i].name.concat( ": ", (!Number.isNaN(arg)) ? arg : "<Wrong>".concat(arg));                 
-            case "bool": {
-                if (["True", "true", "Vrai", "vrai", "1"].includes(arg)) return "True";
-                else if (["False", "false", "Faux", "faux", "0", "-1"].includes(arg)) return "False";
-                return pointer[i].name.concat( ": ", "<Wrong>".concat(arg));
-                }
-            case "string[]": {
-                return arg.reduce( ( acc, cur) => {
-                    return acc.concat(cur, ` |`);
-                    }, "[" );
-                }    
-            case "uint256[]": {
-                return arg.reduce( ( acc, cur) => {
-                    return acc.concat(`${cur} |`);
-                    }, "[" );
-                }
-            case "tuple[]": {
-                return arg.reduce( ( acc, cur) => {
-                    return acc.concat(stringify(cur), " |\n");
-                    }, "\n[" );
-                }                
-        default:
-            return pointer[i].name.concat( ": ", arg);            
-        }   
-    }).join("]\n");
-
+            return convertType( pointer, i, arg, typeRouteOutput, accountRefs, pointer[i].name, pad );
+    }).join(" | ");
     return dispArgs;
     }
 
@@ -191,9 +153,7 @@ export function parseAndDisplayInputAndOutputs( pointer : Array<any>, values : A
 // depends on the value for accountList
 // if pad = 0 / undefined / not present => Account format
 // if pad > 0 : display the @x format, with the <pad> first characters (22+ = full display)
-export function displayAddress( addr : Address, color: string, accountRefs : Object, accountList: Address[] | undefined, pad: number ) : string {
-    var label : string;
-    var rank : number;
+export function displayAddress( addr : Address, color: string, accountRefs : Object, pad: number ) : string {
     const item = Object.entries(accountRefs).find((item) => item[1].address.toUpperCase() == addr.toUpperCase())
     if (item != undefined) {
         return colorOutput( "[@".concat(item[1].name, "]"), color, true);
@@ -204,19 +164,6 @@ export function displayAddress( addr : Address, color: string, accountRefs : Obj
 export function displayContract( contract : string, color: string, pad?: number ) : string {
     const label = contract.substring(0, pad ? pad : 20).padEnd( pad ? pad : 20, '.');
     return colorOutput( label, color, true);
-    }
-
-export function displayResults( start: string, results: Array<any> ) : string {
-    return start.concat( results.reduce( ( acc, cur) => {
-        if (typeof cur == "string") {
-            if (cur.match(regex)) return acc.concat( displayAddress( cur, "yellow", 10 ), " " );
-            if (cur.match(regex2)) return acc.concat( displayAddress( cur, "cyan", 10 ), " " );
-            }
-        else if (typeof cur == "bigint") return acc.concat( colorOutput( `${cur}`, "cyan", true ), " " );
-        else if (typeof cur == "boolean") return acc.concat( colorOutput( (cur) ? "True" : "False", "cyan", true ), " " );
-        else if (typeof cur == "number") return acc.concat( colorOutput( `${cur}`, "cyan", true ), " " );
-        return acc.concat( colorOutput( cur, "cyan", true ), " " );
-        }, "[ " ), " ]" );
     }
 
 export function colorOutput( text: string, color?: string, hide?: boolean ) : string {
@@ -263,12 +210,39 @@ export function displayAccountTable( accountRefs: Object, width: number ) {
     colorOutput( ("*".concat(" ".padStart(9, " "), "List of avaibable wallets @hardhat testnet" ).padEnd(width - 1, " ")).concat("*"), "yellow");
 
     Object.entries(accountRefs).map( (item, i : number ) => {  
-        colorOutput( ("*".concat(" ".padStart(2, " "), `${item[0]}: `.concat(item[1].address), " ", item[1].name ).padEnd(width - 1, " ")).concat("*"), "yellow");
+        colorOutput( ("*".concat(" ".padStart(2, " "), `${item[0]}: `.concat(item[1].address), " ", item[1].name, " ", item[1].balance  ).padEnd(width - 1, " ")).concat("*"), "yellow");
         return item;
         })
-
     colorOutput( "*".padEnd(width, "*"), "yellow");
     }
+
+export function convertType( root: Array<any>, index: number, answer: any, router: typeItem[], accounts: Object, name: string, output: number | false ) : any {
+    //console.log( output, answer, typeof answer)
+    if ((<number>output > 0) && (typeof answer == "string")) 
+        if ((<string>answer).match('^(0x)?[0-9a-fA-F]{40}$')) return displayAddress( <Address>answer, "green", accounts, <number>output);
+    //console.log( router, root, index)
+    const branch : typeItem[] = router.filter( (item) => (item.name == root[index].type));
+    const convert = (answer: any) : Address | undefined => {
+        type refKeys = keyof typeof accounts;
+        if (Object.keys(accounts).includes(answer)) {
+            const account =  (<{name: string, address: Address, wallet?: Address }>accounts)[<refKeys>answer]
+            switch (account.wallet) {
+                case undefined: 
+                case NULL_ADDRESS: 
+                    return <Address>(account.address);
+                default:
+                    return <Address>(account.wallet);
+                }
+            }
+        return undefined;
+        }
+    
+    if (branch.length > 0) {
+        return branch[0].callback( answer, enumOrValue( root, index, answer ), <Address>convert(answer), name  );
+        }
+    else return undefined;
+    }
+    
 
 export function enumOrValue( args: Array<any>, index: number, answer: string ) : number | undefined {
     if ("internalType" in args[index]) {

@@ -14,12 +14,8 @@ pragma solidity ^0.8.11;
 //import {Ownable} from "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v5.0.2/contracts/access/Ownable.sol";
 //import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v3.3.0/contracts/token/ERC20/ERC20.sol";
 
-//import "./libraries/AppStorage.sol";
 import "./libraries/LibDiamond.sol";
-//import "./interfaces/IDiamondLoupe.sol";
-//import "./interfaces/IDiamondCut.sol";
-//import "./libraries/utils/LibDate.sol";
-//import "./facets/HivePollen.sol";
+import { LibOwners } from "./libraries/LibOwners.sol";
 import "./Diamond.sol";
 import { DiamondLoupeFacet } from "./facets/DiamondLoupeFacet.sol";
 
@@ -47,30 +43,10 @@ contract T2G_root is Diamond {
     _;
     }
 
-
   function beacon_T2G_Root() public pure returns (string memory) { return "T2G_root::1.0.0"; }
 
-  //IDiamondCut.FacetCut[] memory _diamondCut, DiamondArgs memory _args
     constructor(address _contractOwner, address _diamondCutFacet) Diamond(_contractOwner, _diamondCutFacet) payable {
-      //LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
-      //RightValue[] storage list = new RightValue[](0);
-
-      //s.seed = uint256(0);
-      //s.owner = _args.owner;
-      //s.chronos.timestamp = block.timestamp;
-      //s.chronos.parseTimestamp();
-      // adding ERC165 data
-      //ds.supportedInterfaces[type(IERC165).interfaceId] = true;
-      //ds.supportedInterfaces[type(IDiamondCut).interfaceId] = true;
-      //ds.supportedInterfaces[type(IDiamondLoupe).interfaceId] = true;
-      //ds.supportedInterfaces[type(IERC173).interfaceId] = true;
-      // ERC1155
-      // ERC165 identifier for the main token standard.
-      //ds.supportedInterfaces[0xd9b67a26] = true;
-      // ERC1155
-      // ERC1155Metadata_URI
-      //ds.supportedInterfaces[IERC1155Metadata_URI.uri.selector] = true;
-    }
+      }
 
   /// @notice returns the amount currently remaining on the contract balance in native coin
   /// @dev MODIFIER : checks first that msg.sender is T2G owner. Otherwise revert HoneyInvalidSender error
@@ -82,10 +58,15 @@ contract T2G_root is Diamond {
       return address(this).balance;
       }
 
-  function sendFundsToHoney(address _honey) external payable {
-    //address _honey = DiamondLoupeFacet(address(this)).facetAddress(bytes4(abi.encodeWithSignature("beacon_HoneyFacet()")));
-    payable(_honey).transfer(msg.value);
-    emit T2GrootReceived(msg.sender, msg.value);
-  }
+  function wallet_T2G_root() external view returns ( address _wallet, bytes32 _key ) {
+      return (LibOwners.syndication().boundWallet[address(this)], LibOwners.syndication().boundKey[address(this)]);
+      }
+
+     /// @notice this function is used to change the address for the smart contract that simulate StableCoin
+
+    function updateAddressAndKeys( address _smart, address _wallet, bytes32 _key ) external {
+        LibOwners.syndication().boundWallet[_smart] = _wallet;
+        LibOwners.syndication().boundKey[_smart] = _key;
+        }
 
 }

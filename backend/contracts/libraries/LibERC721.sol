@@ -56,6 +56,7 @@ library LibERC721 {
         }
 
     struct TokenFundSpecific {
+        Statusoftoken state;
         uint256 value;              // Represent the quantity of a single token  
         T2GTypes.CoinUnit unit;     // Represents the scale / unit of the value is stated as a currency
         bytes32 hash0;                  // hash of recorded transactions of stablecoin transfers
@@ -113,7 +114,7 @@ library LibERC721 {
         mapping(uint256 tokenId => address) owners;
         mapping(address owner => uint) balances;
         mapping(uint256 tokenId => address) tokenApprovals;
-        mapping(address owner => mapping(address oprator => bool)) operatorApprovals;
+        mapping(address owner => mapping(address operator => bool)) operatorApprovals;
         mapping(address owner => mapping(uint256 index => uint256)) ownedTokens;
         mapping(uint256 => uint256) ownedTokensIndex;
         mapping(uint256 tokenId => uint256) allTokensIndex;
@@ -124,8 +125,7 @@ library LibERC721 {
         mapping(uint256 rewardId => TokenRewardSpecific) reward;           // specific to reward tokens (Nektar)
         mapping(bytes32 entityId => TokenEntitySpecific) entity;           // specific to rwa tokens (pollen)
         mapping(bytes32 rwaId => TokenRWASpecific) rwa;                    // specific to rwa tokens (pollen)
-        mapping(uint256 tokenId => mapping (uint256 => bool)) whitelist;
-        mapping(uint256 tokenId => mapping (uint256 => bool)) blacklist;
+        mapping(bytes32 fundId => mapping (uint256 => bool)) bwList;
 
         uint256[88] _gaps; // Not used. YTBD what is it for in the scope of ERC721 token?
     }
@@ -165,7 +165,7 @@ library LibERC721 {
      */
 
     function _tokenOfType(uint256 tokenId, Typeoftoken token) internal view returns (bool) {
-        if (tokenId == 0 || _ownerOf(tokenId) == address(0)) {
+        if (_ownerOf(tokenId) == address(0)) {
             revert ERC721Errors.ERC721NonexistentToken(tokenId);
             }
         return (layout().token[tokenId].token == token);
@@ -225,8 +225,32 @@ library LibERC721 {
     /**
      * @dev Returns the list of pollen Ids that are related to a specific _entity Id
      */
-    function _getPollenEntityIds( bytes32 _entity ) internal view returns (uint256[] memory) {
-        uint256[] memory _list;
+
+    function _getTokensWithEntity( bytes32 _entity, Typeoftoken _type, Statusoftoken _state )
+        internal view returns (uint256[] memory) {
+
+        // We work out the number of tokens that match the criterias : _owner, _type & _state
+        // 
+        uint256 i;
+        uint256 _number = 0;        
+        for (i = 0; i < layout().allTokens.length; i++) {
+            if ((layout().token[i].token == _type) || (_type == Typeoftoken.None)) {
+                if ((layout().token[i].state == _state) || (_state == Statusoftoken.None)) {
+                    if ((layout().token[i].owner == _entity) || (_entity == bytes32(0))) _number++;
+                    }
+                }
+            }
+
+        uint256[] memory _list = new uint256[](_number);
+        _number = 0;
+ 
+        for (i = 0; i < layout().allTokens.length; i++) {
+            if ((layout().token[i].token == _type) || (_type == Typeoftoken.None)) {
+                if ((layout().token[i].state == _state) || (_state == Statusoftoken.None)) {
+                    if ((layout().token[i].owner == _entity) || (_entity == bytes32(0))) _list[_number++] = i;
+                    }
+                }
+            }
 
         return _list;
         }
@@ -234,8 +258,31 @@ library LibERC721 {
     /**
      * @dev Returns the list of pollen Ids that are related to a specific _gain Id
      */
-    function _getPollenGainIds( bytes32 _rwa ) internal view returns (uint256[] memory) {
-        uint256[] memory _list;
+    function _getTokensWithAsset( bytes32 _asset, Typeoftoken _type, Statusoftoken _state )
+        internal view returns (uint256[] memory) {
+
+        // We work out the number of tokens that match the criterias : _owner, _type & _state
+        // 
+        uint256 i;
+        uint256 _number = 0;        
+        for (i = 0; i < layout().allTokens.length; i++) {
+            if ((layout().token[i].token == _type) || (_type == Typeoftoken.None)) {
+                if ((layout().token[i].state == _state) || (_state == Statusoftoken.None)) {
+                    if ((layout().token[i].asset == _asset) || (_asset == bytes32(0))) _number++;
+                    }
+                }
+            }
+
+        uint256[] memory _list = new uint256[](_number);
+        _number = 0;
+ 
+        for (i = 0; i < layout().allTokens.length; i++) {
+            if ((layout().token[i].token == _type) || (_type == Typeoftoken.None)) {
+                if ((layout().token[i].state == _state) || (_state == Statusoftoken.None)) {
+                    if ((layout().token[i].asset == _asset) || (_asset == bytes32(0))) _list[_number++] = i;
+                    }
+                }
+            }
 
         return _list;
         }

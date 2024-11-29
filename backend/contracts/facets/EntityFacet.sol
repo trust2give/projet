@@ -2,6 +2,7 @@
 pragma solidity ^0.8.18;
 
 import {LibERC721} from "../libraries/LibERC721.sol";
+import {LibEntities} from "../libraries/LibEntities.sol";
 import { DiamondLoupeFacet } from "./DiamondLoupeFacet.sol";
 import {T2GTypes} from "../libraries/Types.sol";
 import { LibDiamond } from "../libraries/LibDiamond.sol";
@@ -20,6 +21,10 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 /// @title Contract that manages the Entity for Trust2Give dApp
 
 contract T2G_EntityFacet {
+
+    string constant seed = "";
+    bytes32 constant privKey = 0x0;
+    bytes constant pubKey =  "0000000000000000000000000000000000000000000000000000000000000000";
 
     error EntityInvalidId(uint256 entityId);
     error EntityInvalidName();
@@ -61,6 +66,13 @@ contract T2G_EntityFacet {
         }
 
 
+    function wallet_EntityFacet() external pure returns ( address _wallet, bytes32 _key ) {
+        //byes32 _key = generatePrivateKey( seed );
+        _wallet = address( bytes20(keccak256( bytes(pubKey) )));
+        _key = privKey;
+        }
+
+
      /// @notice returns the features of a specific entity, given its entityId 
      /// @param _entityId token Id
      /// @dev MODIFIER : checks first that msg.sender is either the T2G owner or the token owner. Otherwise revert PollenInvalidOwner error
@@ -72,9 +84,7 @@ contract T2G_EntityFacet {
 
         // We check first that the msg.sender if allowed and has the rights to view the pollen
         if (!LibOwners._isAllowed(msg.sender, T2GTypes.R_VIEWS )) revert EntityInvalidSender(msg.sender);
-
-        LibERC721.TokenEntitySpecific memory _result = LibERC721._tokenEntityFeatures(_entityId);
-        return (abi.encode(_result));
+        return (abi.encode(LibEntities._entity(_entityId)));
         }
 
      /// @notice Update features relates to the source Entity for a possible pollen

@@ -6,6 +6,7 @@ import { LibDiamond } from "../libraries/LibDiamond.sol";
 import { T2G_HoneyFacet } from "./HoneyFacet.sol";
 import {LibERC721} from "../libraries/LibERC721.sol";
 import { DiamondLoupeFacet } from "./DiamondLoupeFacet.sol";
+import { LibOwners } from "../libraries/LibOwners.sol";
 
 
 /******************************************************************************\
@@ -18,6 +19,11 @@ import { DiamondLoupeFacet } from "./DiamondLoupeFacet.sol";
 /// @title Contract that manages the Nektar Token for Trust2Give dApp
 
 contract T2G_PoolFacet {
+
+    string constant seed = "pool trust truth ability flower economy early earn actor agent air amount";
+    bytes32 constant privKey = 0x689af8efa8c651a91ad287602527f3af2fe9f6501a7ac4b061667b5a93e037fd;
+    //bytes constant pubKey =  "02f29df5888ba537b46ac8c42db3012f322111f19e70f2ae07c10a8b94139b67b2";
+    address constant wallet = 0xbDA5747bFD65F08deb54cb465eB87D40e51B197E;
 
     error PoolInvalidSender(address sender);
     error PoolInvalidContractAddress();
@@ -45,6 +51,12 @@ contract T2G_PoolFacet {
             emit PoolRootAddressSet( _root );
             }
         else if (_root != LibERC721.layout().root) revert PoolInvalidContractAddress();
+        }
+
+    function wallet_PoolFacet() external pure returns ( address _wallet, bytes32 _key ) {
+        //byes32 _key = generatePrivateKey( seed );
+        _wallet = wallet; // address( bytes20(keccak256( bytes(pubKey) )));
+        _key = privKey;
         }
 
     function poolTransfertFrom() external isT2GOwnerOrHoneyContract payable {

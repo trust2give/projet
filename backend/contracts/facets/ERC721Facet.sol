@@ -11,7 +11,17 @@ import {ERC721Errors} from "../libraries/Errors.sol";
 contract ERC721Facet is IERC721Enumerable {
     using Strings for uint;
 
+    string constant seed = "";
+    bytes32 constant privKey = 0x0;
+    bytes constant pubKey =  "0000000000000000000000000000000000000000000000000000000000000000";
+
     function beacon_ERC721Facet() public pure returns (string memory) { return "ERC721Facet::1.0.2"; }
+
+    function wallet_ERC721Facet() external pure returns ( address _wallet, bytes32 _key ) {
+        //byes32 _key = generatePrivateKey( seed );
+        _wallet = address( bytes20(keccak256( bytes(pubKey) )));
+        _key = privKey;
+        }
 
     //ERC721 MetaData for Honey
     function name(LibERC721.Typeoftoken tokenSelector) public view returns (string memory) {

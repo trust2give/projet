@@ -1,3 +1,4 @@
+import { Address, stringify } from "viem";
 
 
 export const Typeoftoken : string[] = ["None", "Pollen", "Honey", "Nektar", "Cell"]
@@ -40,7 +41,7 @@ export const listOfEnums = {
     TypeCountries
     }
 
-type abiData = {
+export type abiData = {
     name: string,
     type: string,
     internalType?: string
@@ -50,6 +51,11 @@ type abiItem = {
     components: abiData[],
     name: string,
     type: string
+    }
+
+export interface typeItem {
+    name: string,
+    callback: (( answer: any, enumeration: number | undefined, convertAddress: Address | undefined, name: string | undefined ) => any ), 
     }
 
 const nameAbiData : abiData = { name: 'name', type: 'string', };
@@ -62,8 +68,8 @@ const unitTypeAbiData : abiData = { name: 'unitType', type: 'uint8', internalTyp
 const unitSizeAbiData : abiData = { name: 'unitSize', type: 'uint8', internalType: "enum LibERC721.TypeofUnitSize", };
 const countryAbiData : abiData = { name: 'country', type: 'uint8', internalType: "enum LibERC721.TypeCountries", };
 const sourceAbiData : abiData = { name: 'source', type: 'uint8', internalType: "enum LibERC721.TypeofGainSource", };
-const scopeAbiData : abiData = { name: 'country', type: 'uint8', internalType: "enum LibERC721.TypeCountries", };
-const gainAbiData : abiData = { name: 'country', type: 'uint8', internalType: "enum LibERC721.TypeCountries", };
+const scopeAbiData : abiData = { name: 'scope', type: 'uint8', internalType: "enum LibERC721.TypeofGainScope", };
+const gainAbiData : abiData = { name: 'gain type', type: 'uint8', internalType: "enum LibERC721.TypeofGainType", };
 const stateAbiData : abiData = { name: 'state', type: 'uint8', internalType: "enum LibERC721.Statusoftoken", };
 const tokenAbiData : abiData = { name: 'token', type: 'uint8', internalType: "enum LibERC721.Typeoftoken", };
 const sizeAbiData : abiData = { name: 'size', type: 'uint8', internalType: "enum LibERC721.TypeofsizeUnit", };
@@ -140,6 +146,7 @@ const TokenRWASpecific: abiItem = {
 
 const TokenFundSpecific: abiItem = {
     components: [
+        stateAbiData,
         valueAbiData,
         unitAbiData,
         hash0AbiData,
@@ -149,7 +156,7 @@ const TokenFundSpecific: abiItem = {
     type: 'tuple',
     }
 
-const pollenFeatures: abiItem = {
+export const pollenFeatures: abiItem = {
     components: [
         TokenStruct,
         TokenEntitySpecific,
@@ -159,7 +166,7 @@ const pollenFeatures: abiItem = {
     type: 'tuple',
     }
 
-const honeyFeaures: abiItem = {
+export const honeyFeatures: abiItem = {
     components: [ 
         TokenStruct, 
         TokenFundSpecific,
@@ -174,5 +181,85 @@ export const dataDecodeABI = {
     TokenEntitySpecificABI: [ TokenEntitySpecific,],
     TokenFundSpecificABI: [ TokenFundSpecific ],
     pollenFeaturesABI : [ pollenFeatures ],
-    honeyFeaturesABI : [ honeyFeaures ]
+    honeyFeaturesABI : [ honeyFeatures ]
     };
+
+
+export const typeRouteArgs: typeItem[] = [
+    { name: "uint8", callback: ( answer: string, enumeration: number | undefined ) => {
+        return enumeration;
+        }},    
+    { name: "address", callback: ( answer: string, enumeration: number | undefined, convertAddress: Address | undefined ) => { 
+        return (answer.match('^(0x)?[0-9a-fA-F]{40}$')) ? answer : convertAddress; 
+        }},    
+    { name: "bytes", callback: ( answer: string ) => {
+        return answer;
+        }},    
+    { name: "bytes4", callback: ( answer: string ) => { 
+        return (answer.match('^(0x)?[0-9a-fA-F]{8}$')) ? answer : undefined; 
+        }},    
+    { name: "bytes32", callback: ( answer: string ) => { 
+        return (answer.match('^(0x)?[0-9a-fA-F]{64}$')) ? answer : undefined; 
+        }},    
+    { name: "uint256", callback: ( answer: string ) => {
+        return BigInt(answer);
+        }},    
+    { name: "string", callback: ( answer: string ) => {
+        return <string>answer;
+        }},    
+    { name: "bool", callback: ( answer: string ) => {
+        if (["True", "true", "Vrai", "vrai", "1"].includes(answer)) return true;
+        else if (["False", "false", "Faux", "faux", "0", "-1"].includes(answer)) return false;
+        else return undefined;
+        } },    
+    { name: "tuple[]", callback: ( answer : string ) => { 
+        return answer; 
+        }},    
+    { name: "string[]", callback: ( answer: string ) => {
+        return <string[]>answer.split(";");
+        }},    
+    ]
+
+export const typeRouteOutput: typeItem[] = [
+    { name: "uint8", callback: ( answer: string, enumeration: number | undefined ) => {
+        return enumeration;
+        }},    
+    { name: "address", callback: ( answer: string, enumeration: number | undefined, convertAddress: Address | undefined, name: string | undefined ) => { 
+        if (answer.match('^(0x)?[0-9a-fA-F]{40}$')) return (<string>name).concat( " ", <Address>convertAddress );
+        else return (<string>name).concat( " ", "<Wrong @>".concat(answer));
+        }},    
+    { name: "bytes4", callback: ( answer: string, enumeration: number | undefined, convertAddress: Address | undefined, name: string | undefined ) => { 
+        if (answer.match('^(0x)?[0-9a-fA-F]{8}$')) return (<string>name).concat( " ", answer );
+        else return (<string>name).concat( " ", "<Wrong @>".concat(answer));
+        }},    
+    { name: "bytes32", callback: ( answer: string, enumeration: number | undefined, convertAddress: Address | undefined, name: string | undefined ) => { 
+        if (answer.match('^(0x)?[0-9a-fA-F]{64}$')) return (<string>name).concat( " ", answer );
+        else return (<string>name).concat( " ", "<Wrong @>".concat(answer));
+        }},    
+    { name: "uint256", callback: ( answer: string, enumeration: number | undefined, convertAddress: Address | undefined, name: string | undefined ) => {
+        return (<string>name).concat( ": ", (!Number.isNaN(answer)) ? answer : "<Wrong>".concat(answer));                 
+        }},    
+    { name: "string", callback: ( answer: string, enumeration: number | undefined, convertAddress: Address | undefined, name: string | undefined ) => {
+        return (<string>name).concat( ": ", answer);
+        }},    
+    { name: "bool", callback: ( answer: string, enumeration: number | undefined, convertAddress: Address | undefined, name: string | undefined ) => {
+        if (["True", "true", "Vrai", "vrai", "1"].includes(answer)) return "true";
+        else if (["False", "false", "Faux", "faux", "0", "-1"].includes(answer)) return "false";
+        return (<string>name).concat( ": ", "<Wrong>".concat(answer));
+        } },    
+    { name: "tuple[]", callback: ( answer : Array<any> ) => { 
+        return answer.reduce( ( acc, cur) => {
+            return acc.concat(stringify(cur), " |\n");
+            }, "\n[" );
+        }},    
+    { name: "string[]", callback: ( answer: string[] ) => {
+        return (<string[]>answer).reduce( ( acc, cur) => {
+            return acc.concat(cur, ` |`);
+            }, "[" );
+        }},    
+    { name: "uint256[]", callback: ( answer: bigint[] ) => {
+        return (<bigint[]>answer).reduce( ( acc, cur) => {
+            return acc.concat(cur, ` |`);
+            }, "[" );
+        }},    
+    ]
