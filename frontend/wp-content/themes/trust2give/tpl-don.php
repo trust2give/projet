@@ -44,7 +44,6 @@ get_header();
 
         <hr class="my-8 border-gray-300">
 
-        <!-- Second Section: User Details -->
         <div class="mb-12">
             <div class="grid md:grid-cols-2 gap-8">
                 <!-- First Column -->
@@ -53,8 +52,8 @@ get_header();
                         <label class="flex items-center cursor-pointer">
                             <span class="mr-3">Company</span>
                             <div class="relative inline-block w-12 h-6 transition duration-200 ease-in-out">
-                                <input type="checkbox" name="is_company" id="company-switch" 
-                                       class="absolute w-6 h-6 opacity-0 z-10 cursor-pointer peer">
+                                <input type="checkbox" name="is_company" id="company-switch"
+                                       class="absolute w-6 h-6 opacity-0 z-10 cursor-pointer peer is_company">
                                 <div class="block h-6 w-12 rounded-full bg-gray-300 peer-checked:bg-indigo-400"></div>
                                 <div class="absolute left-1 top-1 w-4 h-4 rounded-full transition-all duration-300 bg-white peer-checked:translate-x-6"></div>
                             </div>
@@ -64,22 +63,22 @@ get_header();
                     <div class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium mb-1">Genre</label>
-                            <select name="gender" class="w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
+                            <select name="gender" id="gender" class="w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
                                 <option value="mr">M.</option>
                                 <option value="mrs">Mme</option>
                             </select>
                         </div>
                         <div>
                             <label class="block text-sm font-medium mb-1">Nom</label>
-                            <input type="text" name="lastname" class="p-2 w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
+                            <input type="text" name="lastname" class="input-text p-2 w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
                         </div>
                         <div>
                             <label class="block text-sm font-medium mb-1">Prénom</label>
-                            <input type="text" name="firstname" class="p-2 w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
+                            <input type="text" name="firstname" class="input-text p-2 w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
                         </div>
                         <div>
                             <label class="block text-sm font-medium mb-1">Email</label>
-                            <input type="email" name="email" class="p-2 w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
+                            <input type="email" name="email" class="input-text p-2 w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
                         </div>
                     </div>
                 </div>
@@ -88,23 +87,23 @@ get_header();
                 <div class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium mb-1">Adresse 1</label>
-                        <input type="text" name="address1" class="p-2 w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
+                        <input type="text" name="address_1" class="input-text p-2 w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-1">Adresse 2</label>
-                        <input type="text" name="address2" class="p-2 w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
+                        <input type="text" name="address_2" class="input-text p-2 w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-1">Code Postal</label>
-                        <input type="text" name="postcode" class="p-2 w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
+                        <input type="text" name="postcode" class="input-text p-2 w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-1">Ville</label>
-                        <input type="text" name="city" class="p-2 w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
+                        <input type="text" name="city" class="input-text p-2 w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-1">Pays</label>
-                        <input type="text" name="country" class="p-2 w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
+                        <input type="text" name="country" class="input-text p-2 w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
                     </div>
                 </div>
             </div>
@@ -127,14 +126,14 @@ get_header();
                     </label>
                 <?php endforeach; ?>
                 <div>
-                    <input type="number" name="custom_amount" placeholder="Autre montant" 
+                    <input type="number" name="custom_amount" placeholder="Autre montant" id="custom-amount" 
                            class="w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 custom-amount">
                 </div>
             </div>
 
             <!-- Submit Button -->
             <div class="flex justify-end">
-                <button type="submit" class="bg-indigo-500 text-white px-8 py-3 rounded-xl hover:bg-indigo-600 transition-colors duration-300">
+                <button type="button" id="submit" class="bg-indigo-500 text-white px-8 py-3 rounded-xl hover:bg-indigo-600 transition-colors duration-300">
                     Faire un don
                 </button>
             </div>

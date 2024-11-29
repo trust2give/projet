@@ -48,7 +48,7 @@
 		<a class="hidden lg:inline-block lg:ml-auto lg:mr-3 py-2 border-2 px-6 bg-indigo-500 hover:bg-indigo-400 text-white font-bold rounded-xl transition duration-200" href="#">Faire un don</a>
 		<button id="connect-wallet"
 				class="hidden lg:inline-block py-2 px-6 border-solid border-2 border-white text-white font-bold rounded-xl transition duration-200">
-			Mon compte
+			Se connecter
 		</button>
 	</nav>
 	<div class="navbar-menu relative z-50 hidden">

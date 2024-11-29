@@ -1,3 +1,20 @@
+let data = {
+    'categories': [],
+    'informations': {
+        'company': false,
+        'gender': 'mr',
+        'lastname': '',
+        'firstname': '',
+        'email': '',
+        'address_1': '',
+        'address_2': '',
+        'postcode': '',
+        'city': '',
+        'country': ''
+    },
+    'amount': 0,
+    'custom_amount': 0,
+};
 
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('connect-wallet').addEventListener('click', async () => {
@@ -15,5 +32,53 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             console.error("No Ethereum provider found.");
         } 
+    });
+
+
+    document.querySelectorAll('.category-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', (el) => {
+            
+            if (el.target.checked) {
+                data['categories'].push(el.target.value);
+                
+            } else {
+                data['categories'].pop(el.target.value);
+            }
+        });
+    });
+
+    document.getElementById('company-switch').addEventListener('change', function() {
+        if (this.checked) {
+            data['informations']['company'] = true;
+        } else {
+            data['informations']['company'] = false;
+        }
+    });
+
+    document.getElementById('gender').addEventListener('change', function() {
+        data['informations']['company'] = this.value;
+    });
+
+    document.querySelectorAll('.input-text').forEach(input => {
+        input.addEventListener('change', function() {
+            data['informations'][this.name] = this.value;
+        });
+    });
+
+    document.querySelectorAll('.amount-radio').forEach(input => {
+        input.addEventListener('change', function() {
+            if (this.checked) {
+                data['amount'] = this.value;
+            }
+        });
+    });
+
+    document.getElementById('custom-amount').addEventListener('change', function() {
+        data['amount'] = 0;
+        data['custom_amount'] = this.value;
+    });
+
+    document.getElementById('submit').addEventListener('click', function() {
+        console.table(data);
     });
 });
