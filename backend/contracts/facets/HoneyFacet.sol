@@ -119,7 +119,7 @@ contract T2G_HoneyFacet {
         return (LibERC721._tokenOfType( _tokenId, LibERC721.Typeoftoken.Honey ));
         }
 
-     /// @notice Update features relates to the funding for a possible honey
+     /// @notice Create or Update a fund object related to the funding for a possible honey
      /// @param _data the data for the new created fund
      /// @dev MODIFIER : checks first that msg.sender is T2G owner. Otherwise revert EntityInvalidSender error
      /// @dev this function act as a setter and overwrites an existing content with new values
@@ -129,13 +129,71 @@ contract T2G_HoneyFacet {
     function setFund( bytes memory _data ) external isT2GOwner returns (bytes32) {
         LibERC721.TokenFundSpecific memory result = abi.decode(_data, (LibERC721.TokenFundSpecific));
         
-        if ((result.hash0.length == 0) || (result.hash0 == 0x0)) revert InvalidHashTransaction();
+        // We check that the hash0 is not null and represents a valid hash format
+        // Otherwise revert
+        if ((result.hash0.length == 0) || (result.hash0 == 0x0)) {
+            revert InvalidHashTransaction();
+            }
 
-        LibERC721.layout().fund[result.hash0].state = LibERC721.Statusoftoken.draft;
-        LibERC721.layout().fund[result.hash0].hash0 = result.hash0;
-        LibERC721.layout().fund[result.hash0].value = result.value;
-        LibERC721.layout().fund[result.hash0].unit = result.unit;
-        LibERC721.layout().fund[result.hash0].rate = result.rate;
+        // We check that the unit is well of StableCoin value.
+        // Otherwise revert
+        if (T2GTypes.CoinUnit(result.unit) != T2GTypes.CoinUnit.T2GSC) {
+            revert HoneyInvalidValueUnit(
+                uint256(0), 
+                T2GTypes.CoinUnit(result.unit)
+                );
+            }
+
+        // Get the @W0 address where fund in stablecoin is supposed to be transfered
+        address _W0 = LibOwners.syndication().boundWallet[address(this)];
+        
+        // Get the @ of the stablecoin contract to get the balance of the @W0 address that contains the fund in stablecoins
+        EUR _stable = EUR(LibOwners.syndication().boundWallet[address(0)]);
+
+        // Get the actual balance of the @W0 address
+        uint256 _balance = _stable.balanceOf(_W0);
+
+        // Get the list of funds available to work out the overall pool of funds
+        bytes32[] memory _fundId = LibERC721.layout().allFunds;
+        uint256 _pool = result.value;
+
+        // Should hash0 be an already fundId registered in the list
+        // We checks that the status is draft, to update data.
+        // Otherwise revert
+        // If status is None. Then we are creating a new fundId and we stack up the Id in the list
+        
+        LibERC721.TokenFundSpecific storage _fund = LibHoney._fund(result.hash0);
+
+        if (_fund.state == LibERC721.Statusoftoken.None) {
+            LibERC721.layout().allFunds.push(result.hash0);
+            }
+        else if (_fund.state > LibERC721.Statusoftoken.draft) {
+            revert HoneyInvalidStatus(result.hash0);
+            }
+
+        for (uint256 i = 0; i < _fundId.length; i++ ) {
+
+            LibERC721.TokenFundSpecific storage _pointer = LibHoney._fund(_fundId[i]);
+            
+            if (_pointer.state <=  LibERC721.Statusoftoken.active) {
+                // Assume that unit is StableCoin.
+                // Assume there is no other sate than draft or active in the balance of W0
+                // Work out the balance of both draft & validated funds
+                if (_fundId[i] != result.hash0) { 
+                    _pool += _pointer.value;
+                    } 
+                }
+            }
+
+        // we check that the actual balance of @W0 address is greater than the sum of _pool + the new fund
+        // Otherwise revert
+        if (_balance < _pool) revert HoneyInvalidBalance( msg.sender, _balance);
+
+        _fund.state = LibERC721.Statusoftoken.draft;
+        _fund.hash0 = result.hash0;
+        _fund.value = result.value;
+        _fund.unit = result.unit;
+        _fund.rate = result.rate;
                 
         emit FundCreated( result.hash0 );
         return result.hash0;
@@ -147,15 +205,20 @@ contract T2G_HoneyFacet {
      /// @return TokenFundSpecific object in abi encoded data format
 
     function fund(bytes32 _fundId) external view returns ( bytes memory ) {
+
         // We check first that the msg.sender if allowed and has the rights to view the pollen
         if (!LibOwners._isAllowed(msg.sender, T2GTypes.R_VIEWS )) revert HoneyInvalidSender(msg.sender);
+
         return (abi.encode(LibHoney._fund(_fundId)));
         }
     
     function getFunds() external view returns (bytes32[] memory _fundId) {
-        if (!LibOwners._isAllowed(msg.sender, T2GTypes.R_VIEWS)) revert HoneyInvalidOwner(msg.sender);        
-        uint256[] memory _ids = LibHoney.isStateAtomic( bytes32(0), LibERC721.Statusoftoken.None );
 
+        // We check first that the msg.sender if allowed and has the rights to view the pollen
+        if (!LibOwners._isAllowed(msg.sender, T2GTypes.R_VIEWS)) revert HoneyInvalidOwner(msg.sender);        
+
+        //uint256[] memory _ids = LibHoney.isStateAtomic( bytes32(0), LibERC721.Statusoftoken.None );
+        _fundId = LibERC721.layout().allFunds;
         }
 
      /// @notice returns the features of a specific Honey, given its tokenId 
@@ -175,7 +238,7 @@ contract T2G_HoneyFacet {
         return (abi.encode(honeyFeatures( data, LibHoney._fund(data.asset) )));
         }
 
-     /// @notice Mints one Honey Token for a specific owner address.
+     /// @notice Mints as many Honey Token as required for a specific owner address.
      /// @notice Emits a series of {Transfer} / {approve} events when successful
      /// @notice Emits a final HoneyCreated event with the TokenId of the new Pollen
      /// @notice The newly created Honey Token is set with a Draft status and will remain so until the white or black list have been sets
@@ -186,37 +249,31 @@ contract T2G_HoneyFacet {
      /// @param _entity bytes32 Id of entity bound to the Honey
      /// @param _fund the transaction Hash of the transaction of value sent by _to address
      /// @dev MODIFIER : checks first that msg.sender is T2G owner. Otherwise revert HoneyInvalidSender error
-     /// @dev MODIFIER : checks then that future owner of new token has already signed up to the T2G app and is not banned. Otherwise revert HoneyInvalidOwner error
-     /// @dev checks then that tokenId does not refer to no already existing token (of any type).
-     /// @dev once cheks are OK and Honey token minted, then sets the approval flags that allow either the owner or the T2G owner to manage the token
 
     function mintHoney(address _to, bytes32 _entity, bytes32 _fund) external isT2GOwner {
-        if (!LibOwners._isAllowed(_to, T2GTypes.R_GIVES)) revert HoneyInvalidOwner(_to);        
 
-        // We neet to check that the StableCoin balance of T2G_Owner wallet has suffisant amount to cover up the Honey amount
-        address _honey = this.get_T2G_HoneyFacet();
-        address _root = LibERC721.layout().root;
-        EUR _stable = EUR(LibOwners.syndication().boundWallet[address(0)]);
-
-        uint256 _balance = _stable.balanceOf(LibOwners.syndication().boundWallet[_root]);
-
-        emit HoneyTrace( address(this), _stable.get_Caller(), address(_stable), _balance, LibOwners.syndication().boundWallet[_root] );
-
-        if (_balance < LibHoney._fund(_fund).value) return; // revert HoneyInvalidBalance( _to, _balance);
-
-        if (_stable.approve(_honey, _balance)) {
-            // We mint and need to get the next _TokenId value available
-            uint256 _tokenId = LibHoney._mint(_to, _entity, _fund); 
-
-            // Once we have minted the right number of Honey, we turn active the entity and fund related to them
-            LibERC721.layout().entity[_entity].state = LibERC721.Statusoftoken.active;
-            LibERC721.layout().fund[_fund].state = LibERC721.Statusoftoken.active;
-
-            emit HoneyTrace( address(this), _honey, address(_stable), _tokenId, _to );
-            } 
-        else {   // catch failing revert() and require()
-            revert HoneyFailedApproval( _to, _honey,"" );
+        // We check that the _owner is allowed (registered, not banned and has rights/profile) to proceed with approval
+        // Otherwise revert
+        if (!LibOwners._isAllowed(_to, T2GTypes.R_GIVES)) {
+            revert HoneyInvalidOwner(_to);
             }
+
+        // Check that _fund is real and in draft status
+        // Otherwise revert
+        if (LibHoney._fund(_fund).state != LibERC721.Statusoftoken.draft) {
+            revert HoneyInvalidStatus(_fund);
+            }
+
+        // We mint and need to get the next _TokenId value available
+        uint256 _tokenId = LibHoney._mint(
+            _to, 
+            _entity, 
+            _fund
+            ); 
+
+        // Once we have minted the right number of Honey, we turn active the entity and fund related to them
+        LibERC721.layout().entity[_entity].state = LibERC721.Statusoftoken.active;
+        LibHoney._fund(_fund).state = LibERC721.Statusoftoken.active;
         }
 
      /// @notice Updates either the white or the black list related to a specific Honey Token. Emits a HoneySetBlackList event in case of success
@@ -265,36 +322,71 @@ contract T2G_HoneyFacet {
      /// @param _fundId the Id of the Fund Id
      /// @param _owner address of the owner of the token. 
      /// @dev MODIFIER : checks first that msg.sender is T2G owner. Otherwise revert HoneyInvalidSender error
-     /// @dev MODIFIER : checks then that _owner has already signed up to the T2G app and is not banned. Otherwise revert HoneyInvalidOwner error
-     /// @dev MODIFIER : checks then that _owner is the token owner. Otherwise revert HoneyInvalidOwner error
-     /// @dev MODIFIER : checks then that tokenId refers to an already existing Honey token. Otherwise revert HoneyInvalidTokenId error
-     /// @dev MODIFIER : checks then that tokenId refers to one Draft Honey token. Otherwise revert HoneyInvalidStatus error
-     /// @dev YTBD : once cheks are OK, then sets the status of Honey Token to Active.
 
     function approveHoney( bytes32 _fundId, address _owner ) external isT2GOwner {
-        if (!LibOwners._isAllowed(_owner, T2GTypes.R_GIVES)) revert HoneyInvalidOwner(_owner);
 
-        uint256[] memory _honeyIds = LibHoney.isStateAtomic(_fundId, LibERC721.Statusoftoken.draft );
-        if (_owner != LibERC721._ownerOf(_honeyIds[0])) revert HoneyInvalidOwner(_owner);
+        // We check that the _owner is allowed (registered, not banned and has rights/profile) to proceed with approval
+        // Otherwise revert
+        if (!LibOwners._isAllowed(_owner, T2GTypes.R_GIVES)) {
+            revert HoneyInvalidOwner(_owner);
+            }
 
-        // We transfer the amount represented by the Honey Token to the HoneyFacet@ to endorse it
+        // Check that _fundId is real and in active status
+        // Otherwise revert
+        if (LibHoney._fund(_fundId).state != LibERC721.Statusoftoken.active) {
+            revert HoneyInvalidStatus(_fundId);
+            }
 
-        EUR _stable = EUR(LibOwners.syndication().boundWallet[address(0)]);
-        address _honey = LibOwners.syndication().boundWallet[this.get_T2G_HoneyFacet()];
-        address _root = LibOwners.syndication().boundWallet[address(this)];
+        // We check that the HNY related to a fund are all in active Status to proceed to approval.
+        // Otherwise revert
+        uint256[] memory _honeyIds = LibHoney.isStateAtomic(
+            _fundId, 
+            LibERC721.Statusoftoken.draft 
+            );
 
-        emit HoneyTrace( _root, _honey, address(_stable), _honeyIds[0], _owner );
+        // We check that the _owner@ is really the owner of the HNY.
+        // otherwise revert.
+        if (_owner != LibERC721._ownerOf(_honeyIds[0])) {
+            revert HoneyInvalidOwner(_owner);
+            }
+
+        // We get the @W0 address where fund in stablecoin is supposed to be transfered from
+        address _W0 = LibOwners.syndication().boundWallet[address(this)]; 
+        // We get the @W1 address where fund in stablecoin is supposed to be transfered to
+        address _W1 = LibOwners.syndication().boundWallet[this.get_T2G_HoneyFacet()];
         
+        // We get the @ of the stablecoin contract to get the balance of the @W0 address that contains the fund in stablecoins
+        EUR _stable = EUR(LibOwners.syndication().boundWallet[address(0)]);
+
+        // event that traces the results. For testing purpose only
+        // to comment when not usefull        
+        emit HoneyTrace( 
+            _W0, 
+            address(_stable), 
+            _W1, 
+            _honeyIds[0], 
+            _owner 
+            );
+
+        // Following assumes that         
         for (uint256 i = 0; i < _honeyIds.length; i++) {
-            if (_stable.transferFrom( _root, _honey, LibERC721.layout().token[_honeyIds[i]].value )) {
-                emit HoneyTrace( _root, _honey, _stable.get_Caller(), _honeyIds[0], _owner );
-                LibERC721.layout().token[_honeyIds[i]].state = LibERC721.Statusoftoken.validated;
+
+            LibERC721.TokenStruct storage _token = LibERC721.layout().token[_honeyIds[i]];
+
+            if (_stable.transferFrom( _W0, _W1, _token.value )) {
+
+                _token.state = LibERC721.Statusoftoken.validated;
                 } 
             else { // catch failing revert() and require()
-                revert HoneyFailedTransfer( _honeyIds[i], _owner, _fundId, "" );
+                revert HoneyFailedTransfer( 
+                    _honeyIds[i], 
+                    _owner, 
+                    _fundId, 
+                    "" 
+                    );
                 }
             }
-        LibERC721.layout().fund[_fundId].state = LibERC721.Statusoftoken.validated;
+        LibHoney._fund(_fundId).state = LibERC721.Statusoftoken.validated;
         }
 
      /// @notice Transfers the amount of native coin related to an active Honey Token to the contract pool.

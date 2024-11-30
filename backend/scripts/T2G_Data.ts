@@ -1,5 +1,4 @@
-import { contractRecord, diamondCore, NULL_ADDRESS, menuRecord, Account } from "./T2G_utils";
-//import { TokenEntitySpecific } from "./T2G_Types";
+import { contractRecord, diamondCore, NULL_ADDRESS, menuRecord, Account } from "./libraries/types";
 
 /// Variables globales qui représentent l'état des smart contracts en déploiement à
 /// réaliser pour réaliser la mise à jour de l'architecture ERC2535 de la dApp Trust2Give

@@ -1,10 +1,15 @@
 const hre = require("hardhat");
-import { diamondNames, tokenCredential, contractSet, facetNames } from "./T2G_Data";
-import { deployDiamond, getOrDeployContract, deployLoupeDiamond, deployWithDiamondCut, deployFacets } from "./deploy";
-import { Address } from "viem";
-import { colorOutput, cutRecord, NULL_ADDRESS, regex, menuRecord, Account } from "./T2G_utils";
+import { diamondNames, contractSet, facetNames } from "./T2G_Data";
+import { deployDiamond, 
+         deployLoupeDiamond, 
+         deployWithDiamondCut, 
+         deployFacets } from "./libraries/deploy";
 import { FacetCutAction } from "./utils/diamond";
-import { writeLastFacetJSONfile, writeLastDiamondJSONfile, writeLastContractJSONfile } from "./InteractWithContracts";
+import { writeLastContractJSONfile, 
+         writeLastDiamondJSONfile, 
+         writeLastFacetJSONfile } from "./libraries/files";
+import { colorOutput } from "./libraries/format";
+import { cutRecord, menuRecord, Account, NULL_ADDRESS, regex, regex2, regex3 } from "./libraries/types";
 
 /******************************************************************************\
 * Author: Franck Dervillez <franck.dervillez@trust2give.com>, Twitter/Github: @fdervillez

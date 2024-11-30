@@ -18,9 +18,8 @@ library LibHoney {
      /// @dev MODIFIER : checks then that tokenId refers to a Pollen and no other type of token. Otherwise revert PollenInvalidTokenId error
      /// @return TokenFundSpecific object
 
-    function _fund(bytes32 _fundId) internal view returns ( LibERC721.TokenFundSpecific memory ) {
-        LibERC721.TokenFundSpecific memory _result = LibERC721._tokenFundFeatures(_fundId);
-        return _result;
+    function _fund(bytes32 _fundId) internal view returns ( LibERC721.TokenFundSpecific storage ) {
+        return LibERC721._tokenFundFeatures(_fundId); 
         }
 
     function _setParams (uint256 _value, T2GTypes.sizeUnit _size, T2GTypes.CoinUnit _unit) internal {

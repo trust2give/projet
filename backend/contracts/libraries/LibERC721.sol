@@ -110,6 +110,8 @@ library LibERC721 {
     struct Layout {
         address root;
         uint256[] allTokens;
+        bytes32[] allFunds;
+        bytes32[] allEntities;
         mapping(uint256 typeId => TokenIdCard) idFeatures;
         mapping(uint256 tokenId => address) owners;
         mapping(address owner => uint) balances;
@@ -195,7 +197,7 @@ library LibERC721 {
      * @dev Returns the Fund specific details of the `tokenId`. Does NOT revert if token doesn't exist
      * NEW: T2G specific
      */
-    function _tokenFundFeatures(bytes32 fundId) internal view returns (TokenFundSpecific memory) {
+    function _tokenFundFeatures(bytes32 fundId) internal view returns (TokenFundSpecific storage) {
         return layout().fund[fundId];
         }
 

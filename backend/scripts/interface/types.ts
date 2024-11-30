@@ -186,78 +186,120 @@ export const dataDecodeABI = {
 
 
 export const typeRouteArgs: typeItem[] = [
-    { name: "uint8", callback: ( answer: string, enumeration: number | undefined ) => {
+    { name: "uint8", 
+      callback: ( answer: string, 
+                  enumeration: number | undefined ) => {
         return enumeration;
         }},    
-    { name: "address", callback: ( answer: string, enumeration: number | undefined, convertAddress: Address | undefined ) => { 
+    { name: "address", 
+      callback: ( answer: string, 
+                  enumeration: number | undefined, 
+                  convertAddress: Address | undefined ) => { 
         return (answer.match('^(0x)?[0-9a-fA-F]{40}$')) ? answer : convertAddress; 
         }},    
-    { name: "bytes", callback: ( answer: string ) => {
+    { name: "bytes", 
+      callback: ( answer: string ) => {
         return answer;
         }},    
-    { name: "bytes4", callback: ( answer: string ) => { 
+    { name: "bytes4", 
+      callback: ( answer: string ) => { 
         return (answer.match('^(0x)?[0-9a-fA-F]{8}$')) ? answer : undefined; 
         }},    
-    { name: "bytes32", callback: ( answer: string ) => { 
+    { name: "bytes32", 
+      callback: ( answer: string ) => { 
         return (answer.match('^(0x)?[0-9a-fA-F]{64}$')) ? answer : undefined; 
         }},    
-    { name: "uint256", callback: ( answer: string ) => {
+    { name: "uint256", 
+      callback: ( answer: string ) => {
         return BigInt(answer);
         }},    
-    { name: "string", callback: ( answer: string ) => {
+    { name: "string", 
+      callback: ( answer: string ) => {
         return <string>answer;
         }},    
-    { name: "bool", callback: ( answer: string ) => {
+    { name: "bool", 
+      callback: ( answer: string ) => {
         if (["True", "true", "Vrai", "vrai", "1"].includes(answer)) return true;
         else if (["False", "false", "Faux", "faux", "0", "-1"].includes(answer)) return false;
         else return undefined;
         } },    
-    { name: "tuple[]", callback: ( answer : string ) => { 
+    { name: "tuple[]", 
+      callback: ( answer : string ) => { 
         return answer; 
         }},    
-    { name: "string[]", callback: ( answer: string ) => {
+    { name: "string[]", 
+      callback: ( answer: string ) => {
         return <string[]>answer.split(";");
         }},    
     ]
 
 export const typeRouteOutput: typeItem[] = [
-    { name: "uint8", callback: ( answer: string, enumeration: number | undefined ) => {
+    { name: "uint8", 
+      callback: ( answer: string, 
+                  enumeration: number | undefined ) => {
         return enumeration;
         }},    
-    { name: "address", callback: ( answer: string, enumeration: number | undefined, convertAddress: Address | undefined, name: string | undefined ) => { 
+    { name: "address", 
+      callback: ( answer: string, 
+                  enumeration: number | undefined, 
+                  convertAddress: Address | undefined, 
+                  name: string | undefined ) => { 
         if (answer.match('^(0x)?[0-9a-fA-F]{40}$')) return (<string>name).concat( " ", <Address>convertAddress );
         else return (<string>name).concat( " ", "<Wrong @>".concat(answer));
         }},    
-    { name: "bytes4", callback: ( answer: string, enumeration: number | undefined, convertAddress: Address | undefined, name: string | undefined ) => { 
+    { name: "bytes4", 
+      callback: ( answer: string, 
+                  enumeration: number | undefined, 
+                  convertAddress: Address | undefined, 
+                  name: string | undefined ) => { 
         if (answer.match('^(0x)?[0-9a-fA-F]{8}$')) return (<string>name).concat( " ", answer );
         else return (<string>name).concat( " ", "<Wrong @>".concat(answer));
         }},    
-    { name: "bytes32", callback: ( answer: string, enumeration: number | undefined, convertAddress: Address | undefined, name: string | undefined ) => { 
+    { name: "bytes32", 
+      callback: ( answer: string, 
+                  enumeration: number | undefined, 
+                  convertAddress: Address | undefined, 
+                  name: string | undefined ) => { 
         if (answer.match('^(0x)?[0-9a-fA-F]{64}$')) return (<string>name).concat( " ", answer );
         else return (<string>name).concat( " ", "<Wrong @>".concat(answer));
         }},    
-    { name: "uint256", callback: ( answer: string, enumeration: number | undefined, convertAddress: Address | undefined, name: string | undefined ) => {
+    { name: "uint256", 
+      callback: ( answer: string, 
+                  enumeration: number | undefined, 
+                  convertAddress: Address | undefined, 
+                  name: string | undefined ) => {
         return (<string>name).concat( ": ", (!Number.isNaN(answer)) ? answer : "<Wrong>".concat(answer));                 
         }},    
-    { name: "string", callback: ( answer: string, enumeration: number | undefined, convertAddress: Address | undefined, name: string | undefined ) => {
+    { name: "string", 
+      callback: ( answer: string, 
+                  enumeration: number | undefined, 
+                  convertAddress: Address | undefined, 
+                  name: string | undefined ) => {
         return (<string>name).concat( ": ", answer);
         }},    
-    { name: "bool", callback: ( answer: string, enumeration: number | undefined, convertAddress: Address | undefined, name: string | undefined ) => {
+    { name: "bool", 
+      callback: ( answer: string, 
+                  enumeration: number | undefined, 
+                  convertAddress: Address | undefined, 
+                  name: string | undefined ) => {
         if (["True", "true", "Vrai", "vrai", "1"].includes(answer)) return "true";
         else if (["False", "false", "Faux", "faux", "0", "-1"].includes(answer)) return "false";
         return (<string>name).concat( ": ", "<Wrong>".concat(answer));
         } },    
-    { name: "tuple[]", callback: ( answer : Array<any> ) => { 
+    { name: "tuple[]", 
+      callback: ( answer : Array<any> ) => { 
         return answer.reduce( ( acc, cur) => {
             return acc.concat(stringify(cur), " |\n");
             }, "\n[" );
         }},    
-    { name: "string[]", callback: ( answer: string[] ) => {
+    { name: "string[]", 
+      callback: ( answer: string[] ) => {
         return (<string[]>answer).reduce( ( acc, cur) => {
             return acc.concat(cur, ` |`);
             }, "[" );
         }},    
-    { name: "uint256[]", callback: ( answer: bigint[] ) => {
+    { name: "uint256[]", 
+      callback: ( answer: bigint[] ) => {
         return (<bigint[]>answer).reduce( ( acc, cur) => {
             return acc.concat(cur, ` |`);
             }, "[" );

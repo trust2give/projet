@@ -1,23 +1,26 @@
 const hre = require("hardhat");
-import { readLastContractSetJSONfile, writeLastContractJSONfile, InteractWithContracts, writeLastDiamondJSONfile, readLastDiamondJSONfile, readLastFacetJSONfile, writeLastFacetJSONfile } from "./InteractWithContracts";
-import { createWalletClient, AbiFunction, Address, getAbiItem, http } from "viem";
-import { generatePrivateKey } from 'viem/accounts'
-import { mainnet } from 'viem/chains'
-import { contractRecord, colorOutput, regex, regex2, regex3, Account, NULL_ADDRESS, displayAccountTable, rwRecord, rwType, menuRecord, accountIndex, convertType, enumOrValue } from "./T2G_utils";
-import { DeployContracts,  } from "./DeployContracts";
+import { Address, encodeAbiParameters, decodeAbiParameters } from 'viem'
 import * as readline from 'readline';
+import { InteractWithContracts } from "./InteractWithContracts";
+import { readLastContractSetJSONfile, 
+         writeLastContractJSONfile, 
+         writeLastDiamondJSONfile, 
+         readLastDiamondJSONfile, 
+         readLastFacetJSONfile, 
+         writeLastFacetJSONfile } from "./libraries/files";
+import { accountIndex, convertType, enumOrValue } from "./libraries/utils";
+import { DeployContracts,  } from "./DeployContracts";
 import { contractSet, diamondNames, facetNames, smart, encodeInterfaces } from "./T2G_Data";
-import { dataDecodeABI, abiData, typeRouteArgs, honeyFeatures, pollenFeatures, Typeoftoken, Statusoftoken } from "./T2G_Types";
-import { encodeAbiParameters, decodeAbiParameters } from 'viem'
-import { bigint } from "hardhat/internal/core/params/argumentTypes";
-
-import { 
-    signMessage, 
-    signTransaction, 
-    signTypedData, 
-    privateKeyToAddress,
-    toAccount 
-  } from 'viem/accounts'
+import { dataDecodeABI, abiData, typeRouteArgs, honeyFeatures, pollenFeatures, Typeoftoken, Statusoftoken } from "./interface/types";
+import { colorOutput, displayAccountTable } from "./libraries/format";
+import { contractRecord, rwRecord, rwType, menuRecord, Account, NULL_ADDRESS, regex, regex2, regex3 } from "./libraries/types";
+import { showBeacons } from "./logic/beacons";
+import { showBalances } from "./logic/balances";
+import { showTokens } from "./logic/tokens";
+import { showRights } from "./logic/rights";
+import { showApprovals } from "./logic/approvals";
+import { showInstance, updateInstances } from "./logic/instances";
+import { accountRefs, globalState, setState, addAccount, account, updateAccountBalance, assignAccounts } from "./logic/states";
 
 /*******************************************************************************************\
 * Author: Franck Dervillez <franck.dervillez@trust2give.com>, Twitter/Github: @fdervillez
@@ -53,93 +56,6 @@ import {
 /// npx hardhat node        - Run the hardhat node prior to script if required
 /// npx hardhat run .\scripts\Menu.ts --network localhost | test - Run the script (test for NAS version)
 
-type  menuState = {
-    inputs?: "None" | "Function" | "Sender" | "Args" | "OK" = "None",
-    deploy?: boolean,
-    object?: boolean,
-    index?: number,
-    subIndex?: number,
-    tag?: string,
-    help?: string,
-    level?: string,
-    promptText?: string,
-    preset?: string,
-    sender?: Account,
-    item?: rwRecord,
-    subItem?: Array<any>,
-    pad?: number
-    }
-
-/// Function that fetch the new instances of each smart contract
-/// given the sender wallet
-export async function updateInstances() {
-    const wallets = await hre.viem.getWalletClients();
-    const publicClient = await hre.viem.getPublicClient();
-    const level : string | undefined = globalState.level;
-
-    for( const item of smart ) {
-        if (level == undefined || level == "" || level == item.tag) {
-            if ((item.contract != undefined) || (item.diamond != undefined)) {
-                    const accounts = Object.values(accountRefs);
-
-                    var root = (item.diamond == Account.AA) ? accounts[10].address : (item.diamond == Account.AB) ? accounts[11].address : undefined;
-                    var index = await accountIndex(accountRefs, <Account>globalState.sender, true);
-                    if (index == undefined) index = 0;
-                    item.instance = await hre.viem.getContractAt( 
-                        item.contract, 
-                        (root != undefined) ? root : accounts[10].address, 
-                        { client: { wallet: wallets[<number>index] } } 
-                        );
-                    
-                    item.events = await publicClient.getContractEvents({ abi: item.instance.abi, address: (root != undefined) ? root : accounts[10].address, })
-                    }
-            }
-        }
-    }
-
-function setState( newState: menuState, item?: rwRecord) {
-    globalState = Object.assign( globalState, newState );
-    if (item != undefined) globalState.item = item; 
-    }
-
-export async function updateAccountBalance() : Promise<Object> {
-    const publicClient = await hre.viem.getPublicClient();
-    var rank = 0;
-    type refKeys = keyof typeof accountRefs;
-    for (const wallet of Object.entries(accountRefs)) {
-        accountRefs[<refKeys>wallet[0]].balance = await publicClient.getBalance({ address: wallet[1].address,});
-        }
-    }
-
-const addAccount = async (rank: number, name: string, addr: Address, wallet: Array<any> ) : Promise<Object> => {
-    //console.log(name, addr, rank, wallet)
-    const publicClient = await hre.viem.getPublicClient();
-    const indice = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    const balance = await publicClient.getBalance({ address: addr,})    
-    return Object.assign( accountRefs, Object.fromEntries(new Map(
-        [ [ `@${indice.substring(rank,rank + 1)}`, 
-            { name: name, wallet: (wallet.length > 0) ? wallet[0] : NULL_ADDRESS, address: addr, private: wallet[1], balance: balance } ] ])));
-    }
-
-const account = async ( rank: number, wallet: boolean ) : Promise<Address> => {
-    const indice = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    type refKeys = keyof typeof accountRefs;
-    if (rank != undefined && rank > -1 && rank < 36) {
-        const index = <refKeys>`@${indice.substring(rank,rank + 1)}`;   
-        return (wallet) ? accountRefs[index].wallet : accountRefs[index].address;
-        }
-    return NULL_ADDRESS;
-    }
-
-
-export var globalState : menuState = {};
-
-// accountReds represents the set of wallets EOA or Smwart Accounts
-// { "@X": { name: string, address: Address, balance: bigint }}
-// @0 to @9 => Wallet accounts from hardhat node
-// @A : {name: T2G_root, address: <address of wallet bound to SC, not @SC itself if present, otherwise yes, balance: <balance of address in EUR contract> }
-export var accountRefs: Object = {};
-
 async function main() {
 
     const width = 70;
@@ -151,213 +67,6 @@ async function main() {
     colorOutput( ("*".concat(" ".padStart(10, " "), "Author: franck.dervillez@trust2give.fr" ).padEnd(width - 1, " ")).concat("*"), "cyan");
     colorOutput( "*".padEnd(width, "*"), "cyan");
         
-    const showInstance = ( level : string ) : Array<any> => {
-        const record = <menuRecord>smart.find((el: menuRecord ) => el.tag == level);
-        //console.log(record.instance.abi)
-        return record.instance.abi.map( 
-            (item : { inputs: abiData[], name: string, outputs?: abiData[], stateMutability?: string, type: string, anonymous?: boolean }) => {
-                const stateMutability = () => {
-                    if ("stateMutability" in item) {
-                        if (item.stateMutability === "view") return colorOutput( "R", "yellow", true )
-                        else if (item.stateMutability === "payable") return colorOutput( "$", "green", true )
-                        else if (item.stateMutability === "nonpayable") return colorOutput( "W", "blue", true )
-                        else if (item.stateMutability === "pure") return colorOutput( "P", "cyan", true )
-                        else return colorOutput( "?", "red", true );
-                        }
-                    else return colorOutput( " ", "blue", true );
-                    }
-                const itemType = () => {
-                    if (item.type === "function") return colorOutput( "Fn", "yellow", true )
-                    else if (item.type === "constructor") return colorOutput( "Cr", "green", true )
-                    else if (item.type === "error") return colorOutput( "Er", "red", true )
-                    else if (item.type === "event") return colorOutput( "Ev", "cyan", true )
-                    else return colorOutput( "??", "red", true )
-                    }
-                    colorOutput( "> ".concat( itemType(), stateMutability(), item.name,                     
-                    colorOutput( "[".concat( item.inputs.map( ( el: abiData ) => el.name).join("| "), "]"), "green", true), " => ",
-                    ("outputs" in item) ? colorOutput( "[".concat( item.outputs.map( ( el: abiData ) => {
-                        return ((el.name != "") ? el.name : "").concat( "(", <string>(("internalType" in el) ? el.internalType : el.type), ")") 
-                        }).join("| "), "]"), "cyan", true) : "_",
-                    ), "yellow");
-                });
-        }
-
-    const showBeacons = async ( records: contractRecord[]) => {
-        const wallets = await hre.viem.getWalletClients();
-        const loupe = <menuRecord>smart.find((el: menuRecord ) => el.contract == diamondNames.DiamondLoupeFacet.name);
-        const facets = await loupe.instance.read["facetAddresses"]( [], wallets[0] );
-
-        for ( const item of records) {
-            try {
-                const record = <menuRecord>smart.find((el: menuRecord ) => el.contract == item.name);
-
-                // Read the beacon_<SC Name> function for each Smart Contract Facet of the Diamond
-                const raw1 : any = (item.beacon) ? await record.instance.read[<string>item.beacon]( [], wallets[0] ) : undefined;
-                const beacon = colorOutput( "[".concat( (raw1 != undefined) ? raw1 : "None", "]"), "green", true);
-                // Read the get_<SC Name> function for each Smart Contract Facet of the Diamond
-                const raw2 : any = (item.get) ? await record.instance.read[<string>item.get]( [], wallets[0] ) : undefined;
-                const present : boolean = facets.includes(raw2);
-                const realAddress = colorOutput( "[".concat( (raw2 != undefined) ? raw2 : `${NULL_ADDRESS}`, "]"), (present) ? "green" : "red", true);
-                // Read the wallet_<SC Name> function for each Smart Contract Facet of the Diamond
-                const raw3 : any = (item.wallet) ? await record.instance.read[<string>item.wallet]( [], wallets[0] ) : undefined;
-                const wallet = colorOutput( "[".concat( (raw3 != undefined) ? raw3[0] : `${NULL_ADDRESS}`, "]"), (raw3 != undefined) ? "white" : "blue", true);
-
-                colorOutput( "> ".concat( item.name.padEnd(16, " "), " => ", beacon.padEnd(36, " "), realAddress.padEnd(42, " "), wallet ), "yellow");
-                }
-            catch {
-                colorOutput( "> ".concat( item.name.padEnd(16, " "), " => Error " ), "red");
-                }
-            }
-        }
-
-    const showERC721 = async () => {
-        const wallets = await hre.viem.getWalletClients();
-        const record1 = <menuRecord>smart.find((el: menuRecord ) => el.tag == "Erc721");
-        const record2 = <menuRecord>smart.find((el: menuRecord ) => el.tag == "Honey");
-        const record3 = <menuRecord>smart.find((el: menuRecord ) => el.tag == "Pollen");
-        const supply : bigint = await record1.instance.read["totalSupply"]( [], wallets[0] );
-        colorOutput( "Total ERC721 Tokens [".concat( `${supply}`.padStart(32,"0"), "]"), "cyan");
-
-        for ( var i = 0; i < supply; i++) {
-            try {                
-                const tokenId : bigint = await record1.instance.read["tokenByIndex"]( [ i ], wallets[0] );
-                const owner : Address = await record1.instance.read["ownerOf"]( [ tokenId ], wallets[0] );
-                const wallet = Object.values(accountRefs).find((el) => el.address == owner);
-                const balanceOf : bigint = await record1.instance.read["balanceOf"]( [ owner ], wallets[0] );
-                
-                const isHoney = await record2.instance.read["isHoneyType"]( [ tokenId ], wallets[0] );
-                const isPollen : boolean = await record3.instance.read["isPollenType"]( [ tokenId ], wallets[0] );
-                var token;
-                var display;
-                if (isHoney) {
-                    const raw = await record2.instance.read["honey"]( [ tokenId ], wallets[0] );
-                    token = decodeAbiParameters( [ honeyFeatures ], raw );
-                    display = "[".concat( Typeoftoken[token[0].TokenStruct.token], "] [", Statusoftoken[token[0].TokenStruct.state], "] [", token[0].TokenFundSpecific.hash0, "]");
-                    }
-                else if (isPollen) {
-                    const raw : `0x{string}` = await record3.instance.read["pollen"]( [ tokenId ], wallets[0] );
-                    token = decodeAbiParameters( [ pollenFeatures ], raw );
-                    display = "[".concat( "]");
-                    }
-                else throw("unrecognized");
-                //console.log(token)
-                colorOutput( "> Token ".concat( `${tokenId}`.padEnd( 8, " "), "| ", 
-                            `${balanceOf}`, " => ", (wallet != undefined) ? wallet.name : owner,  display  ), "yellow"); //  , 
-                }
-            catch (error) {
-                colorOutput( "> Token ".concat( `XXX`.padEnd( 8, " "), " => Problem " ), "red");
-                console.log(error)
-                }
-            }
-        }
-
-    const showBalances = async () => {
-        const wallets = await hre.viem.getWalletClients();
-        const stable = <menuRecord>smart.find((el: menuRecord ) => el.tag == "EUR");
-        const syndic = <menuRecord>smart.find((el: menuRecord ) => el.tag == "Syndication");
-
-        const rights = {
-            VIEW: 1,
-            GIVE: 2,
-            OWN: 4,
-            FARM: 8,
-            GRANT: 16,
-            COLLECT: 32,
-            ADMIN: 64
-            }
-
-        for ( const item of Object.entries(accountRefs)) {
-            try {
-                var AddressAndkeys : Array<any> = [ NULL_ADDRESS, "0x0000000000000000000000000000000000000000000000000000000000000000"];
-                
-                const facet : menuRecord = <menuRecord>smart.find((el: menuRecord ) => el.contract == item[1].name);
-                if (facet != undefined) {
-                    const facets : contractRecord = <contractRecord>facetNames.find((el: contractRecord ) => el.name == item[1].name);
-                    if (facets != undefined) {
-                        if (facets.wallet) {
-                            AddressAndkeys = await facet.instance.read[<string>facets.wallet]( [], wallets[0] );
-                        }
-                    }
-                    else {
-                        if (diamondNames.Diamond.name == item[1].name) {
-                            AddressAndkeys = await facet.instance.read[<string>diamondNames.Diamond.wallet]( [], wallets[0] );
-                            }   
-                        }   
-                    }   
-                
-                var balance : bigint = BigInt(0);
-                var net1 : string = "";
-                balance = await stable.instance.read.balanceOf( [ item[1].address ], wallets[0] );                    
-                net1 = (balance != undefined) ? colorOutput( "[".concat( `${balance}`.padStart(32,"0"), "]"), (balance > 0) ? "yellow" : "blue", true) : "_";
-                
-                if (item[1].name.match("Wallet [0-9]")) {
-                    const isReg : string = (Number(await syndic.instance.read.isWalletRegistered( [ item[1].address ], wallets[0] )) == 1) ? "green" : "blue";
-                    const isBan = (Number(await syndic.instance.read.isWalletBanned( [ item[1].address ], wallets[0] )) == 1) ? "red" : isReg;
-                    const wRights : number = await syndic.instance.read.getWalletRights( [ item[1].address ], wallets[0] );
-                    
-                    // We format the display of rights for a wallet
-                    const flags = Object.entries(rights).reduce( ( acc, cur) => {
-                        return acc.concat( colorOutput( cur[0], (cur[1] & wRights) ? isBan : "blue", true), ` `);
-                        }, "[" );
-                    const net4 = (wRights != undefined) ? colorOutput( "[".concat( flags, "]"), "blue", true) : "_";
-                    
-                    colorOutput( "> ".concat( item[1].name.padEnd( 16, " "), " => ", net1, net4 ), "yellow"); //  , 
-                    }
-                else {
-                    var raw0 : bigint = BigInt(0);
-                    var net0 : string = "";
-
-                    if (AddressAndkeys[0] != NULL_ADDRESS) {
-                        raw0 = await stable.instance.read.balanceOf( [ AddressAndkeys[0] ], wallets[0] );
-                        net0 = (raw0 != undefined) ? colorOutput( "[".concat( `${raw0}`.padStart(32,"0"), "]"), (raw0 > 0) ? "cyan" : "blue", true) : "_";
-                        }
-                    
-                    //console.log(wallets[0])
-                    // Should a wallet@ exist, we display the approved @ related to it
-                    var titleList : string[] = [];
-                    //colorOutput( "[".concat( accountRefs[index].name, ":", `${approve}`, "]" ), "yellow", true)
-                    var approveList : string[] = [];
-                    if (item[1].wallet != undefined && item[1].wallet != NULL_ADDRESS) {
-                        type AccountKeys = keyof typeof accountRefs;
-
-                        // Wallet 0
-                        // T2G_Root (Address) & (Wallet)
-                        // Honey (Address) & (Wallet)
-                        // Pool (Address) & (Wallet)
-                        // Pollen (Address) & (Wallet)
-                        const accountList : { label: AccountKeys, wallet: 'wallet' | 'address' }[] = [ 
-                            { label: <AccountKeys>'@0', wallet: 'address' }, 
-                            { label: <AccountKeys>'@A', wallet: 'wallet'  }, 
-                            { label: <AccountKeys>'@E', wallet: 'wallet'  }, 
-                            { label: <AccountKeys>'@F', wallet: 'wallet'  }, 
-                            { label: <AccountKeys>'@G', wallet: 'wallet'  } 
-                            ]
-                        
-                        approveList = [];
-                        for ( const index of accountList) {
-                            //console.log(item[1].wallet, (accountRefs[index.label])[index.wallet])
-                            const approve : bigint = await stable.instance.read.allowance( 
-                                [ item[1].wallet, (accountRefs[index.label])[index.wallet] ], 
-                                wallets[0] 
-                                );
-                            //console.log(approve)
-                            approveList.push(
-                                colorOutput( "[".concat( ["NOK", "OK "][Number(approve > 0)], "]" ), ["red", "green"][Number(approve > 0)], true)
-                                );
-                            }
-                        }
-
-                    colorOutput( "> ".concat( item[1].name.padEnd( 16, " "), " => ", net1, net0, approveList.join(" ") ), "yellow"); //  , 
-
-                    }
-                }
-            catch (error) {
-                //console.log(error)
-                //colorOutput( "> ".concat( item[1].name.padEnd( 16, " "), " => Not Registered " ), "red");
-                }
-            }
-        }
-
     setState( { inputs: "None", 
         deploy: false, 
         object: false, 
@@ -372,16 +81,7 @@ async function main() {
         subItem: [] }, 
         <rwRecord>{});
 
-    // We get the list of available accounts from hardhat testnet
-    const accounts = await hre.ethers.getSigners();
-    const publicClient = await hre.viem.getPublicClient();
-
-    var rank = 0;
-    for (const wallet of accounts.toSpliced(10)) {
-        const balance = await publicClient.getBalance({ address: wallet.address,})    
-        accountRefs = Object.assign( accountRefs, Object.fromEntries(new Map([ [`@${rank}`, { name: `Wallet ${rank}`, address: wallet.address, balance: balance} ] ])));
-        rank++;
-        }
+    await assignAccounts();
 
     // We complete the list with possible two other address: T2G_Root & EUR contracts
     // since they can be selected as Account.AA & Account.AE options
@@ -395,14 +95,15 @@ async function main() {
     
     const wallets = await hre.viem.getWalletClients();
     const root : Array<any> = await getRoot.read.wallet_T2G_root( [], wallets[0] );
-    accountRefs = await addAccount( 10, diamondNames.Diamond.name, diamondNames.Diamond.address, root );
+
+    await addAccount( 10, diamondNames.Diamond.name, diamondNames.Diamond.address, root );
     colorOutput( ("*".concat(" ".padStart(2, " "), `${Account["AA"]}: `.concat(await account(10, false)), " T2G Root" ).padEnd(width - 1, " ")).concat("*"), "cyan");
     
     await readLastContractSetJSONfile();
-    accountRefs = await addAccount( 11, contractSet[0].name, contractSet[0].address, [] );
+    await addAccount( 11, contractSet[0].name, contractSet[0].address, [] );
     colorOutput( ("*".concat(" ".padStart(2, " "), `${Account["AB"]}: `.concat(await account(11, false)), " EUR SC" ).padEnd(width - 1, " ")).concat("*"), "cyan");
 
-    rank = 12;
+    var rank = 12;
     type AccountKeys = keyof typeof Account;
     const indice = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     for (const facet of facetNames) {
@@ -416,7 +117,7 @@ async function main() {
                     );
 
                 const raw : Array<any> = (facet.wallet) ? await getAddr.read[<string>facet.wallet]( [], wallets[0] ) : [];
-                accountRefs = await addAccount( rank, facet.name, newAddress, raw );
+                await addAccount( rank, facet.name, newAddress, raw );
                 colorOutput( ("*".concat(" ".padStart(2, " "), `${Account[<AccountKeys>`A${indice.substring(rank,rank + 1)}`]}: `.concat(await account(rank, false)), " ", facet.name ).padEnd(width - 1, " ")).concat("*"), "cyan");
                 rank++;
                 }
@@ -472,6 +173,9 @@ async function main() {
             displayAccountTable(accountRefs, width);
             }
         else if (answer == "State")  console.log(globalState);
+        else if (answer == "rights") { 
+            await showRights();
+            }
         else if (answer == "back") setState( { inputs: "None", object: false, tag: "", level: "" }, <rwRecord>{});
         else if (answer == "beacon") {
             await showBeacons( [diamondNames.Diamond] );
@@ -479,7 +183,10 @@ async function main() {
             await showBeacons( contractSet );
             }
         else if (answer == "token") {
-            await showERC721();            
+            await showTokens();            
+            }
+        else if (answer == "allowance") {
+            await showApprovals();            
             }
         else if (answer == "balance") { await showBalances(); }
         else if (answer == "Help") {
@@ -498,8 +205,8 @@ async function main() {
             else {
                 await DeployContracts( accountRefs, answer, smart );
 
-                accountRefs = await addAccount( 10, diamondNames.Diamond.name, diamondNames.Diamond.address, [] );
-                accountRefs = await addAccount( 11, contractSet[0].name, contractSet[0].address, [] );
+                await addAccount( 10, diamondNames.Diamond.name, diamondNames.Diamond.address, [] );
+                await addAccount( 11, contractSet[0].name, contractSet[0].address, [] );
                 }
             }
         // In the case when contract are selected. 
@@ -512,7 +219,7 @@ async function main() {
                     if (!Object.keys(accountRefs).includes(answer)) break;
                     else {
                         if (globalState.sender != <Account>answer) {
-                            globalState.sender = <Account>answer;
+                            setState( { sender: <Account>answer } );
                             await updateInstances();  
                             }
 
@@ -532,8 +239,9 @@ async function main() {
                                 var subValue = convertType( ABIformat[0].components, <number>globalState.subIndex, answer, typeRouteArgs, accountRefs, "", false);
                                 
                                 if (subValue != undefined) {
-                                    globalState.subItem?.push(subValue);
-                                    setState( { subIndex: <number>globalState.subIndex + 1 });
+                                    var sub : Array<any> = globalState.subItem ? globalState.subItem : [];
+                                    sub.push(subValue);
+                                    setState( { subItem: sub, subIndex: <number>globalState.subIndex + 1 });
                                     }
                                 }
                             if (globalState.subIndex >= ABIformat[0].components.length) {

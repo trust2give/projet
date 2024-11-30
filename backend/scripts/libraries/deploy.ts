@@ -1,8 +1,9 @@
 import hre from "hardhat";
-import { FacetCutAction, getSelectors } from "./utils/diamond";
 import { Address, encodeFunctionData } from "viem";
-import { colorOutput, regex, NULL_ADDRESS, cutRecord, contractRecord, diamondCore } from "./T2G_utils";
-import { diamondNames, tokenCredential, contractSet, facetNames } from "./T2G_Data";
+import { FacetCutAction, getSelectors } from "../utils/diamond";
+import { regex, NULL_ADDRESS, cutRecord, contractRecord, diamondCore } from "../libraries/types";
+import { diamondNames, tokenCredential, contractSet, facetNames } from "../T2G_Data";
+import { colorOutput, displayAccountTable } from "../libraries/format";
 
 
 export async function getOrDeployContract( contract : contractRecord, name: string, action: FacetCutAction | undefined ) : Promise<Address> {
