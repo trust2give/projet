@@ -1,3 +1,7 @@
+import hre from "hardhat";
+import { Address } from "viem";
+// import syndicFacetAbi from './abi/syndicFacet.json';
+
 let data = {
     'categories': [],
     'informations': {
@@ -17,30 +21,39 @@ let data = {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
+
     document.getElementById('connect-wallet').addEventListener('click', async () => {
         if (window.ethereum) {
             try {
                 // Demander une connexion au wallet
                 const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-                
+                const publicClient = await hre.viem.getPublicClient();
                 // Afficher l'adresse connectée
-                console.log('Compte connecté :', accounts[0]);
-                
+                // console.log('Compte connecté :', accounts[0]);
+                // const walletIsRegistered = await client.readContract({
+                //     address: accounts[0],
+                //     abi: syndicFacetAbi.abi,
+                //     functionName: 'registerWallet',
+                //     arguments: [accounts[0], 2]
+                // });
+                //
+                // console.log(walletIsRegistered)
+
             } catch (error) {
                 console.error('Erreur lors de la connexion au wallet :', error.message);
             }
         } else {
             console.error("No Ethereum provider found.");
-        } 
+        }
     });
 
 
     document.querySelectorAll('.category-checkbox').forEach(checkbox => {
         checkbox.addEventListener('change', (el) => {
-            
+
             if (el.target.checked) {
                 data['categories'].push(el.target.value);
-                
+
             } else {
                 data['categories'].pop(el.target.value);
             }

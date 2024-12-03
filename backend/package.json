@@ -1,6 +1,7 @@
 {
   "name": "trust2give",
   "version": "1.0.0",
+  "type": "module",
   "description": "Package for backend smart contract",
   "main": "index.js",
   "directories": {

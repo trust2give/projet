@@ -1,8 +1,8 @@
 {
   "name": "trust2give",
   "private": true,
-  "version": "0.0.0",
   "type": "module",
+  "version": "0.0.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -10,13 +10,13 @@
     "preview": "vite preview"
   },
   "devDependencies": {
-    "vite": "^4.5.0",
     "@vitejs/plugin-react": "^4.0.0",
     "autoprefixer": "^10.4.14",
     "postcss": "^8.4.23",
-    "tailwindcss": "^3.3.2"
+    "tailwindcss": "^3.3.2",
+    "vite": "^4.5.5"
   },
   "dependencies": {
-    "web3": "^1.9.0"
+    "viem": "^2.21.51"
   }
 }

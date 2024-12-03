@@ -14,12 +14,13 @@ function trust2give_setup()
 }
 add_action('after_setup_theme', 'trust2give_setup');
 
-function trust2give_enqueue_scripts() {
+function trust2give_enqueue_scripts()
+{
     // Previous enqueues remain...
     // Enqueue Web3 script
     wp_enqueue_script(
         'web3',
-        '/wp-content/themes/trust2give/dist/main.js',
+        '/wp-content/themes/trust2give/assets/js/build/main.js',
         [],
         '1.0.0',
         true

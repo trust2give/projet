@@ -4,7 +4,7 @@ export default {
   root: './assets',  // Le répertoire où se trouvent vos fichiers JS/TS/CSS
   build: {
     manifest: true,
-    outDir: path.resolve(__dirname, 'dist'),  // Le répertoire où seront compilés les fichiers
+    outDir: path.resolve(__dirname, 'assets/js/build'),  // Le répertoire où seront compilés les fichiers
     emptyOutDir: true,
     rollupOptions: {
       input: {
