@@ -15,9 +15,8 @@ library LibEntities {
      /// @dev MODIFIER : checks then that tokenId refers to a Pollen and no other type of token. Otherwise revert PollenInvalidTokenId error
      /// @return TokenRWASpecific object
 
-    function _entity(bytes32 _entityId) internal view returns ( LibERC721.TokenEntitySpecific memory ) {
-        LibERC721.TokenEntitySpecific memory _result = LibERC721._tokenEntityFeatures(_entityId);
-        return _result;
+    function _entity(bytes32 _entityId) internal view returns ( LibERC721.TokenEntitySpecific storage ) {
+        return LibERC721.layout().entity[_entityId];
         }
 
 }

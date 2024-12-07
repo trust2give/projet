@@ -26,7 +26,7 @@ contract T2G_EntityFacet {
     bytes32 constant privKey = 0x0;
     bytes constant pubKey =  "0000000000000000000000000000000000000000000000000000000000000000";
 
-    error EntityInvalidId(uint256 entityId);
+    error EntityInvalidId(bytes32 entityId);
     error EntityInvalidName();
     error EntityInvalidUId();
     error EntityInvalidCountry();
@@ -35,7 +35,7 @@ contract T2G_EntityFacet {
     error EntityFailed(address owner, string reason);
 
     event EntityRootAddressSet( address root );
-    event EntityUpdated( address owner, uint256 entityId );
+    event EntityUpdated( address owner, bytes32 entityId );
     event EntityCreated( bytes32 entityId );
 
     modifier isT2GOwner {
@@ -87,6 +87,15 @@ contract T2G_EntityFacet {
         return (abi.encode(LibEntities._entity(_entityId)));
         }
 
+    function getEntities() external view returns (bytes32[] memory _entityId) {
+
+        // We check first that the msg.sender if allowed and has the rights to view the pollen
+        if (!LibOwners._isAllowed(msg.sender, T2GTypes.R_VIEWS)) revert EntityInvalidSender(msg.sender);        
+
+        //uint256[] memory _ids = LibHoney.isStateAtomic( bytes32(0), LibERC721.Statusoftoken.None );
+        _entityId = LibERC721.layout().allEntities;
+        }
+
      /// @notice Update features relates to the source Entity for a possible pollen
      /// @param _data the data for the new created entity
      /// @dev MODIFIER : checks first that msg.sender is T2G owner. Otherwise revert EntityInvalidSender error
@@ -98,7 +107,7 @@ contract T2G_EntityFacet {
     
     function setEntity( bytes memory _data ) external isT2GOwner returns (bytes32) {
         bytes32 _id;
-
+        
         LibERC721.TokenEntitySpecific memory result = abi.decode(_data, (LibERC721.TokenEntitySpecific));
         
         if (bytes(result.name).length == 0) revert EntityInvalidName();
@@ -107,16 +116,33 @@ contract T2G_EntityFacet {
 
         _id = keccak256( bytes(string.concat( string.concat(result.name, result.uid), Strings.toString(uint256(result.country)))) );
 
-        LibERC721.layout().entity[_id].state = LibERC721.Statusoftoken.draft;
-        LibERC721.layout().entity[_id].name = result.name;
-        LibERC721.layout().entity[_id].uid = result.uid;
-        LibERC721.layout().entity[_id].email = result.email;
-        LibERC721.layout().entity[_id].postal = result.postal;
-        LibERC721.layout().entity[_id].country = result.country;
-        LibERC721.layout().entity[_id].entity = result.entity;
-        LibERC721.layout().entity[_id].sector = result.sector;
-        LibERC721.layout().entity[_id].unitType = result.unitType;
-        LibERC721.layout().entity[_id].unitSize = result.unitSize;
+        // Get the list of entities available to work out the overall pool of funds
+        //bytes32[] memory _fundId = LibERC721.layout().allFunds;
+
+        // Should _id be an already entity registered in the list
+        // We checks that the status is draft, to update data.
+        // Otherwise revert
+        // If status is None. Then we are creating a new _id and we stack up the Id in the list
+        
+        LibERC721.TokenEntitySpecific storage _entity = LibEntities._entity(_id);
+
+        if (_entity.state == LibERC721.Statusoftoken.None) {
+            LibERC721.layout().allEntities.push(_id);
+            }
+        else if (_entity.state > LibERC721.Statusoftoken.draft) {
+            revert EntityInvalidId(_id);
+            }
+
+        _entity.state = LibERC721.Statusoftoken.draft;
+        _entity.name = result.name;
+        _entity.uid = result.uid;
+        _entity.email = result.email;
+        _entity.postal = result.postal;
+        _entity.country = result.country;
+        _entity.entity = result.entity;
+        _entity.sector = result.sector;
+        _entity.unitType = result.unitType;
+        _entity.unitSize = result.unitSize;
                 
         emit EntityCreated( _id );
         return _id;

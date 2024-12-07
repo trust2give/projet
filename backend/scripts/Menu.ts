@@ -11,14 +11,15 @@ import { readLastContractSetJSONfile,
 import { accountIndex, convertType, enumOrValue } from "./libraries/utils";
 import { DeployContracts,  } from "./DeployContracts";
 import { contractSet, diamondNames, facetNames, smart, encodeInterfaces } from "./T2G_Data";
-import { dataDecodeABI, abiData, typeRouteArgs, honeyFeatures, pollenFeatures, Typeoftoken, Statusoftoken } from "./interface/types";
+import { commandItem, dataDecodeABI, abiData, typeRouteArgs, honeyFeatures, pollenFeatures, Typeoftoken, Statusoftoken } from "./interface/types";
 import { colorOutput, displayAccountTable } from "./libraries/format";
 import { contractRecord, rwRecord, rwType, menuRecord, Account, NULL_ADDRESS, regex, regex2, regex3 } from "./libraries/types";
 import { showBeacons } from "./logic/beacons";
 import { showBalances } from "./logic/balances";
 import { showTokens } from "./logic/tokens";
-import { showRights } from "./logic/rights";
-import { showApprovals } from "./logic/approvals";
+import { showRights, setRights, getRights, banRights } from "./logic/rights";
+import { showApprovals, setApprovals } from "./logic/approvals";
+import { createFunds, getAllFunds } from "./logic/honey";
 import { showInstance, updateInstances } from "./logic/instances";
 import { accountRefs, globalState, setState, addAccount, account, updateAccountBalance, assignAccounts } from "./logic/states";
 
@@ -154,7 +155,7 @@ async function main() {
             Choices = record.instance.abi.filter( (item) => (item.type == "function")).map((item) => item.name);
             }
         else if ((globalState.inputs == "Function") && (Choices.some((el : string) => el == answer))) {      
-            const rwRec = (name : string) : rwRecord => {
+            const setRecord = (name : string) : rwRecord => {
                 const fct = record.instance.abi.filter((item) => (item.type == "function" && item.name == answer))[0];
                 
                 return <rwRecord>{ 
@@ -165,7 +166,7 @@ async function main() {
                     values: [],
                     outcome: fct.outputs };
                     }             
-            setState( { inputs: "Sender", object: false, tag: answer, index: 0, subIndex: 0 }, rwRec(answer));
+            setState( { inputs: "Sender", object: false, tag: answer, index: 0, subIndex: 0 }, setRecord(answer));
             }
         else if (answer == "Accounts")  {
             //const balance = await publicClient.getBalance({ address: addr,})     
@@ -173,20 +174,58 @@ async function main() {
             displayAccountTable(accountRefs, width);
             }
         else if (answer == "State")  console.log(globalState);
-        else if (answer == "rights") { 
-            await showRights();
+        else if (answer.startsWith("rights ")) { 
+            const keys = answer.split(" ");
+            switch (keys[1]) {
+                case "all": {
+                    await showRights(); 
+                    break;
+                    }
+                case "set": {
+                    await setRights( <Account>keys[2], Number(keys[3]));
+                    break;
+                    }
+                case "get": {
+                    await getRights( <Account>keys[2]);
+                    break;
+                    }
+                case "ban": {
+                    await banRights( <Account>keys[2]);
+                    break;
+                    }
+                default:
+                }
             }
         else if (answer == "back") setState( { inputs: "None", object: false, tag: "", level: "" }, <rwRecord>{});
-        else if (answer == "beacon") {
-            await showBeacons( [diamondNames.Diamond] );
-            await showBeacons( facetNames );
-            await showBeacons( contractSet );
+        else if (answer == "beacon") { await showBeacons( [diamondNames.Diamond, ...facetNames, ...contractSet] ); }
+        else if (answer == "token") { await showTokens(); }
+        else if (answer.startsWith("fund")) { 
+            const keys = answer.split(" ");
+            switch (keys[1]) {
+                case "set": {
+                    await createFunds( <Account>keys[2], Number(keys[3]), Number(keys[4]) );
+                    break;
+                    }
+                case "all": {
+                    await getAllFunds();
+                    break;
+                    }
+                default:
+                }
             }
-        else if (answer == "token") {
-            await showTokens();            
-            }
-        else if (answer == "allowance") {
-            await showApprovals();            
+        else if (answer.startsWith("allowance ")) { 
+            const keys = answer.split(" ");
+            switch (keys[1]) {
+                case "all": {
+                    await showApprovals(); 
+                    break;
+                    }
+                case "set": {
+                    await setApprovals( <Account>keys[2], <Account>keys[3] );
+                    break;
+                    }
+                default:
+                }
             }
         else if (answer == "balance") { await showBalances(); }
         else if (answer == "Help") {
@@ -267,7 +306,7 @@ async function main() {
 
             // Checks whether input conditions are met or not. If so then call up smart contract function
             if (globalState.inputs == "OK") {
-                await InteractWithContracts( <rwRecord>globalState.item, <Account>globalState.sender, accountRefs, [ record, smart[1] ], <number>globalState.pad );
+                await InteractWithContracts( <rwRecord>globalState.item, <Account>globalState.sender, record );
                 setState( { inputs: "Function", tag: "" }, <rwRecord>{});
                 }
             }

@@ -1,4 +1,7 @@
 import { contractRecord, diamondCore, NULL_ADDRESS, menuRecord, Account } from "./libraries/types";
+const hre = require("hardhat");
+import { Address } from "viem";
+import { accountRefs, accountType, globalState, setState, addAccount, account, updateAccountBalance, assignAccounts } from "./logic/states";
 
 /// Variables globales qui représentent l'état des smart contracts en déploiement à
 /// réaliser pour réaliser la mise à jour de l'architecture ERC2535 de la dApp Trust2Give
@@ -91,3 +94,42 @@ export const encodeInterfaces = {
   //T2G_PollenFacet: [{ function: "pollen", _data: "TokenEntitySpecific" }]
   }
   
+  export const getWalletAddressFromSmartContract = async ( account: accountType | accountType[] ) :Promise<accountType[]> => {
+    const wallets = await hre.viem.getWalletClients();
+
+    var list : accountType[] = [];
+    var item : accountType;
+    var res: Array<any> = [];
+    var accounts : accountType[] = Array.isArray(account) ? account : [ account ];
+    for ( item of accounts ) {
+      res = [ undefined, undefined ]
+
+      const facet : menuRecord = <menuRecord>smart.find((el: menuRecord ) => el.contract == item.name);
+
+      if (facet != undefined) {
+
+          const facets : contractRecord = <contractRecord>facetNames.find((el: contractRecord ) => el.name == item.name);
+          
+          if (facets != undefined) {
+              if (facets.wallet) {
+                  res = await facet.instance.read[<string>facets.wallet]( [], wallets[0] );
+              }
+          }
+          else {
+              if (diamondNames.Diamond.name == item.name) {
+                  res = await facet.instance.read[<string>diamondNames.Diamond.wallet]( [], wallets[0] );
+                }   
+            }   
+        }   
+
+      list.push( { 
+        name: item.name , 
+        address: item.address, 
+        wallet: res[0],
+        private: res[1],
+        balance: item.balance
+        });
+      }
+
+    return list;        
+    }

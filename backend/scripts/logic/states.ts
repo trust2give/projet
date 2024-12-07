@@ -1,4 +1,5 @@
 const hre = require("hardhat");
+import { Address } from "viem";
 import { rwRecord, Account, NULL_ADDRESS } from "../libraries/types";
 
 export var globalState : menuState = {};
@@ -12,6 +13,14 @@ export var accountRefs: Object = {};
 export function setState( newState: menuState, item?: rwRecord) {
     globalState = Object.assign( globalState, newState );
     if (item != undefined) globalState.item = item; 
+    }
+
+export type accountType = {   
+    name: string, 
+    address: Address, 
+    wallet: Address | undefined, 
+    private?: '0x{string}' | undefined, 
+    balance: bigint 
     }
 
 export type  menuState = {

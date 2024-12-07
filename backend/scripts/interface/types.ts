@@ -58,6 +58,11 @@ export interface typeItem {
     callback: (( answer: any, enumeration: number | undefined, convertAddress: Address | undefined, name: string | undefined ) => any ), 
     }
 
+export interface commandItem {
+    name: string,
+    commands: { name: string, callback: (() => any)}[], 
+    }
+    
 const nameAbiData : abiData = { name: 'name', type: 'string', };
 const emailAbiData : abiData = { name: 'email', type: 'string', };
 const postalAbiData : abiData = { name: 'postal', type: 'string', };
@@ -292,12 +297,18 @@ export const typeRouteOutput: typeItem[] = [
             return acc.concat(stringify(cur), " |\n");
             }, "\n[" );
         }},    
-    { name: "string[]", 
+    { name: "bytes32[]", 
       callback: ( answer: string[] ) => {
         return (<string[]>answer).reduce( ( acc, cur) => {
             return acc.concat(cur, ` |`);
             }, "[" );
         }},    
+    { name: "string[]", 
+        callback: ( answer: string[] ) => {
+            return (<string[]>answer).reduce( ( acc, cur) => {
+                return acc.concat(cur, ` |`);
+                }, "[" );
+            }},    
     { name: "uint256[]", 
       callback: ( answer: bigint[] ) => {
         return (<bigint[]>answer).reduce( ( acc, cur) => {
