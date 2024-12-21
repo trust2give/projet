@@ -38,7 +38,7 @@ export async function InteractWithContracts(rwItem : rwRecord, from: Account, fa
     const newArgs = rwItem.values;
     // On format les valeurs pour affichage en stdout 
     //console.log(rwItem.args, newArgs, "\n")                                       
-    const dispArgs = parseAndDisplayInputAndOutputs( rwItem.args, newArgs, accountRefs, 10 );
+    const dispArgs = parseAndDisplayInputAndOutputs( rwItem.args, newArgs, 10 );
     //console.log("sortie", dispArgs)
     type refKeys = keyof typeof accountRefs;
 
@@ -63,20 +63,22 @@ export async function InteractWithContracts(rwItem : rwRecord, from: Account, fa
 
             const eventFacetLogs = await publicClient.getContractEvents({ abi: facets.instance.abi, address: facets.instance.address, })
             const eventSCLogs = await publicClient.getContractEvents({ abi: eur.instance.abi, address: eur.instance.address, })
+            
+            //console.log( eventFacetLogs, eventSCLogs )
 
             log = log.concat( colorOutput( (typeof method === "object") ? method.reduce( (acc, cur) => { return cur.concat(acc, "|")} ) : "[Tx:".concat( method.substring(0, 6), "..]"), "green", true ));
 
             for ( const event of eventFacetLogs) {
                 if (event.transactionHash == method) {
                     const EvtInputs = facets.instance.abi.filter((item) => item.type == "event" && item.name == event.eventName)[0].inputs; //.map((item) => item.inputs);
-                    const dispEvents = parseAndDisplayInputAndOutputs( EvtInputs, Object.values(event.args), accountRefs, <number>globalState.pad );
+                    const dispEvents = parseAndDisplayInputAndOutputs( EvtInputs, Object.values(event.args), <number>globalState.pad );
                     log = log.concat( colorOutput( "\n >> Event ".concat( event.eventName, dispEvents, " "), "yellow", true ));                
                     }
                 }
 
             for ( const event of eventSCLogs) {
                 const EvtInputs = eur.instance.abi.filter((item) => item.type == "event" && item.name == event.eventName)[0].inputs; //.map((item) => item.inputs);
-                const dispEvents = parseAndDisplayInputAndOutputs( EvtInputs, Object.values(event.args), accountRefs, <number>globalState.pad );
+                const dispEvents = parseAndDisplayInputAndOutputs( EvtInputs, Object.values(event.args), <number>globalState.pad );
                 log = log.concat( colorOutput( "\n >> Event ".concat( event.eventName, dispEvents, " "), "yellow", true )); 
                 }
 
@@ -115,14 +117,14 @@ export async function InteractWithContracts(rwItem : rwRecord, from: Account, fa
                             
                             beacon = values.map((val) => {
                                 if (Array.isArray(val)) {
-                                    return "\n".concat(parseAndDisplayInputAndOutputs( ABIformat, [val], accountRefs, <number>globalState.pad ));
+                                    return "\n".concat(parseAndDisplayInputAndOutputs( ABIformat, [val], <number>globalState.pad ));
                                 }
                                 else if (typeof val == "object") {
                                     return "\n[".concat( Object.entries(val).map((item) => {
                                         if ("components" in ABIformat[0]) {
                                             const abi = ABIformat[0].components.find((el) => el.name == item[0])
-                                            if ("components" in abi) return "\n".concat(parseAndDisplayInputAndOutputs( abi.components, Object.values(item[1]), accountRefs, <number>globalState.pad ));
-                                            else return "\n".concat(parseAndDisplayInputAndOutputs( [ abi ], [ item[1] ], accountRefs, <number>globalState.pad ));
+                                            if ("components" in abi) return "\n".concat(parseAndDisplayInputAndOutputs( abi.components, Object.values(item[1]), <number>globalState.pad ));
+                                            else return "\n".concat(parseAndDisplayInputAndOutputs( [ abi ], [ item[1] ], <number>globalState.pad ));
                                         }
                                     }).join("|"), "\n]");
                                 }
@@ -134,7 +136,7 @@ export async function InteractWithContracts(rwItem : rwRecord, from: Account, fa
                 }
 
             // For the results not concerned by the encode function
-            if (!decodeFlag) beacon = parseAndDisplayInputAndOutputs( rwItem.outcome, result, accountRefs, <number>globalState.pad );
+            if (!decodeFlag) beacon = parseAndDisplayInputAndOutputs( rwItem.outcome, result, <number>globalState.pad );
 
             //console.log(values, beacon, silent, decodeFlag, rwItem.outcome, result)
 
@@ -145,36 +147,61 @@ export async function InteractWithContracts(rwItem : rwRecord, from: Account, fa
             return values;
             }
     } catch (error) {
-        console.log(error)
         const errorLabel : Array<any> = Object.entries(<errorFrame>error);
-        const errorDisplay : string = errorLabel.reduce( (last, item) => {
+        //console.log(errorLabel, "\n");
+        var features : string[] = new Array(10);
+
+        for ( const item of errorLabel) {
             switch (item[0]) {
+                case "shortMessage": {
+                    features[0] = colorOutput("[shortMessage: ".concat( item[1], "]"), "magenta", true);
+                    break;
+                    }
                 case "metaMessages": {
-                    return last.concat( colorOutput(item[1][0], "red", true), " " );
+                    features[1] = colorOutput("[metaMessages: ".concat( item[1][0], "]"), "red", true);
+                    break;
+                    }
+                case "contractAddress": {
+                    features[2] = colorOutput("[Contract: ".concat( displayAddress( item[1], "yellow", <number>globalState.pad), "]"), "magenta", true);
+                    break;
+                    }
+                case "functionName": {
+                    features[3] = colorOutput("[function: ".concat( item[1], "]"), "magenta", true);
+                    break;
                     }
                 case "args": {
-                    return last.concat( colorOutput( item[1].reduce( ( acc, cur) => {
+                    features[4] = colorOutput( "[Args: ".concat( item[1].reduce( ( acc, cur) => {
                         if (typeof cur == "string") {
-                            if (cur.match(regex)) return acc.concat( displayAddress( cur, "yellow", <number>globalState.pad ), " " );
-                            if (cur.match(regex2)) return acc.concat( displayAddress( cur, "cyan", <number>globalState.pad ), " " );
+                            if (cur.match(regex)) return acc.concat( displayAddress( cur, "yellow", false ), " " );
+                            if (cur.match(regex2)) return acc.concat( displayAddress( cur, "cyan", false ), " " );
                             }
                         else if (typeof cur == "bigint") return acc.concat( colorOutput( `${cur}`, "cyan", true ), " " );
                         else if (typeof cur == "boolean") return acc.concat( colorOutput( (cur) ? "True" : "False", "cyan", true ), " " );
                         else if (typeof cur == "number") return acc.concat( colorOutput( `${cur}`, "cyan", true ), " " );
                         return acc.concat( colorOutput( cur, "cyan", true ), " " );
-                        }, "[ " ), "blue", true), " ]" );
+                        }, " " ), " ]" ), "blue", true);
+                    break;
                     }
-                case "contractAddress": {
-                    return last.concat( colorOutput( displayAddress( item[1], "yellow", <number>globalState.pad ), "yellow", true) );
+                case "name": {
+                    features[5] = colorOutput("[Name: ".concat( item[1], "]"), "yellow", true);
+                    break;
                     }
-                case "functionName": {
-                    return last.concat( "[", colorOutput( item[1], "magenta", true), "] " );
+                case "sender": {
+                    features[6] = colorOutput("[sender: ".concat( item[1], "]"), "yellow", true);
+                    break;
+                    }
+                case "formattedArgs": {
+                    features[7] = colorOutput("[function: ".concat( item[1], "]"), "yellow", true);
+                    break;
+                    }
+                case "cause": {
+                    features[8] = colorOutput("[function: ".concat( item[1], "]"), "yellow", true);
+                    break;
                     }
                 default:
-                    return last;
                 }
-            }, colorOutput( ">> " , "red", true) );
-        console.log(errorDisplay);
+            }
+        colorOutput(features.join("\n"), "white");
         return undefined;
         }    
     }

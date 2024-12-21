@@ -114,7 +114,14 @@ contract T2G_EntityFacet {
         if (bytes(result.uid).length == 0) revert EntityInvalidUId();
         if (result.country == T2GTypes.countries.NONE) revert EntityInvalidCountry();
 
-        _id = keccak256( bytes(string.concat( string.concat(result.name, result.uid), Strings.toString(uint256(result.country)))) );
+        _id = keccak256( bytes(
+            string.concat( 
+                string.concat( 
+                    string.concat(result.name, result.uid), 
+                    result.email ), 
+                    Strings.toString( uint256(result.country) )
+                )
+                ) );
 
         // Get the list of entities available to work out the overall pool of funds
         //bytes32[] memory _fundId = LibERC721.layout().allFunds;

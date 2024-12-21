@@ -34,8 +34,12 @@ export async function updateInstances() {
     }
 
 export const showInstance = ( level : string ) : Array<any> => {
+
     const record = <menuRecord>smart.find((el: menuRecord ) => el.tag == level);
-    //console.log(record.instance.abi)
+    
+    if (record == undefined) return ["Undefined Contract"];
+    if (record.instance == undefined) return ["No instance implemented"]; 
+    
     return record.instance.abi.map( 
         (item : { inputs: abiData[], name: string, outputs?: abiData[], stateMutability?: string, type: string, anonymous?: boolean }) => {
             const stateMutability = () => {

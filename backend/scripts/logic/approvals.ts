@@ -16,6 +16,39 @@ type approval = {
         }[] 
     }
 
+export const updateApprovals = async () => {
+    console.log("Update Approvals")
+
+    const wallets = await hre.viem.getWalletClients();
+    const eur = <menuRecord>smart.find((el: menuRecord ) => el.tag == "EUR");
+
+    const approve :rwRecord = setRecord( "EUR", "approve");
+
+    const accounts = [ Account.A0, Account.AA, Account.AE, Account.AF, Account.AG ];
+
+    try {                        
+        for (const from of accounts ) {
+            for (const to of accounts ) {
+                const fromAccount = (<accountType>accountRefs[from]);
+                const toAccount = (<accountType>accountRefs[to]);
+                
+                const fromAddress = ((fromAccount.wallet != undefined) && (fromAccount.wallet != NULL_ADDRESS)) ? fromAccount.wallet : fromAccount.address;
+                const toAddress = ((toAccount.wallet != undefined) && (toAccount.wallet != NULL_ADDRESS)) ? toAccount.wallet : toAccount.address;
+           
+                approve.values = [ 
+                    toAddress,
+                    BigInt(10**32) 
+                    ];
+        
+                await InteractWithContracts( <rwRecord>approve, from, eur );            
+                }
+            }
+        }
+    catch (error) {
+        console.log(error)
+        }
+    }
+
 export const getStableCoinApprovals = async ( owners: accountType | accountType[] ) : Promise<approval[]> => {
     const wallets = await hre.viem.getWalletClients();
     const stable = <menuRecord>smart.find((el: menuRecord ) => el.tag == "EUR");
@@ -58,7 +91,14 @@ export const showApprovals = async () => {
             //console.log(item)
             const displaySender = item.spender.map((item) => {
                 if (item.value > 0) {
-                    return colorOutput( "[".concat( item.wallet.name, "]" ), ["cyan", "yellow"][Number(item.wallet.wallet != NULL_ADDRESS)], true)
+                    return colorOutput( 
+                        "[".concat( 
+                            item.wallet.name, 
+                            `:${item.value}`, 
+                            "]" 
+                            ), 
+                        ["cyan", "yellow"][Number(item.wallet.wallet != NULL_ADDRESS)], 
+                        true)
                     }
                 return "";
                 });

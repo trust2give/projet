@@ -94,8 +94,12 @@ export const encodeInterfaces = {
   //T2G_PollenFacet: [{ function: "pollen", _data: "TokenEntitySpecific" }]
   }
   
-  export const getWalletAddressFromSmartContract = async ( account: accountType | accountType[] ) :Promise<accountType[]> => {
-    const wallets = await hre.viem.getWalletClients();
+  export const getWalletAddressFromSmartContract = async () :Promise<accountType[]> => {
+
+    type accKeys = keyof typeof accountRefs;
+    const wallet = accountRefs[<accKeys>`@0`].client;
+
+    const account: accountType | accountType[] = <accountType[]>Object.values(accountRefs);
 
     var list : accountType[] = [];
     var item : accountType;
@@ -112,12 +116,12 @@ export const encodeInterfaces = {
           
           if (facets != undefined) {
               if (facets.wallet) {
-                  res = await facet.instance.read[<string>facets.wallet]( [], wallets[0] );
+                  res = await facet.instance.read[<string>facets.wallet]( [], wallet );
               }
           }
           else {
               if (diamondNames.Diamond.name == item.name) {
-                  res = await facet.instance.read[<string>diamondNames.Diamond.wallet]( [], wallets[0] );
+                  res = await facet.instance.read[<string>diamondNames.Diamond.wallet]( [], wallet );
                 }   
             }   
         }   

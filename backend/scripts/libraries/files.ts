@@ -9,13 +9,13 @@ export interface facetRecord {
     facets: Object
     }
 
-export async function readLastContractSetJSONfile() : Promise<contractRecord[]> {
+export async function readLastContractSetJSONfile() : Promise<boolean> {
     const jsonString = fs.readFileSync('./scripts/ContractSet.json', 'utf-8');
     const item : contractRecord = JSON.parse(jsonString);
-    if (item.name != "EUR") throw("Bad Record Name for EUR StableCoin Address recovery :: ".concat(item.name));
+    if (item.name != "EUR") return false;
     //colorOutput("Recall Last EUR Smart Contract Record >> ".concat(JSON.stringify(item)), "cyan");
     contractSet[0] = <contractRecord>item;
-    return contractSet;
+    return true;
     }
 
 export async function writeLastContractJSONfile( ) {
@@ -71,12 +71,17 @@ export async function writeLastDiamondJSONfile( ) {
         });
     }
       
-export async function readLastDiamondJSONfile() {
+export async function readLastDiamondJSONfile() : Promise<boolean> {
     const jsonString = fs.readFileSync('./scripts/T2G_Root.json', 'utf-8');
     const DiamondCore : diamondCore = JSON.parse(jsonString);
-    if (DiamondCore.Diamond.name != "T2G_root") throw("Bad Record Name for T2G_Root Address recovery :: ".concat(DiamondCore.Diamond.name));
+
+    if (DiamondCore.Diamond.name != "T2G_root") return false;
+    if (!DiamondCore.Diamond.address.match(regex)) return false;
+    
     diamondNames.Diamond = <contractRecord>DiamondCore.Diamond;
     diamondNames.DiamondInit = <contractRecord>DiamondCore.DiamondInit;
     diamondNames.DiamondCutFacet = <contractRecord>DiamondCore.DiamondCutFacet;
     diamondNames.DiamondLoupeFacet = <contractRecord>DiamondCore.DiamondLoupeFacet;
+
+    return true;
     }

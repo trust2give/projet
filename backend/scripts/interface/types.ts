@@ -3,7 +3,7 @@ import { Address, stringify } from "viem";
 
 export const Typeoftoken : string[] = ["None", "Pollen", "Honey", "Nektar", "Cell"]
 
-export const Statusoftoken : string[] =  [ "None", "Draft", "Validated", "Active", "Burnt", "Canceled"]
+export const Statusoftoken : string[] =  [ "None", "Draft", "Validated", "Certified", "Active", "Burnt", "Canceled"]
 
 export const TypeofUnit : string[] = ["None", "GWEI", "EURO", "DOLLAR", "SWISSFRANC", "STERLINGPOUND", "YEN", "YUAN", "USDC", "USDT", "EURC", "SUI"]
 

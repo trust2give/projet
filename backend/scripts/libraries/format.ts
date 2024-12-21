@@ -11,7 +11,7 @@ export function displayAddress( addr : Address, color: string, pad: number | boo
     if (item != undefined && <boolean>pad != false) {
         return colorOutput( "[@".concat(item.name, "]"), color, true);
         }
-    else return colorOutput( "[@".concat(addr.substring(0, (!<boolean>pad) ? 42 : (<number>pad > 2) ? <number>pad : 6 ), "...]"), color, true); 
+    else return colorOutput( "[@".concat(addr.substring(0, (!<boolean>pad) ? 64 : (<number>pad > 2) ? <number>pad : 6 ), "...]"), color, true); 
     }
 
 export function displayContract( contract : string, color: string, pad?: number ) : string {

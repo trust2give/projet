@@ -5,26 +5,36 @@ import { dataDecodeABI, abiData, typeRouteArgs, honeyFeatures, pollenFeatures, T
 import { colorOutput, displayAccountTable } from "../libraries/format";
 import { contractRecord, rwRecord, rwType, menuRecord, Account, NULL_ADDRESS, regex, regex2, regex3 } from "../libraries/types";
 import { accountRefs, accountType, globalState, setState, addAccount, account, updateAccountBalance, assignAccounts } from "../logic/states";
+import { InteractWithContracts, setRecord } from "../InteractWithContracts";
 
 export const getStableCoinBalance = async ( account: accountType | accountType[] ) : Promise<accountType | accountType[]> => {
-    const wallets = await hre.viem.getWalletClients();
     const stable = <menuRecord>smart.find((el: menuRecord ) => el.tag == "EUR");
+
+    const decimals :rwRecord = setRecord( "EUR", "decimals");
+    const gwei = await InteractWithContracts( <rwRecord>decimals, Account.A0, stable, true );            
+    console.log("GWEI decimals %d", gwei);
+
+    const balance :rwRecord = setRecord( "EUR", "balanceOf");
+
     var list : accountType[] = [];
     var item : accountType;
     var accounts : accountType[] = Array.isArray(account) ? account : [ account ];
     for ( item of accounts ) {
         if (item != undefined) {
             if (((item.wallet != undefined) && (item.wallet != NULL_ADDRESS)) || (item.address != NULL_ADDRESS)) {
+
+                balance.values = [ 
+                    ((item.wallet != undefined) && (item.wallet != NULL_ADDRESS)) ? item.wallet : item.address
+                    ];    
+
                 list.push( { 
                     name: item.name , 
                     address: item.address, 
                     wallet: item.wallet,
                     private: item.private,
-                    balance: await stable.instance.read.balanceOf( [ 
-                        ((item.wallet != undefined) && (item.wallet != NULL_ADDRESS)) ? item.wallet : item.address 
-                        ], 
-                        wallets[0] 
-                        )});
+                    balance: await InteractWithContracts( <rwRecord>balance, Account.A0, stable, true ),
+                    decimals : gwei
+                    });
                 }
             }
         }
@@ -32,8 +42,6 @@ export const getStableCoinBalance = async ( account: accountType | accountType[]
     } 
 
 export const showBalances = async () => {
-    const wallets = await hre.viem.getWalletClients();
-
     console.log("Enter Get Balances")
 
     var balance : accountType[] = [{ 
@@ -41,11 +49,13 @@ export const showBalances = async () => {
         address: NULL_ADDRESS, 
         wallet: undefined, 
         private: undefined, 
-        balance: BigInt(0) 
+        balance: BigInt(0),
+        decimals: 0
         }];
         
     // Check and fetch possible wallet bound to account [ @Wallet, Private Key ]
-    balance = await getWalletAddressFromSmartContract( <accountType[]>Object.values(accountRefs) );            
+    balance = await getWalletAddressFromSmartContract();
+
     balance = <accountType[]>await getStableCoinBalance( balance );
     //console.log(balance);
 
@@ -53,8 +63,13 @@ export const showBalances = async () => {
 
     for ( const item of balance) {
         try {
+            const root : bigint = item.balance / BigInt(10 ** Number(item.decimals));
+            const remain : bigint = item.balance - root * BigInt(10 ** Number(item.decimals));
             const net1 : string = (item.balance > 0) ? colorOutput( "[".concat( 
-                `${item.balance}`.padStart(32,"0"), "]"), 
+                `${root}`.padStart(9,"0"), 
+                ".",
+                `${remain}`.padStart(Number(item.decimals),"0"), "]"
+                ), 
                 (((item.wallet != undefined) && (item.wallet != NULL_ADDRESS)) ? "yellow" : "cyan"), 
                 true) : "";
 

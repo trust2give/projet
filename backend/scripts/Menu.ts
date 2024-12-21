@@ -18,10 +18,11 @@ import { showBeacons } from "./logic/beacons";
 import { showBalances } from "./logic/balances";
 import { showTokens } from "./logic/tokens";
 import { showRights, setRights, getRights, banRights } from "./logic/rights";
-import { showApprovals, setApprovals } from "./logic/approvals";
-import { createFunds, getAllFunds } from "./logic/honey";
+import { showApprovals, setApprovals, updateApprovals } from "./logic/approvals";
+import { createFunds, getAllFunds, mintHoney, approveHoney, transferHoney } from "./logic/honey";
+import { createEntity, getAllEntities } from "./logic/entity";
 import { showInstance, updateInstances } from "./logic/instances";
-import { accountRefs, globalState, setState, addAccount, account, updateAccountBalance, assignAccounts } from "./logic/states";
+import { initState, prompts, accountRefs, globalState, setState, addAccount, account, updateAccountBalance, assignAccounts, deployState } from "./logic/states";
 
 /*******************************************************************************************\
 * Author: Franck Dervillez <franck.dervillez@trust2give.com>, Twitter/Github: @fdervillez
@@ -57,6 +58,22 @@ import { accountRefs, globalState, setState, addAccount, account, updateAccountB
 /// npx hardhat node        - Run the hardhat node prior to script if required
 /// npx hardhat run .\scripts\Menu.ts --network localhost | test - Run the script (test for NAS version)
 
+export const help = {
+    keywords: () => "Help: ".concat(
+        Object.keys(help).join(" "), " S.Contract: ", ...smart.map((item) => " ".concat(item.tag) )
+        ),
+    rights: "manage wallet rights: all / set Account @[0 - Z] flags [0 - 127] / get Account @[0 - Z] / ban Account @[0 - Z]",
+    beacon: "display beacons / available contracts",
+    token: "sort out list of ERC721 tokens of any kind created",
+    Accounts: "sort out list of wallets & smart contracts",
+    fund: "Create a new fund or display funds : set Account @[0 - Z] Amount Rate / all ",
+    mint: "Create or manage a new Honey : honey Account @[0 - Z] entityId fundId / approve Account @[0 - Z] fundId / transfer Account @[0 - Z] fundId",
+    identity: "Create or display entities : set person / set entity / all",
+    allowance: "Manage Stable Coin approvals : all / set / update Owner @[0 - Z] Spender @[0 - Z]",
+    balance: "Show all accounts balances",
+    deploy: "Command template : <Contract> <Action> <List of Smart Contract> \n where Contract = {Facet/Contract/Diamond} action = {Add/Replace/Remove} {[contractName ContractName...]} ]\n"
+    }
+
 async function main() {
 
     const width = 70;
@@ -68,68 +85,104 @@ async function main() {
     colorOutput( ("*".concat(" ".padStart(10, " "), "Author: franck.dervillez@trust2give.fr" ).padEnd(width - 1, " ")).concat("*"), "cyan");
     colorOutput( "*".padEnd(width, "*"), "cyan");
         
-    setState( { inputs: "None", 
-        deploy: false, 
-        object: false, 
-        index: 0, 
-        subIndex: 0,
-        tag: "", 
-        help: "", 
-        level: "", 
-        promptText: "Smart Contract (<Help>, <Accounts> or <Contact Name>) >> ", 
-        preset: "", 
-        pad: 10,
-        subItem: [] }, 
-        <rwRecord>{});
+    initState();
 
     await assignAccounts();
 
     // We complete the list with possible two other address: T2G_Root & EUR contracts
     // since they can be selected as Account.AA & Account.AE options
-
-    await readLastDiamondJSONfile();    
     
-    const getRoot = await hre.viem.getContractAt( 
-        diamondNames.Diamond.name, 
-        diamondNames.Diamond.address
-        );
-    
-    const wallets = await hre.viem.getWalletClients();
-    const root : Array<any> = await getRoot.read.wallet_T2G_root( [], wallets[0] );
+    var root : Array<any> = [];
+    var initialized : boolean = false;
 
-    await addAccount( 10, diamondNames.Diamond.name, diamondNames.Diamond.address, root );
-    colorOutput( ("*".concat(" ".padStart(2, " "), `${Account["AA"]}: `.concat(await account(10, false)), " T2G Root" ).padEnd(width - 1, " ")).concat("*"), "cyan");
-    
-    await readLastContractSetJSONfile();
-    await addAccount( 11, contractSet[0].name, contractSet[0].address, [] );
-    colorOutput( ("*".concat(" ".padStart(2, " "), `${Account["AB"]}: `.concat(await account(11, false)), " EUR SC" ).padEnd(width - 1, " ")).concat("*"), "cyan");
+    type accKeys = keyof typeof accountRefs;
 
-    var rank = 12;
-    type AccountKeys = keyof typeof Account;
-    const indice = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    for (const facet of facetNames) {
-        if (smart.findIndex((item) => item.contract == facet.name) > -1) {
+    if (await readLastDiamondJSONfile()) {
+
+        const getRoot = await hre.viem.getContractAt( 
+            diamondNames.Diamond.name, 
+            diamondNames.Diamond.address
+            );
+
+        try {            
+            root = await getRoot.read.wallet_T2G_root( [], accountRefs[<accKeys>`@0`].client );
+
+            initialized = true;
+            }
+        catch (error) {
+            console.error(">> Error :: No T2G_Root initialized @ %s", diamondNames.Diamond.address, error.shortMessage)
+            }
+    
+        await addAccount( 10, diamondNames.Diamond.name, diamondNames.Diamond.address, root );
+
+        colorOutput( ("*".concat(" ".padStart(2, " "), `${Account["AA"]}: `.concat(await account(10, false)), " T2G Root" ).padEnd(width - 1, " ")).concat("*"), "cyan");
+
+        if (await readLastContractSetJSONfile()) {
+
+            const stableCoin = await hre.viem.getContractAt( 
+                "EUR", 
+                contractSet[0].address
+                );
+            
             try {
-                const newAddress = await readLastFacetJSONfile( facet.name, await account(10, false)); 
-                
-                const getAddr = await hre.viem.getContractAt( 
-                    facet.name, 
-                    diamondNames.Diamond.address
-                    );
-
-                const raw : Array<any> = (facet.wallet) ? await getAddr.read[<string>facet.wallet]( [], wallets[0] ) : [];
-                await addAccount( rank, facet.name, newAddress, raw );
-                colorOutput( ("*".concat(" ".padStart(2, " "), `${Account[<AccountKeys>`A${indice.substring(rank,rank + 1)}`]}: `.concat(await account(rank, false)), " ", facet.name ).padEnd(width - 1, " ")).concat("*"), "cyan");
-                rank++;
+                const eur = await stableCoin.read.name( 
+                    [], 
+                    accountRefs[<accKeys>`@0`].client
+                    );                
                 }
             catch (error) {
-                //console.log(error);
+                console.error(">> Error :: No StableCoin Contract initialized @ %s ", contractSet[0].address, error.shortMessage)
                 }
+
+            await addAccount( 11, contractSet[0].name, contractSet[0].address, [] );
+        
+            colorOutput( ("*".concat(" ".padStart(2, " "), `${Account["AB"]}: `.concat(await account(11, false)), " EUR SC" ).padEnd(width - 1, " ")).concat("*"), "cyan");    
             }
-        }
-    //console.log(accountRefs)
-    await updateInstances();    
+        
+        if (initialized) {
+            var rank = 12;
+            type AccountKeys = keyof typeof Account;
+            const indice = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            for (const facet of facetNames) {
+                if (smart.findIndex((item) => item.contract == facet.name) > -1) {
     
+                    const getAddr = await hre.viem.getContractAt( 
+                        facet.name, 
+                        diamondNames.Diamond.address
+                        );
+    
+                    try {    
+    
+                        const get : Address = (facet.get) ? await getAddr.read[<string>facet.get]( 
+                            [], 
+                            accountRefs[<accKeys>`@0`].client 
+                            ) : NULL_ADDRESS;                
+                        
+                        const wallet : Array<any> = (facet.wallet) ? await getAddr.read[<string>facet.wallet]( 
+                            [], 
+                            accountRefs[<accKeys>`@0`].client 
+                            ) : [];
+                        
+                        await addAccount( rank, facet.name, get, wallet );
+        
+                        colorOutput( ("*".concat(" ".padStart(2, " "), `${Account[<AccountKeys>`A${indice.substring(rank,rank + 1)}`]}: `.concat(await account(rank, false)), " ", facet.name ).padEnd(width - 1, " ")).concat("*"), "cyan");
+                        rank++;
+                        }
+                    catch (error) {
+                        console.error(">> Error :: No Facet Contract initialized %s, @ %s", facet.name, diamondNames.Diamond.address)
+                       }
+                    }
+                }
+
+            await updateInstances();    
+            } 
+        }
+
+    if (!initialized) {
+        console.error("No T2G_Root contract initialised");        
+        deployState();
+        }
+
     const rl : readline.Interface = readline.createInterface({
         input: process.stdin,
         output: process.stdout,
@@ -147,10 +200,37 @@ async function main() {
         
         rl.on('line', async (line) => {
         var answer : string = line.trim();
-        
-        if ((globalState.inputs == "None") && (answer == "Deploy")) setState( { deploy: true, object: false, index: 0, subIndex: 0, level: "", inputs: "None", tag: "", subItem: [] }, <rwRecord>{});
+
+        if (answer == "back") initState();
+        else if (answer == "State")  console.log(globalState);
+        else if (answer.startsWith("Help")) { 
+            setState( { help: help.keywords() });
+
+            const keys = answer.split(" ");
+
+            type helpKeys = keyof typeof help;
+
+            if (keys[1] in help)
+                setState( { help: help[<helpKeys>keys[1]] });
+            else {
+                if (smart.some((el: menuRecord) => el.tag == keys[1]))
+                    setState( { 
+                        help: showInstance( <string>keys[1] ) 
+                        });
+                }
+
+            colorOutput(<string>globalState.help, "yellow");
+            }
+        else if ((globalState.inputs == "None") && (answer == "Deploy")) deployState();
         else if ((globalState.inputs == "None") && (smart.some((el: menuRecord) => el.tag == answer))) {            
-            setState( { deploy: false, object: false, level: answer, inputs: "Function" });            
+
+            setState( { 
+                deploy: false, 
+                object: false, 
+                level: answer, 
+                inputs: "Function" 
+                });            
+
             record = <menuRecord>smart.find((el: menuRecord ) => el.tag == globalState.level);
             Choices = record.instance.abi.filter( (item) => (item.type == "function")).map((item) => item.name);
             }
@@ -166,14 +246,22 @@ async function main() {
                     values: [],
                     outcome: fct.outputs };
                     }             
-            setState( { inputs: "Sender", object: false, tag: answer, index: 0, subIndex: 0 }, setRecord(answer));
+
+            setState( { 
+                inputs: "Sender", 
+                object: false, 
+                tag: answer, 
+                index: 0, 
+                subIndex: 0 }, 
+                setRecord(answer)
+                );
             }
         else if (answer == "Accounts")  {
-            //const balance = await publicClient.getBalance({ address: addr,})     
-            await updateAccountBalance();       
-            displayAccountTable(accountRefs, width);
+
+            await updateAccountBalance(); 
+
+            displayAccountTable(width);
             }
-        else if (answer == "State")  console.log(globalState);
         else if (answer.startsWith("rights ")) { 
             const keys = answer.split(" ");
             switch (keys[1]) {
@@ -196,7 +284,6 @@ async function main() {
                 default:
                 }
             }
-        else if (answer == "back") setState( { inputs: "None", object: false, tag: "", level: "" }, <rwRecord>{});
         else if (answer == "beacon") { await showBeacons( [diamondNames.Diamond, ...facetNames, ...contractSet] ); }
         else if (answer == "token") { await showTokens(); }
         else if (answer.startsWith("fund")) { 
@@ -213,6 +300,70 @@ async function main() {
                 default:
                 }
             }
+        else if (answer.startsWith("mint")) { 
+            const keys = answer.split(" ");
+            switch (keys[1]) {
+                case "honey": {
+                    const entityList : string[] = <string[]>await getAllEntities( true );
+                    const fundList : string[] = <string[]>await getAllFunds( true );
+
+                    await mintHoney( <Account>keys[2], entityList[Number(keys[3])], fundList[Number(keys[4])] );
+                    break;
+                    }
+                case "approve": {
+                    const fundList : string[] = <string[]>await getAllFunds( true );
+
+                    await approveHoney( <Account>keys[2], fundList[Number(keys[3])] );
+                    break;
+                    }
+                case "transfer": {
+                    const fundList : string[] = <string[]>await getAllFunds( true );
+
+                    await transferHoney( <Account>keys[2], fundList[Number(keys[3])] );
+                    break;
+                    }
+                default:
+                }
+            }
+        else if (answer.startsWith("identity")) { 
+            const keys = answer.split(" ");
+            switch (keys[1]) {
+                case "set": {
+                    switch (keys[2]) {
+                        case "person": {
+                            await createEntity( true, { 
+                                name: keys[3],
+                                email: keys[4],
+                                postal: keys[5],
+                                country: keys[6]
+                                } );
+                            break;
+                            }
+                        case "entity": {
+                            await createEntity( false, { 
+                                name: keys[3],
+                                uid: keys[4],
+                                email: keys[5],
+                                postal: keys[6],
+                                entity: keys[7],
+                                sector: keys[8],
+                                unitType: keys[9],
+                                unitSize: keys[10],
+                                country: keys[11]
+                                } );
+                            break;
+                            }
+                        default:
+                        }
+                    break;
+                    }
+                case "all": {
+                    await getAllEntities();
+                    break;
+                    }
+                default:
+                }
+            }
         else if (answer.startsWith("allowance ")) { 
             const keys = answer.split(" ");
             switch (keys[1]) {
@@ -224,35 +375,23 @@ async function main() {
                     await setApprovals( <Account>keys[2], <Account>keys[3] );
                     break;
                     }
+                case "update": {
+                    await updateApprovals();
+                    break;
+                    }
                 default:
                 }
             }
         else if (answer == "balance") { await showBalances(); }
-        else if (answer == "Help") {
-            if (globalState.level == "") setState( { help: "Keywords: help, balance, beacon, back, state, accounts + [".concat( smart.map( (el) => el.tag ).join("| "), "]\n") });
-            else  setState( { help: showInstance( <string>globalState.level ) });
-            colorOutput(<string>globalState.help, "yellow");
-            }
         
         // In the case when Deploy is selected
         if (globalState.deploy) {
-            if (answer == "back") setState( { inputs: "None", deploy: false, object: false, tag: "", level: "" }, <rwRecord>{});
-            else if (answer == "Help") {
-                setState( { help: "Command template : <Contract> <Action> <List of Smart Contract> \n where Contract = {Facet/Contract/Diamond} action = {Add/Replace/Remove} {[contractName ContractName...]} ]\n" });
-                colorOutput(<string>globalState.help, "yellow");
-                }
-            else {
-                await DeployContracts( accountRefs, answer, smart );
+            await DeployContracts( accountRefs, answer, smart );
 
-                await addAccount( 10, diamondNames.Diamond.name, diamondNames.Diamond.address, [] );
-                await addAccount( 11, contractSet[0].name, contractSet[0].address, [] );
-                }
+            await addAccount( 10, diamondNames.Diamond.name, diamondNames.Diamond.address, [] );
+            await addAccount( 11, contractSet[0].name, contractSet[0].address, [] );
             }
-        // In the case when contract are selected. 
-        // Checks if contract and function are set up. If so, key in the values for sender and inputs
         else {
-            type refKeys = keyof typeof accountRefs;
-
             switch (globalState.inputs) {
                 case "Sender": {
                     if (!Object.keys(accountRefs).includes(answer)) break;
@@ -262,7 +401,14 @@ async function main() {
                             await updateInstances();  
                             }
 
-                        setState( { inputs: (globalState.item.args.length > 0) ? "Args" : "OK", object: false, index: 0, subIndex: 0, subItem: [] });
+                        setState( { 
+                            inputs: (globalState.item.args.length > 0) ? "Args" : "OK", 
+                            object: false, 
+                            index: 0, 
+                            subIndex: 0, 
+                            subItem: [] 
+                            });
+
                         answer = "";
                         }
                     break;
@@ -271,11 +417,12 @@ async function main() {
                     try {
                         var index: number = <number>globalState.index;
                         var item: rwRecord = <rwRecord>globalState.item;
+
                         if (item.args[index].type == "bytes") {
                             // we are in the case when an encoded complex struct is to be passed
                             // It may require additionnal sub-inputs to get
                             if (globalState.object) {
-                                var subValue = convertType( ABIformat[0].components, <number>globalState.subIndex, answer, typeRouteArgs, accountRefs, "", false);
+                                var subValue = convertType( ABIformat[0].components, <number>globalState.subIndex, answer, typeRouteArgs, "", false);
                                 
                                 if (subValue != undefined) {
                                     var sub : Array<any> = globalState.subItem ? globalState.subItem : [];
@@ -284,13 +431,20 @@ async function main() {
                                     }
                                 }
                             if (globalState.subIndex >= ABIformat[0].components.length) {
+                                
                                 const encodedData = encodeAbiParameters( ABIformat, [globalState.subItem] );
+                                
                                 item.values[index++] = encodedData; 
-                                setState( { object: false, subIndex: 0, subItem: [] });
+
+                                setState( { 
+                                    object: false, 
+                                    subIndex: 0, 
+                                    subItem: [] 
+                                    });
                                 }
                             }
                         else {
-                            item.values[index] = convertType( item.args, <number>index, answer, typeRouteArgs, accountRefs, "", false);
+                            item.values[index] = convertType( item.args, <number>index, answer, typeRouteArgs, "", false);
                             if (item.values[index] != undefined) index++;
                             }
                         setState( { inputs: (index < globalState.item.args.length) ? "Args" : "OK", index: index, item: item });
@@ -311,66 +465,79 @@ async function main() {
                 }
             }
 
-        //var preset: string = "";
         // We update the prompt text with the new status, waiting for new command
         switch (globalState.inputs) {
         case "None": {
-            setState({ promptText: (globalState.deploy) ? "Deploy Smart Contract (<Help>, <Accounts> or Contract Name) " : 
-                                    "Which Smart Contract (<Help>, <Accounts> or Contract Name) ? " , preset: "" });
+            setState({ 
+                promptText: (globalState.deploy) ? prompts.Deploy : prompts.None 
+                });
             break;
             }
+        case "Sender":
         case "Function": {
-            setState({ promptText: `Which Function (<Help>, <Accounts>, <back> or Function Name ) ? `, preset: "" });
+            setState({ 
+                promptText: prompts[globalState.inputs], 
+                });
             break;
-            }
-        case "Sender": {
-            setState({ promptText: "Which Sender's Account (msg.sender) [@0 ... @9] ? ", preset: "@" });
-            break;                
             }
         case "Args": {
+            
             const index = <number>globalState.index;
             const subIndex = <number>globalState.subIndex;
+
             if (index < (<rwRecord>globalState.item).args.length) {
                 var argPointer = (<rwRecord>globalState.item).args[index];
-                //console.log((<rwRecord>globalState.item).args)
-                // Check if we are requesting simple type inputs or (bytes memory _data) -like input
+                
                 if (argPointer.type == "bytes" && argPointer.name == "_data") {
+
                     if (subIndex == 0) {
+                    
                         if ((<rwRecord>globalState.item).contract in encodeInterfaces) {
+
                             type encKeys = keyof typeof encodeInterfaces;
+                            
                             const encodeInput = encodeInterfaces[<encKeys>(<rwRecord>globalState.item).contract].find((item) => item.function == (<rwRecord>globalState.item).function);
-                            // We check that the related function is concerned or not by the abi.encode
+
                             if (encodeInput != undefined) {
+
                                 if ("_data" in encodeInput) {
+
                                     if (encodeInput._data in dataDecodeABI) {
+
                                         type decKeys = keyof typeof dataDecodeABI;
                                         ABIformat =  dataDecodeABI[<decKeys>encodeInput._data];
+
                                         setState( { object: true, subItem: [] });
                                         }
                                     }
                                 }
                             }
                         }
-                    setState({ promptText: "Arg".concat( ` [${index} / ${subIndex}] - ${argPointer.name} [${ABIformat[0].name} ${ABIformat[0].components[subIndex].name}]`), preset: "@" });
+
+                    setState({ 
+                        promptText: prompts.subArgs( 
+                            index, 
+                            subIndex, 
+                            argPointer.name, 
+                            ABIformat[0].name, 
+                            ABIformat[0].components[subIndex].name
+                            )
+                        });
                     } 
-                else setState({ promptText: "Arg".concat( ` [${index}] - ${argPointer.name} [${argPointer.type}] `), preset: "@" });
+                else setState({ 
+                    promptText: prompts.Args( 
+                        index, 
+                        argPointer.name, 
+                        argPointer.type, 
+                        )
+                    });
                }
             break;                
             }
         default:
         }
 
-        setState({ promptText: "".concat( 
-            colorOutput( `[ ${(globalState.level != "") ? globalState.level : "None"}|${(globalState.tag != "") ? globalState.tag : "None"}|${globalState.inputs}] `, "cyan", true ), 
-                            <string>globalState.promptText ), 
-                            preset: "" });
-            
-        rl.setPrompt(<string>(globalState.promptText).concat(` >> `));
-        if (globalState.preset != "") {
-            rl.write(globalState.preset); 
-            rl.write(null, { ctrl: true, name: 'f' });
-            }
-        // we wait for the next input from user
+        rl.setPrompt(prompts.display());
         rl.prompt();
 
         }).on('close', () => {

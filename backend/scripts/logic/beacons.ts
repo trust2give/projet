@@ -5,7 +5,9 @@ import { contractRecord, rwRecord, rwType, menuRecord, Account, NULL_ADDRESS, re
 
 export const showBeacons = async ( records: contractRecord[]) => {
     const wallets = await hre.viem.getWalletClients();
+
     const loupe = <menuRecord>smart.find((el: menuRecord ) => el.contract == diamondNames.DiamondLoupeFacet.name);
+
     const facets = await loupe.instance.read["facetAddresses"]( [], wallets[0] );
 
     for ( const item of records) {
@@ -15,10 +17,12 @@ export const showBeacons = async ( records: contractRecord[]) => {
             // Read the beacon_<SC Name> function for each Smart Contract Facet of the Diamond
             const raw1 : any = (item.beacon) ? await record.instance.read[<string>item.beacon]( [], wallets[0] ) : undefined;
             const beacon = colorOutput( "[".concat( (raw1 != undefined) ? raw1 : "None", "]"), "green", true);
+
             // Read the get_<SC Name> function for each Smart Contract Facet of the Diamond
             const raw2 : any = (item.get) ? await record.instance.read[<string>item.get]( [], wallets[0] ) : undefined;
             const present : boolean = facets.includes(raw2);
             const realAddress = colorOutput( "[".concat( (raw2 != undefined) ? raw2 : `${NULL_ADDRESS}`, "]"), (present) ? "green" : "red", true);
+            
             // Read the wallet_<SC Name> function for each Smart Contract Facet of the Diamond
             const raw3 : any = (item.wallet) ? await record.instance.read[<string>item.wallet]( [], wallets[0] ) : undefined;
             const wallet = colorOutput( "[".concat( (raw3 != undefined) ? raw3[0] : `${NULL_ADDRESS}`, "]"), (raw3 != undefined) ? "white" : "blue", true);
@@ -31,5 +35,26 @@ export const showBeacons = async ( records: contractRecord[]) => {
         }
     }
 
+export const getAddress = async ( item: contractRecord ) : Promise<Array<any>>=> {
+    const wallets = await hre.viem.getWalletClients();
 
+    const loupe = <menuRecord>smart.find((el: menuRecord ) => el.contract == diamondNames.DiamondLoupeFacet.name);
+
+    const facets = await loupe.instance.read["facetAddresses"]( [], wallets[0] );
+
+    try {
+        const record = <menuRecord>smart.find((el: menuRecord ) => el.contract == item.name);
+
+        // Read the get_<SC Name> function for each Smart Contract Facet of the Diamond
+        const raw2 : any = (item.get) ? await record.instance.read[<string>item.get]( [], wallets[0] ) : undefined;
+        
+        // Read the wallet_<SC Name> function for each Smart Contract Facet of the Diamond
+        const raw3 : any = (item.wallet) ? await record.instance.read[<string>item.wallet]( [], wallets[0] ) : undefined;
+        }
+    catch {
+        colorOutput( "> ".concat( item.name.padEnd(16, " "), " => Error " ), "red");
+        }
+    return [raw2, raw3];
+    }
+    
     
