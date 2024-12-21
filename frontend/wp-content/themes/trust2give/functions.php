@@ -16,12 +16,19 @@ add_action('after_setup_theme', 'trust2give_setup');
 
 function trust2give_enqueue_scripts()
 {
-    // Previous enqueues remain...
-    // Enqueue Web3 script
+	wp_enqueue_script(
+		'viem',
+		'https://cdn.jsdelivr.net/npm/web3@4.16.0/dist/web3.min.js',
+//		'https://cdn.jsdelivr.net/npm/viem@latest/dist/viem.min.js',
+//		'/wp-content/themes/trust2give/assets/js/lib/viem.js',
+		[/*'type' => 'module'*/],
+		'1.0.0',
+		true
+	);
     wp_enqueue_script(
-        'web3',
-        '/wp-content/themes/trust2give/assets/js/build/main.js',
-        [],
+        'app',
+        '/wp-content/themes/trust2give/assets/js/app.js',
+        ['viem'/*'type' => 'module'*/],
         '1.0.0',
         true
     );
