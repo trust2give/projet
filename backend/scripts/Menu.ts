@@ -17,9 +17,9 @@ import { contractRecord, rwRecord, rwType, menuRecord, Account, NULL_ADDRESS, re
 import { showBeacons } from "./logic/beacons";
 import { showBalances } from "./logic/balances";
 import { showTokens } from "./logic/tokens";
-import { showRights, setRights, getRights, banRights } from "./logic/rights";
-import { showApprovals, setApprovals, updateApprovals } from "./logic/approvals";
-import { createFunds, getAllFunds, mintHoney, approveHoney, transferHoney } from "./logic/honey";
+import { rightCallback } from "./logic/rights";
+import { approveCallback } from "./logic/approvals";
+import { fundCallback, honeyCallback } from "./logic/honey";
 import { createEntity, getAllEntities } from "./logic/entity";
 import { showInstance, updateInstances } from "./logic/instances";
 import { initState, prompts, accountRefs, globalState, setState, addAccount, account, updateAccountBalance, assignAccounts, deployState } from "./logic/states";
@@ -45,7 +45,7 @@ import { initState, prompts, accountRefs, globalState, setState, addAccount, acc
 * - Deploy : enter the management mode of the ERC2535 architecture, where you can
 * add/replace/remove facets or rebuild a complete T2G Diamond or StableCoin contract
 * 
-* When in Deploy mode, three JSON files are updated : FacetJson, ContractSet.Json & T2G_root.Json
+* When in Deploy mode, three JSON files are updated : ContractSet.Json & T2G_root.Json
 * These two files are to be kept as is and not altered by the user otherwise the reference
 * and addresses of T2G_Root & StableCOint contracts will be lost. Theses files are used
 * to get the addresses back when interacting with facets.
@@ -67,7 +67,7 @@ export const help = {
     token: "sort out list of ERC721 tokens of any kind created",
     Accounts: "sort out list of wallets & smart contracts",
     fund: "Create a new fund or display funds : set Account @[0 - Z] Amount Rate / all ",
-    mint: "Create or manage a new Honey : honey Account @[0 - Z] entityId fundId / approve Account @[0 - Z] fundId / transfer Account @[0 - Z] fundId",
+    mint: "Create or manage a new Honey : honey Account @[0 - Z] fundId entityId / approve Account @[0 - Z] fundId / transfer Account @[0 - Z] fundId",
     identity: "Create or display entities : set person / set entity / all",
     allowance: "Manage Stable Coin approvals : all / set / update Owner @[0 - Z] Spender @[0 - Z]",
     balance: "Show all accounts balances",
@@ -200,13 +200,12 @@ async function main() {
         
         rl.on('line', async (line) => {
         var answer : string = line.trim();
+        const keys = answer.split(" ");
 
         if (answer == "back") initState();
         else if (answer == "State")  console.log(globalState);
         else if (answer.startsWith("Help")) { 
             setState( { help: help.keywords() });
-
-            const keys = answer.split(" ");
 
             type helpKeys = keyof typeof help;
 
@@ -257,76 +256,47 @@ async function main() {
                 );
             }
         else if (answer == "Accounts")  {
-
             await updateAccountBalance(); 
 
             displayAccountTable(width);
             }
         else if (answer.startsWith("rights ")) { 
-            const keys = answer.split(" ");
-            switch (keys[1]) {
-                case "all": {
-                    await showRights(); 
-                    break;
-                    }
-                case "set": {
-                    await setRights( <Account>keys[2], Number(keys[3]));
-                    break;
-                    }
-                case "get": {
-                    await getRights( <Account>keys[2]);
-                    break;
-                    }
-                case "ban": {
-                    await banRights( <Account>keys[2]);
-                    break;
-                    }
-                default:
+            const found = rightCallback.find((item) => item.tag == keys[1]);
+            if (found != undefined) {
+                await found.callback(
+                    <Account>keys[2], 
+                    Number(keys[3])
+                    );
                 }
             }
-        else if (answer == "beacon") { await showBeacons( [diamondNames.Diamond, ...facetNames, ...contractSet] ); }
-        else if (answer == "token") { await showTokens(); }
+        else if (answer == "beacon") { 
+            await showBeacons( [diamondNames.Diamond, ...facetNames, ...contractSet] ); 
+            }
+        else if (answer == "token") { 
+            await showTokens(); 
+            }
         else if (answer.startsWith("fund")) { 
-            const keys = answer.split(" ");
-            switch (keys[1]) {
-                case "set": {
-                    await createFunds( <Account>keys[2], Number(keys[3]), Number(keys[4]) );
-                    break;
-                    }
-                case "all": {
-                    await getAllFunds();
-                    break;
-                    }
-                default:
+            const found = fundCallback.find((item) => item.tag == keys[1]);
+            if (found != undefined) {
+                await found.callback(
+                    false,
+                    <Account>keys[2], 
+                    Number(keys[3]), 
+                    Number(keys[4])
+                    );
                 }
             }
         else if (answer.startsWith("mint")) { 
-            const keys = answer.split(" ");
-            switch (keys[1]) {
-                case "honey": {
-                    const entityList : string[] = <string[]>await getAllEntities( true );
-                    const fundList : string[] = <string[]>await getAllFunds( true );
-
-                    await mintHoney( <Account>keys[2], entityList[Number(keys[3])], fundList[Number(keys[4])] );
-                    break;
-                    }
-                case "approve": {
-                    const fundList : string[] = <string[]>await getAllFunds( true );
-
-                    await approveHoney( <Account>keys[2], fundList[Number(keys[3])] );
-                    break;
-                    }
-                case "transfer": {
-                    const fundList : string[] = <string[]>await getAllFunds( true );
-
-                    await transferHoney( <Account>keys[2], fundList[Number(keys[3])] );
-                    break;
-                    }
-                default:
+            const found = honeyCallback.find((item) => item.tag == keys[1]);
+            if (found != undefined) {
+                await found.callback(
+                    <Account>keys[2], 
+                    (<string[]>await fundCallback.find((item) => item.tag == "all")?.callback( true ))[Number(keys[3])], 
+                    (<string[]>await getAllEntities( true ))[Number(keys[4])]
+                    );
                 }
             }
         else if (answer.startsWith("identity")) { 
-            const keys = answer.split(" ");
             switch (keys[1]) {
                 case "set": {
                     switch (keys[2]) {
@@ -365,24 +335,17 @@ async function main() {
                 }
             }
         else if (answer.startsWith("allowance ")) { 
-            const keys = answer.split(" ");
-            switch (keys[1]) {
-                case "all": {
-                    await showApprovals(); 
-                    break;
-                    }
-                case "set": {
-                    await setApprovals( <Account>keys[2], <Account>keys[3] );
-                    break;
-                    }
-                case "update": {
-                    await updateApprovals();
-                    break;
-                    }
-                default:
+            const found = approveCallback.find((item) => item.tag == keys[1]);
+            if (found != undefined) {
+                await found.callback(                    
+                    <Account>keys[2], 
+                    <Account>keys[3]
+                    );
                 }
             }
-        else if (answer == "balance") { await showBalances(); }
+        else if (answer == "balance") { 
+            await showBalances(); 
+            }
         
         // In the case when Deploy is selected
         if (globalState.deploy) {

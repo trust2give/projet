@@ -42,7 +42,7 @@ contract T2G_PollenFacet {
     error PollenInvalidOwner(address owner);
     error PollenInvalidSender(address sender);
     error PollenInvalidAmount(address sender);
-    error PollenInvalidStatus(uint256 tokenId);
+    error PollenInvalidStatus(bytes32 tokenId);
     error PollenInvalidContractAddress();
     error PollenFailed(address owner, string reason);
     error InvalidGHGReportName();
@@ -55,7 +55,7 @@ contract T2G_PollenFacet {
     event PollenRootAddressSet( address root );
     event PollenUpdated( address owner, uint256 tokenId );
     event PollenCreated( address owner, uint256 tokenId, uint256 value, uint8 unit );
-    event GHGGainCreated( bytes32 rwaId );
+    event RwaCreated( bytes32 rwaId );
     event PollenStatusChanged( address owner, uint256 tokenId, LibERC721.Statusoftoken status );
 
     struct pollenFeatures {
@@ -67,14 +67,6 @@ contract T2G_PollenFacet {
     // Modifier
     modifier isT2GOwner {
         if (msg.sender != LibDiamond.contractOwner()) revert PollenInvalidSender(msg.sender);
-        _;
-        }
-
-    // Modifier
-    modifier isT2GOwnerOrPollenOwner(uint256 _tokenId) {
-        if (msg.sender != LibDiamond.contractOwner() && msg.sender != LibERC721._ownerOf(_tokenId)) {
-                revert PollenInvalidSender(msg.sender);
-                }
         _;
         }
 
@@ -102,7 +94,9 @@ contract T2G_PollenFacet {
      /// @dev the returned text is to be updated whenever a change in the contract is made and new deployment is carried out
      /// @return string that recalls the contact name + its current deployed version : "contractname::version"
 
-    function beacon_PollenFacet() public pure returns (string memory) { return "T2G_PollenFacet::1.0.2"; }
+    function beacon_PollenFacet() public pure returns (string memory) { 
+        return "T2G_PollenFacet::1.0.2"; 
+        }
 
     function wallet_PollenFacet() external pure returns ( address _wallet, bytes32 _key ) {
         //byes32 _key = generatePrivateKey( seed );
@@ -115,7 +109,7 @@ contract T2G_PollenFacet {
      /// @param _size T2GTypes.sizeUnit
      /// @param _unit T2GTypes.CoinUnit
 
-    function updatePollenParams (uint256 _value, T2GTypes.sizeUnit _size, T2GTypes.CoinUnit _unit) external isT2GOwner {
+    function updatePollenParams(uint256 _value, T2GTypes.sizeUnit _size, T2GTypes.CoinUnit _unit) external isT2GOwner {
         LibPollens._setParams(_value, _size, _unit);
         }
 
@@ -124,7 +118,7 @@ contract T2G_PollenFacet {
      /// @return _size T2GTypes.sizeUnit
      /// @return _unit T2GTypes.CoinUnit
 
-    function getPollenParams () external view returns (uint256 _value, T2GTypes.sizeUnit _size, T2GTypes.CoinUnit _unit) {
+    function getPollenParams() external view returns (uint256 _value, T2GTypes.sizeUnit _size, T2GTypes.CoinUnit _unit) {
         return LibPollens._getParams();
         }
 
@@ -140,17 +134,67 @@ contract T2G_PollenFacet {
         return DiamondLoupeFacet(LibERC721.layout().root).facetAddress(bytes4(abi.encodeWithSignature("beacon_PollenFacet()")));
         }
 
+     /* OK */
+     /// @notice Update features related to the RWA for a possible pollen
+     /// @param _data the data for the new created GHG Gain
+     /// @dev MODIFIER : checks first that msg.sender is T2G owner. Otherwise revert EntityInvalidSender error
+     /// @dev this function act as a setter and overwrites an existing content with new values
+     /// @dev the Id is worked out from the combination of report1 & report2 which normally are enough 
+     /// @dev once cheks are OK, then sets the adds the new RWA GHG Gain 
+     /// @return the Id of the created RWA GHG Gain
+    
+    function setRwa( bytes memory _data ) external isT2GOwner returns (bytes32) {
+
+        LibERC721.TokenRWASpecific memory result = abi.decode(_data, (LibERC721.TokenRWASpecific));
+        
+        if ((bytes32(result.report1).length == 0) || (bytes32(result.report1) == 0x0)) {
+            revert InvalidGHGReportName();
+            }
+
+        if ((bytes32(result.report2).length == 0) || (bytes32(result.report2) == 0x0)) {
+            revert InvalidGHGReportName();
+            }
+
+        bytes32 _id = keccak256( bytes(bytes.concat(result.report1, result.report2)));
+
+        LibERC721.TokenRWASpecific storage _rwa = LibPollens._rwa(_id);
+
+        // Check that _rwa is real and in draft status o new
+        // Otherwise revert
+        if (_rwa.state > LibERC721.Statusoftoken.draft) {
+            revert PollenInvalidStatus(_id);
+            }
+
+        _rwa.state = LibERC721.Statusoftoken.draft;
+        _rwa.value = result.value;
+        _rwa.size = result.size;
+        _rwa.source = result.source;
+        _rwa.scope = result.scope;
+        _rwa.gain = result.gain;
+        _rwa.report1 = result.report1;
+        _rwa.report2 = result.report2;
+                
+        emit RwaCreated( _id );
+        return _id;
+        }
+
      /// @notice returns the list of TokenIds related to the owner wallet
      /// @param _state State of the pollen to get NONE is all.
      /// @dev if msg.sender is T2G_Owner, then returns the full list of TokenId regardless owners
      /// @return Encoded Array of TokenId which are related to msg.sender wallet
     function getMyPollenList( LibERC721.Statusoftoken _state ) external view returns ( bytes memory ) {        
+
         // We check first that the msg.sender if allowed and has the rights to view the pollen
-        if (!LibOwners._isAllowed(msg.sender, T2GTypes.R_VIEWS )) revert PollenInvalidOwner(msg.sender);
+        if (!LibOwners._isAllowed(
+            msg.sender, 
+            T2GTypes.R_VIEWS 
+            )) revert PollenInvalidOwner(msg.sender);
+
         uint256[] memory _tokens = LibERC721._getTokensWithEntity(bytes32(0), LibERC721.Typeoftoken.Pollen, _state);
         return (abi.encode(_tokens));
         }
 
+     /*  OK */
      /// @notice returns the features of a specific rwa, given its rwaId 
      /// @param _rwaId token Id
      /// @dev MODIFIER : checks first that msg.sender is either the T2G owner or the token owner. Otherwise revert PollenInvalidOwner error
@@ -159,22 +203,38 @@ contract T2G_PollenFacet {
 
     function rwa(bytes32 _rwaId) external view returns ( bytes memory ) {
         // We check first that the msg.sender if allowed and has the rights to view the pollen
-        if (!LibOwners._isAllowed(msg.sender, T2GTypes.R_VIEWS )) revert PollenInvalidOwner(msg.sender);
+        if (!LibOwners._isAllowed(
+            msg.sender, 
+            T2GTypes.R_VIEWS 
+            )) revert PollenInvalidOwner(msg.sender);
+
         return (abi.encode(LibPollens._rwa(_rwaId)));
         }
 
+     /*  OK */
+    function getRwas() external view returns (bytes32[] memory _rwaId) {
+        // We check first that the msg.sender if allowed and has the rights to view the pollen
+
+        if (!LibOwners._isAllowed(
+            msg.sender, 
+            T2GTypes.R_VIEWS
+            )) revert PollenInvalidOwner(msg.sender);        
+
+        _rwaId = LibERC721.layout().allRwas;
+        }
+
+     /*  OK */
      /// @notice returns the features of a specific Pollen, given its tokenId 
      /// @param _tokenId token Id
-     /// @dev MODIFIER : checks first that msg.sender is either the T2G owner or the token owner. Otherwise revert PollenInvalidOwner error
      /// @dev MODIFIER : checks then that tokenId refers to a Pollen and no other type of token. Otherwise revert PollenInvalidTokenId error
-     /// @dev IMPORTANT : no checks is done if tokenId is null.
      /// @return tuple ( TokenStruct, TokenEntitySpecific, TokenRWASpecific) in abi encoded data format
 
     function pollen(uint256 _tokenId) 
-        external isT2GOwnerOrPollenOwner(_tokenId) isPollen(_tokenId) 
+        external isPollen(_tokenId) 
         view returns ( bytes memory ) {
 
         // We check first that the msg.sender if allowed and has the rights to view the pollen
+        if (msg.sender != LibDiamond.contractOwner() && msg.sender != LibERC721._ownerOf(_tokenId)) revert PollenInvalidSender(msg.sender);
         if (!LibOwners._isAllowed(msg.sender, T2GTypes.R_VIEWS )) revert PollenInvalidOwner(msg.sender);
 
         LibERC721.TokenStruct memory data1 = LibERC721._tokenCommonFeatures(_tokenId);
@@ -189,60 +249,67 @@ contract T2G_PollenFacet {
                 )
             );
         }
-    
-     /// @notice Change the entity features for all the Pollen related to an owner if in draft status 
-     /// @notice Provides an overall update of all of the pollens belonging to the owner as long as pollen is in draft status 
-     /// @param _owner address of the owner
-     /// @param _old bytes32 Id of the old reference to Entity features
-     /// @param _new bytes32 Id of the new reference to Entity features
-     /// @dev MODIFIER : checks first that msg.sender is either the T2G owner or the token owner. Otherwise revert PollenInvalidOwner error
-     /// @dev MODIFIER : checks then that tokenId refers to a Pollen and no other type of token. Otherwise revert PollenInvalidTokenId error
+     
+     /*  OK */
+     /// @notice Create a Gain with as many tokens as required by the amount of the funding
+     /// @param _to [Address] Wallet address of the owner of the Pollens
+     /// @param _entity [bytes32] Id of the entity object that features the source of GHG gains
+     /// @param _rwa [bytes32] Id of the RWA object that implements the GHG gains in CO2eq
 
-    function updateGainEntity(address _owner, bytes32 _old, bytes32 _new) external isT2GOwner {
+    function mintPollens(address _to, bytes32 _entity, bytes32 _rwa ) external isT2GOwner {
+
         // We check first that the _owner if allowed and has the rights to update
-        if (!LibOwners._isAllowed(_owner, T2GTypes.R_FARMS )) revert PollenInvalidOwner(_owner);
+        if (!LibOwners._isAllowed(
+            _to, 
+            T2GTypes.R_FARMS 
+            )) revert PollenInvalidOwner(_to);
+        
+        LibERC721.TokenRWASpecific memory result = LibPollens._rwa(_rwa);
 
-        uint256[] memory _pollens = LibPollens.isStateAtomic( _old, LibERC721.Statusoftoken.None );
-        bool _cancel = true;
-
-        for (uint256 i = 0; i < _pollens.length; i++) {
-            if (LibERC721.layout().token[_pollens[i]].state != LibERC721.Statusoftoken.draft) _cancel = false;
-            LibERC721.layout().token[_pollens[i]].owner = _new;        
-            LibERC721.layout().token[_pollens[i]].updated = block.timestamp;
-            emit PollenUpdated( _owner, _pollens[i] );
+        // Check that _rwa is real and in draft status; otherwise revert
+        if (result.state > LibERC721.Statusoftoken.draft) {
+            revert PollenInvalidStatus(_rwa);
             }
 
-        LibERC721.layout().entity[_new].state = LibERC721.Statusoftoken.active;
-        // if true means that all of the pollens have been updated.
-        // Thus there is no longer _old related to pollens so turned to canceled
-        // Otherwise keep it active since it remains pollens with it
-        if (_cancel) {
-            LibERC721.layout().entity[_old].state = LibERC721.Statusoftoken.canceled;
+        require(
+            result.size > T2GTypes.sizeUnit.NONE, 
+            "No RWA Unit set"
+            );
+
+        uint256 _amount = result.value * (1000 ** (uint8(result.size) - 1));
+
+        (uint256 _coin, T2GTypes.sizeUnit _size, ) = LibPollens._getParams();
+
+        require( 
+            _coin > 0, 
+            "Zero Pollen Value"
+            );
+
+        require( 
+            _size > T2GTypes.sizeUnit.NONE, 
+            "No Pollen Unit"
+            );
+
+        _coin = _coin * (1000 ** (uint8(_size) - 1));
+        
+        require( 
+            _amount >= _coin, 
+            string.concat( "Not enough gains : ", Strings.toString(_amount) )
+            );
+
+        for (uint256 i = _amount; (i - _coin) >= 0; i = i - _coin) {
+            LibPollens._mint( 
+                _to, 
+                _entity, 
+                _rwa 
+                );
             }
+
+        // Once we have minted the right number of Pollen, we turn active the entity and rwa related to them
+        LibERC721.layout().entity[_entity].state = LibERC721.Statusoftoken.active;
+        LibERC721.layout().rwa[_rwa].state = LibERC721.Statusoftoken.active;
         }
- 
-     /// @notice Change the RWA features for all the Pollen related to an owner and _old gain Id if in draft status 
-     /// @notice Provides an overall update of all of the pollens belonging to the owner as long as pollen is in draft status 
-     /// @param _owner address of the owner
-     /// @param _old bytes32 Id of the old reference to RWA features
-     /// @param _new bytes32 Id of the new reference to RWA features
-     /// @dev MODIFIER : checks first that msg.sender is either the T2G owner or the token owner. Otherwise revert PollenInvalidOwner error
-     /// @dev MODIFIER : checks then that tokenId refers to a Pollen and no other type of token. Otherwise revert PollenInvalidTokenId error
 
-    function updateGainRwa(address _owner, bytes32 _old, bytes32 _new) external isT2GOwner {
-        // We check first that the _owner if allowed and has the rights to update
-        if (!LibOwners._isAllowed(_owner, T2GTypes.R_FARMS )) revert PollenInvalidOwner(_owner);
-
-        uint256[] memory _pollens = LibPollens.isStateAtomic( _old, LibERC721.Statusoftoken.draft );
-        for (uint256 i = 0; i < _pollens.length; i++) {
-            LibERC721.layout().token[_pollens[i]].asset = _new;
-            LibERC721.layout().token[_pollens[i]].updated = block.timestamp;
-            emit PollenUpdated(_owner, _pollens[i]);
-            }
-
-        LibERC721.layout().rwa[_new].state = LibERC721.Statusoftoken.active;
-        LibERC721.layout().rwa[_old].state = LibERC721.Statusoftoken.canceled;
-        }
 
      /// @notice Validate a gain made up of several Pollens before being certifiable
      /// @notice Only the T2G Owner can run this function on behalf of an owner of the tokens that has the R_FARMS profile, 
@@ -282,80 +349,20 @@ contract T2G_PollenFacet {
             }
         }
 
-     /// @notice Create a Gain with as many tokens as required by the amount of the funding
-    function registerGains(address _to, bytes32 _entity, bytes32 _rwa ) external isT2GOwner {
-
-        // We check first that the _owner if allowed and has the rights to update
-        if (!LibOwners._isAllowed(_to, T2GTypes.R_FARMS )) revert PollenInvalidOwner(_to);
-        // Check the validity of the gain and convert it into as many pollen tokens as required
-
-        LibERC721.TokenRWASpecific memory result = LibPollens._rwa(_rwa);
-        require(result.size > T2GTypes.sizeUnit.NONE, "No RWA Unit set");
-
-        uint256 _amount = result.value * (1000 ** (uint8(result.size) - 1));
-
-        (uint256 _coin, T2GTypes.sizeUnit _size, ) = LibPollens._getParams();
-        require( _coin > 0, "Zero Pollen Value");
-        require( _size > T2GTypes.sizeUnit.NONE, "No Pollen Unit");
-
-        _coin = _coin * (1000 ** (uint8(_size) - 1));
-        
-        require( _amount >= _coin, string.concat( "Not enough gains : ", Strings.toString(_amount) ));
-
-        for (uint256 i = _amount; (i - _coin) >= 0; i = i - _coin) {
-            LibPollens._mint( _to, _entity, _rwa );
-            }
-
-        // Once we have minted the right number of Polle, we turn active the entity and rwa related to them
-        LibERC721.layout().entity[_entity].state = LibERC721.Statusoftoken.active;
-        LibERC721.layout().rwa[_rwa].state = LibERC721.Statusoftoken.active;
-        }
-
-     /// @notice Update features related to the RWA for a possible pollen
-     /// @param _data the data for the new created GHG Gain
-     /// @dev MODIFIER : checks first that msg.sender is T2G owner. Otherwise revert EntityInvalidSender error
-     /// @dev this function act as a setter and overwrites an existing content with new values
-     /// @dev the Id is worked out from the combination of report1 & report2 which normally are enough 
-     /// @dev once cheks are OK, then sets the adds the new RWA GHG Gain 
-     /// @return the Id of the created RWA GHG Gain
-    
-    function setGHGGain( bytes memory _data ) external isT2GOwner returns (bytes32) {
-        bytes32 _id;
-
-        LibERC721.TokenRWASpecific memory result = abi.decode(_data, (LibERC721.TokenRWASpecific));
-        
-        if ((bytes32(result.report1).length == 0) || (bytes32(result.report1) == 0x0)) revert InvalidGHGReportName();
-        if ((bytes32(result.report2).length == 0) || (bytes32(result.report2) == 0x0)) revert InvalidGHGReportName();
-
-        _id = keccak256( bytes(bytes.concat(result.report1, result.report2)));
-
-        LibERC721.layout().rwa[_id].state = LibERC721.Statusoftoken.draft;
-        LibERC721.layout().rwa[_id].value = result.value;
-        LibERC721.layout().rwa[_id].size = result.size;
-        LibERC721.layout().rwa[_id].source = result.source;
-        LibERC721.layout().rwa[_id].scope = result.scope;
-        LibERC721.layout().rwa[_id].gain = result.gain;
-        LibERC721.layout().rwa[_id].report1 = result.report1;
-        LibERC721.layout().rwa[_id].report2 = result.report2;
-                
-        emit GHGGainCreated( _id );
-        return _id;
-        }
-
      /// @notice Cancel a Pollen 
      /// @notice Only the T2G Owner can run this function on behalf of an owner of the token that has the R_FARMS profile, 
      /// @notice Both TokenId and Owner address are to be given as inputs to prevent any undesired or malicious action.
      /// @notice To cancel a Pollen, it is required to be in State : DRAFT only
 
-    function cancelPollen ( address _owner, uint256 _tokenId ) external isT2GOwner isPollen(_tokenId) {
+    function cancelPollen ( address _owner, bytes32 _tokenId ) external isT2GOwner {
         // We check first that the _owner if allowed and has the rights to update
         if (!LibOwners._isAllowed(_owner, T2GTypes.R_FARMS )) revert PollenInvalidOwner(_owner);
-
+/*
         if (LibERC721.layout().token[_tokenId].state != LibERC721.Statusoftoken.draft) revert PollenInvalidStatus(_tokenId);
 
         LibERC721.layout().token[_tokenId].state = LibERC721.Statusoftoken.canceled;
         LibERC721.layout().token[_tokenId].updated = block.timestamp;
-        emit PollenStatusChanged( _owner, _tokenId, LibERC721.layout().token[_tokenId].state );
+        emit PollenStatusChanged( _owner, _tokenId, LibERC721.layout().token[_tokenId].state );*/
         }
 
      /// @notice Burns / Cancels a draft Pollen Token. For security reasons. 
@@ -372,19 +379,19 @@ contract T2G_PollenFacet {
      /// @dev YTDB : IMPORTANT Check how to cope with "burn" in the sense of ERC721 and canceled as per T2G. Burning does not clear/erase the token
      /// @dev from the pool of tokens but rather freezes it to the Canceled state, for later tracability purposes.
 
-    function burnPollen(uint256 _tokenId, address _owner) 
-        external isT2GOwner isPollen(_tokenId) {
+    function burnPollen(bytes32 _tokenId, address _owner) 
+        external isT2GOwner {
 
         // We check first that the _owner if allowed and has the rights to update
         if (!LibOwners._isAllowed(_owner, T2GTypes.R_FARMS )) revert PollenInvalidOwner(_owner);
-
+/*
         if (LibERC721.layout().token[_tokenId].state != LibERC721.Statusoftoken.certified) revert PollenInvalidStatus(_tokenId);
 
         LibERC721._burn(_tokenId);
 
         LibERC721.layout().token[_tokenId].state = LibERC721.Statusoftoken.burnt;
         LibERC721.layout().token[_tokenId].updated = block.timestamp;
-        emit PollenStatusChanged( _owner, _tokenId, LibERC721.layout().token[_tokenId].state );
+        emit PollenStatusChanged( _owner, _tokenId, LibERC721.layout().token[_tokenId].state );*/
         }
 
 }

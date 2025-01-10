@@ -20,9 +20,8 @@ library LibPollens {
      /// @dev MODIFIER : checks then that tokenId refers to a Pollen and no other type of token. Otherwise revert PollenInvalidTokenId error
      /// @return TokenRWASpecific object
 
-    function _rwa(bytes32 _rwaId) internal view returns ( LibERC721.TokenRWASpecific memory ) {
-        LibERC721.TokenRWASpecific memory _result = LibERC721._tokenRwaFeatures(_rwaId);
-        return _result;
+    function _rwa(bytes32 _rwaId) internal view returns ( LibERC721.TokenRWASpecific storage ) {
+        return LibERC721._tokenRwaFeatures(_rwaId); 
         }
 
     function _setParams (uint256 _value, T2GTypes.sizeUnit _size, T2GTypes.CoinUnit _unit) internal {

@@ -111,6 +111,7 @@ library LibERC721 {
         address root;
         uint256[] allTokens;
         bytes32[] allFunds;
+        bytes32[] allRwas;
         bytes32[] allEntities;
         mapping(uint256 typeId => TokenIdCard) idFeatures;
         mapping(uint256 tokenId => address) owners;
@@ -205,7 +206,7 @@ library LibERC721 {
      * @dev Returns the Rwa specific details of the `tokenId`. Does NOT revert if token doesn't exist
      * NEW: T2G specific
      */
-    function _tokenRwaFeatures(bytes32 rwaId) internal view returns (TokenRWASpecific memory) {
+    function _tokenRwaFeatures(bytes32 rwaId) internal view returns (TokenRWASpecific storage) {
         return layout().rwa[rwaId];
         }
 
