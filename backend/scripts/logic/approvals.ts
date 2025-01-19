@@ -1,12 +1,11 @@
 const hre = require("hardhat");
 import { Address } from "viem";
 import { contractSet, diamondNames, facetNames, smart, encodeInterfaces, getWalletAddressFromSmartContract } from "../T2G_Data";
-import { dataDecodeABI, abiData, typeRouteArgs, honeyFeatures, pollenFeatures, Typeoftoken, Statusoftoken } from "../interface/types";
 import { colorOutput, displayAccountTable } from "../libraries/format";
 import { contractRecord, rwRecord, rwType, menuRecord, Account, NULL_ADDRESS, regex, regex2, regex3 } from "../libraries/types";
 import { accountType, accountRefs, globalState, setState, addAccount, account, updateAccountBalance, assignAccounts } from "./states";
-import { getStableCoinBalance } from "./balances";
-import { InteractWithContracts, setRecord } from "../InteractWithContracts";
+import { InteractWithContracts } from "../InteractWithContracts";
+import { setrwRecordFromSmart } from "../logic/instances";
 
 type approval = { 
     owner: accountType, 
@@ -17,7 +16,7 @@ type approval = {
     }
 
     export const getStableCoinApprovals = async ( owners: accountType | accountType[] ) : Promise<approval[]> => {
-        const wallets = await hre.viem.getWalletClients();
+
         const stable = <menuRecord>smart.find((el: menuRecord ) => el.tag == "EUR");
     
         var list : approval[] = [];
@@ -36,7 +35,7 @@ type approval = {
                         value: await stable.instance.read.allowance( 
                             [ (owner.wallet != NULL_ADDRESS) ? owner.wallet : owner.address, 
                                 (spender.wallet != NULL_ADDRESS) ? spender.wallet : spender.address ], 
-                                wallets[0] )
+                                globalState.wallets[0] )
                             });                    
                         }   
                         list.push( { 
@@ -51,11 +50,8 @@ export const approveCallback : { tag: string, callback: (from?: Account, to?: Ac
     { tag: "update", 
       callback: async () => {
             console.log("Update Approvals")
-        
-            const wallets = await hre.viem.getWalletClients();
-            const eur = <menuRecord>smart.find((el: menuRecord ) => el.tag == "EUR");
-        
-            const approve :rwRecord = setRecord( "EUR", "approve");
+                
+            const approve :rwRecord = await setrwRecordFromSmart( "approve", "EUR");
         
             const accounts = [ Account.A0, Account.AA, Account.AE, Account.AF, Account.AG ];
         
@@ -73,7 +69,7 @@ export const approveCallback : { tag: string, callback: (from?: Account, to?: Ac
                             BigInt(10**32) 
                             ];
                 
-                        await InteractWithContracts( <rwRecord>approve, from, eur );            
+                        await InteractWithContracts( <rwRecord>approve, from );            
                         }
                     }
                 }
@@ -117,11 +113,9 @@ export const approveCallback : { tag: string, callback: (from?: Account, to?: Ac
     { tag: "set",
       callback: async ( from?: Account, to?: Account ) => {
             console.log("Set Approvals %s => %s", from, to)
-        
-            const eur = <menuRecord>smart.find((el: menuRecord ) => el.tag == "EUR");
-        
-            const approve :rwRecord = setRecord( "EUR", "approve");
-            const balanceOf :rwRecord = setRecord( "EUR", "balanceOf");
+                
+            const approve :rwRecord = await setrwRecordFromSmart( "approve", "EUR");
+            const balanceOf :rwRecord = await setrwRecordFromSmart( "balanceOf", "EUR");
         
             try {                        
                 if (Object.keys(accountRefs).includes(from) 
@@ -136,14 +130,14 @@ export const approveCallback : { tag: string, callback: (from?: Account, to?: Ac
                     type refKeys = keyof typeof accountRefs;
         
                     balanceOf.values = [ fromAddress ];
-                    const balance = Number(await InteractWithContracts( <rwRecord>balanceOf, Account.A0, eur, true ));            
+                    const balance = Number(await InteractWithContracts( <rwRecord>balanceOf, Account.A0, true ));            
                     //console.log("balance", fromAddress, balance)
                     approve.values = [ 
                         toAddress,
                         balance 
                         ];
         
-                    await InteractWithContracts( <rwRecord>approve, from, eur );            
+                    await InteractWithContracts( <rwRecord>approve, <Account>from );            
                     }
                 }
             catch (error) {

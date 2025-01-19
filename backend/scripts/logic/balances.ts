@@ -5,20 +5,33 @@ import { dataDecodeABI, abiData, typeRouteArgs, honeyFeatures, pollenFeatures, T
 import { colorOutput, displayAccountTable } from "../libraries/format";
 import { contractRecord, rwRecord, rwType, menuRecord, Account, NULL_ADDRESS, regex, regex2, regex3 } from "../libraries/types";
 import { accountRefs, accountType, globalState, setState, addAccount, account, updateAccountBalance, assignAccounts } from "../logic/states";
-import { InteractWithContracts, setRecord } from "../InteractWithContracts";
+import { InteractWithContracts } from "../InteractWithContracts";
+import { setrwRecordFromSmart } from "../logic/instances";
 
 export const getStableCoinBalance = async ( account: accountType | accountType[] ) : Promise<accountType | accountType[]> => {
-    const stable = <menuRecord>smart.find((el: menuRecord ) => el.tag == "EUR");
 
-    const decimals :rwRecord = setRecord( "EUR", "decimals");
-    const gwei = await InteractWithContracts( <rwRecord>decimals, Account.A0, stable, true );            
+    const decimals :rwRecord = await setrwRecordFromSmart( 
+        "decimals", 
+        "EUR" 
+        );
+
+    const gwei = await InteractWithContracts( 
+        <rwRecord>decimals, 
+        Account.A0, 
+        true 
+        );            
+    
     console.log("GWEI decimals %d", gwei);
 
-    const balance :rwRecord = setRecord( "EUR", "balanceOf");
+    const balance :rwRecord = await setrwRecordFromSmart( 
+        "balanceOf", 
+        "EUR"
+        );
 
     var list : accountType[] = [];
     var item : accountType;
     var accounts : accountType[] = Array.isArray(account) ? account : [ account ];
+
     for ( item of accounts ) {
         if (item != undefined) {
             if (((item.wallet != undefined) && (item.wallet != NULL_ADDRESS)) || (item.address != NULL_ADDRESS)) {
@@ -32,7 +45,7 @@ export const getStableCoinBalance = async ( account: accountType | accountType[]
                     address: item.address, 
                     wallet: item.wallet,
                     private: item.private,
-                    balance: await InteractWithContracts( <rwRecord>balance, Account.A0, stable, true ),
+                    balance: await InteractWithContracts( <rwRecord>balance, Account.A0, true ),
                     decimals : gwei
                     });
                 }

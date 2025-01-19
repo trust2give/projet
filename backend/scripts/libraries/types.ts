@@ -51,9 +51,9 @@ export enum Account {
     export interface contractRecord { 
         name: string, 
         address: Address,
-        beacon: string | boolean,
-        get: string | boolean,
-        wallet: string | boolean
+        beacon?: string | boolean,
+        get?: string | boolean,
+        wallet?: string
         }
     
     export type diamondCore = {
@@ -64,15 +64,17 @@ export enum Account {
         }
     
     /// enum type qui permet de définir si une interaction est de type READ ou WRITE
-    export enum rwType { READ, WRITE }
+    export enum rwType { READ, WRITE, CONSTRUCTOR }
     
     export type rwRecord = { 
         rwType: rwType,
         contract: string, 
+        instance: any,
         function: string, 
         args: Array<any>,
         values: Array<any>,
-        outcome: Array<any>
+        outcome: Array<any>,
+        events: any
     }
     
     export type menuRecord = {
@@ -82,20 +84,4 @@ export enum Account {
         diamond: Account | undefined,
         instance: any,
         events: any,
-        }
-    
-    export interface errorFrame {
-        cause : string,
-        details : string,
-        docsPath: string,
-        metaMessages: string,
-        shortMessage: string,
-        version: string,
-        name: string,
-        abi: string,
-        args: string,
-        contractAddress: string,
-        formattedArgs: string,
-        functionName: string,
-        sender: string
         }

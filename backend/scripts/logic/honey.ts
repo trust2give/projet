@@ -1,20 +1,20 @@
 const hre = require("hardhat");
 import { Address, encodeAbiParameters, decodeAbiParameters } from 'viem'
 import { contractSet, diamondNames, facetNames, smart, encodeInterfaces } from "../T2G_Data";
-import { Statusoftoken, dataDecodeABI, abiData, typeRouteArgs, honeyFeatures, pollenFeatures, TypeofUnit } from "../interface/types";
+import { Statusoftoken, dataDecodeABI, abiData, honeyFeatures, pollenFeatures, TypeofUnit } from "../interface/types";
 import { colorOutput, displayAccountTable } from "../libraries/format";
 import { contractRecord, rwRecord, rwType, menuRecord, Account, NULL_ADDRESS, regex, regex2, regex3 } from "../libraries/types";
 import { accountType, accountRefs, globalState, setState, addAccount, account, updateAccountBalance, assignAccounts } from "./states";
 import { getStableCoinBalance } from "./balances";
-import { InteractWithContracts, setRecord } from "../InteractWithContracts";
+import { setrwRecordFromSmart } from "../logic/instances";
+import { InteractWithContracts } from "../InteractWithContracts";
 
   
 export const honeyCallback : { tag: string, callback: (from: Account, fund: string, entity?: string) => {} }[] = [
     { tag: "mint", 
       callback: async ( from: Account, fund: string, entity?: string ) => {
 
-            const honey = <menuRecord>smart.find((el: menuRecord ) => el.tag == "Honey");
-            const mint :rwRecord = setRecord( "Honey", "mintHoney");
+            const mint: rwRecord = await setrwRecordFromSmart( "mintHoney", "Honey" );
         
             try {                        
                 if (Object.keys(accountRefs).includes(from)) {
@@ -27,7 +27,7 @@ export const honeyCallback : { tag: string, callback: (from: Account, fund: stri
                         fund
                         ];
         
-                    const tx1 = await InteractWithContracts( <rwRecord>mint, Account.A0, honey, true );            
+                    const tx1 = await InteractWithContracts( <rwRecord>mint, Account.A0, true );            
                     }
                 }
             catch (error) {
@@ -39,8 +39,7 @@ export const honeyCallback : { tag: string, callback: (from: Account, fund: stri
     { tag: "approve",
       callback: async ( from: Account, fund: string ) => {
 
-            const honey = <menuRecord>smart.find((el: menuRecord ) => el.tag == "Honey");
-            const approve :rwRecord = setRecord( "Honey", "approveHoney");
+            const approve :rwRecord = await setrwRecordFromSmart( "approveHoney", "Honey" );
         
             try {                        
                 if (Object.keys(accountRefs).includes(from)) {
@@ -52,7 +51,7 @@ export const honeyCallback : { tag: string, callback: (from: Account, fund: stri
                         fromAccount.address
                         ];
                         
-                    await InteractWithContracts( <rwRecord>approve, Account.A0, honey );            
+                    await InteractWithContracts( <rwRecord>approve, Account.A0 );            
                     }
                 }
             catch (error) {
@@ -64,8 +63,7 @@ export const honeyCallback : { tag: string, callback: (from: Account, fund: stri
     { tag: "transfer",
       callback: async ( from: Account, fund: string ) => {
 
-            const honey = <menuRecord>smart.find((el: menuRecord ) => el.tag == "Honey");
-            const transfer :rwRecord = setRecord( "Honey", "transferToPool");
+            const transfer :rwRecord = await setrwRecordFromSmart( "transferToPool", "Honey");
         
             try {                        
                 if (Object.keys(accountRefs).includes(from)) {
@@ -77,7 +75,7 @@ export const honeyCallback : { tag: string, callback: (from: Account, fund: stri
                         fromAccount.address
                         ];
         
-                    await InteractWithContracts( <rwRecord>transfer, Account.A0, honey );            
+                    await InteractWithContracts( <rwRecord>transfer, Account.A0 );            
                     }
                 }
             catch (error) {
@@ -92,16 +90,13 @@ export const fundCallback : { tag: string, callback: (silent: boolean, from?: Ac
     { tag: "set",
       callback: async ( silent: boolean, from?: Account, value?: number, rate?: number ) => {
             console.log("Create Fund %s => %s %d", from, value, rate)
+     
+            const decimals :rwRecord = await setrwRecordFromSmart( "decimals", "EUR");
+            const transfer :rwRecord = await setrwRecordFromSmart( "transfer", "EUR");
+            const setfund :rwRecord = await setrwRecordFromSmart( "setFund", "Honey" );
+            const fund :rwRecord = await setrwRecordFromSmart( "fund", "Honey");
         
-            const eur = <menuRecord>smart.find((el: menuRecord ) => el.tag == "EUR");
-            const honey = <menuRecord>smart.find((el: menuRecord ) => el.tag == "Honey");
-        
-            const decimals :rwRecord = setRecord( "EUR", "decimals");
-            const transfer :rwRecord = setRecord( "EUR", "transfer");
-            const setfund :rwRecord = setRecord( "Honey", "setFund");
-            const fund :rwRecord = setRecord( "Honey", "fund");
-        
-            const gwei = await InteractWithContracts( <rwRecord>decimals, Account.A0, eur, true );            
+            const gwei = await InteractWithContracts( <rwRecord>decimals, Account.A0, true );            
             console.log("GWEI decimals %d", gwei);
         
             try {                        
@@ -117,14 +112,14 @@ export const fundCallback : { tag: string, callback: (silent: boolean, from?: Ac
                         BigInt(value * (10 ** gwei))
                         ];
         
-                    const tx1 = await InteractWithContracts( <rwRecord>transfer, Account.A0, eur );            
+                    const tx1 = await InteractWithContracts( <rwRecord>transfer, Account.A0 );            
         
                     transfer.values = [ 
                         toAccount.wallet,
                         BigInt(value * (10 ** gwei))
                         ];
                     console.log( transfer )
-                    const tx2 = await InteractWithContracts( <rwRecord>transfer, from, eur );            
+                    const tx2 = await InteractWithContracts( <rwRecord>transfer, <Account>from );            
         
                     if ("T2G_HoneyFacet" in encodeInterfaces) {
                         const encodeInput = encodeInterfaces.T2G_HoneyFacet.find((item) => item.function == "setFund");
@@ -147,7 +142,7 @@ export const fundCallback : { tag: string, callback: (silent: boolean, from?: Ac
                                         encodedData 
                                         ];
                         
-                                    await InteractWithContracts( <rwRecord>setfund, Account.A0, honey );   
+                                    await InteractWithContracts( <rwRecord>setfund, Account.A0 );   
         
                                     fund.values = [ 
                                         tx2 
@@ -159,7 +154,7 @@ export const fundCallback : { tag: string, callback: (silent: boolean, from?: Ac
                                         unit: number,
                                         hash0: string,
                                         rate: number
-                                        }[] = await InteractWithContracts( <rwRecord>fund, Account.A0, honey, true );   
+                                        }[] = await InteractWithContracts( <rwRecord>fund, Account.A0, true );   
                             
                                     colorOutput( "> ".concat(
                                         "[".concat(tx2,"] "), 
@@ -187,23 +182,20 @@ export const fundCallback : { tag: string, callback: (silent: boolean, from?: Ac
     { tag: "all",
       callback: async ( silent: boolean ) : Promise<string[] | undefined> => {
             console.log("Get All Fund");
+                
+            const getfunds :rwRecord = await setrwRecordFromSmart( "getFunds", "Honey");
+            const fund :rwRecord = await setrwRecordFromSmart( "fund", "Honey");
         
-            const eur = <menuRecord>smart.find((el: menuRecord ) => el.tag == "EUR");
-            const honey = <menuRecord>smart.find((el: menuRecord ) => el.tag == "Honey");
+            const decimals :rwRecord = await setrwRecordFromSmart( "decimals", "EUR");
         
-            const getfunds :rwRecord = setRecord( "Honey", "getFunds");
-            const fund :rwRecord = setRecord( "Honey", "fund");
-        
-            const decimals :rwRecord = setRecord( "EUR", "decimals");
-        
-            const gwei = await InteractWithContracts( <rwRecord>decimals, Account.A0, eur, true );            
+            const gwei = await InteractWithContracts( <rwRecord>decimals, Account.A0, true );            
             console.log("GWEI decimals %d", gwei);
             //BigInt(value * (10 ** gwei)),
         
             try {                        
                 getfunds.values = [];
         
-                const fundIds : string[] = await InteractWithContracts( <rwRecord>getfunds, Account.A0, honey, true );   
+                const fundIds : string[] = await InteractWithContracts( <rwRecord>getfunds, Account.A0, true );   
                 
                 if (!silent) {
                     var rank = 0;
@@ -218,7 +210,7 @@ export const fundCallback : { tag: string, callback: (silent: boolean, from?: Ac
                             unit: number,
                             hash0: string,
                             rate: number
-                            }[] = await InteractWithContracts( <rwRecord>fund, Account.A0, honey, true );   
+                            }[] = await InteractWithContracts( <rwRecord>fund, Account.A0, true );   
                             
                         const color : string = ["blue", "yellow", "cyan", "green", "white", "red", "red"][fundValue[0].state];
             

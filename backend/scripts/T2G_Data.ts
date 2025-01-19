@@ -1,4 +1,4 @@
-import { contractRecord, diamondCore, NULL_ADDRESS, menuRecord, Account } from "./libraries/types";
+import { contractRecord, diamondCore, rwRecord, rwType, NULL_ADDRESS, menuRecord, Account } from "./libraries/types";
 const hre = require("hardhat");
 import { Address } from "viem";
 import { accountRefs, accountType, globalState, setState, addAccount, account, updateAccountBalance, assignAccounts } from "./logic/states";
@@ -28,25 +28,25 @@ import { accountRefs, accountType, globalState, setState, addAccount, account, u
 /// Pour retrouver les addresses des derniers contracts déployés T2G_Root et EUR (Contract StableCoin Mock-up)
 
 export const contractSet : contractRecord[] = [
-  { name: "EUR", address: NULL_ADDRESS, beacon: false, get: 'get_EUR', wallet: false },
+  { name: "EUR", address: NULL_ADDRESS, get: 'get_EUR' },
   ]
 
 export const facetNames : contractRecord[] = [
-  { name: 'OwnershipFacet', address: NULL_ADDRESS, beacon: false, get: false, wallet: false },
-  { name: 'ERC721Facet', address: NULL_ADDRESS, beacon: 'beacon_ERC721Facet', get: false, wallet: false },
-  { name: 'T2G_NektarFacet', address: NULL_ADDRESS, beacon: 'beacon_NektarFacet', get: 'get_T2G_NektarFacet', wallet: false },
+  { name: 'OwnershipFacet', address: NULL_ADDRESS },
+  { name: 'ERC721Facet', address: NULL_ADDRESS, beacon: 'beacon_ERC721Facet' },
+  { name: 'T2G_NektarFacet', address: NULL_ADDRESS, beacon: 'beacon_NektarFacet', get: 'get_T2G_NektarFacet' },
   { name: 'T2G_PollenFacet', address: NULL_ADDRESS, beacon: 'beacon_PollenFacet', get: 'get_T2G_PollenFacet', wallet: 'wallet_PollenFacet' },
   { name: 'T2G_HoneyFacet', address: NULL_ADDRESS, beacon: 'beacon_HoneyFacet', get: 'get_T2G_HoneyFacet', wallet: 'wallet_HoneyFacet' },
   { name: 'T2G_PoolFacet', address: NULL_ADDRESS, beacon: 'beacon_PoolFacet', get: 'get_T2G_PoolFacet', wallet: "wallet_PoolFacet" },
-  { name: 'T2G_EntityFacet', address: NULL_ADDRESS, beacon: 'beacon_EntityFacet', get: 'get_T2G_EntityFacet', wallet: false },
-  { name: 'T2G_SyndicFacet', address: NULL_ADDRESS, beacon: 'beacon_SyndicFacet', get: 'get_T2G_SyndicFacet', wallet: false }
+  { name: 'T2G_EntityFacet', address: NULL_ADDRESS, beacon: 'beacon_EntityFacet', get: 'get_T2G_EntityFacet' },
+  { name: 'T2G_SyndicFacet', address: NULL_ADDRESS, beacon: 'beacon_SyndicFacet', get: 'get_T2G_SyndicFacet' }
   ]
 
 export const diamondNames : diamondCore = {
-    Diamond: { name: "T2G_root", address: NULL_ADDRESS, beacon: 'beacon_T2G_Root', get: false, wallet: "wallet_T2G_root" },
-    DiamondCutFacet: { name: "DiamondCutFacet", address: NULL_ADDRESS, beacon: false, get: false, wallet: false },
-    DiamondLoupeFacet: { name: "DiamondLoupeFacet", address: NULL_ADDRESS, beacon: false, get: false, wallet: false },
-    DiamondInit: { name: "DiamondInit", address: NULL_ADDRESS, beacon: false, get: false, wallet: false },
+    Diamond: { name: "T2G_root", address: NULL_ADDRESS, beacon: 'beacon_T2G_Root', wallet: "wallet_T2G_root" },
+    DiamondCutFacet: { name: "DiamondCutFacet", address: NULL_ADDRESS },
+    DiamondLoupeFacet: { name: "DiamondLoupeFacet", address: NULL_ADDRESS },
+    DiamondInit: { name: "DiamondInit", address: NULL_ADDRESS },
     }
 
 export const tokenCredential = { 
@@ -75,6 +75,24 @@ export var smart : menuRecord[] = [
   { tag: "Syndication", contract: "T2G_SyndicFacet",  diamond: Account.AA, args: [], instance: undefined, events: undefined } 
   ];
 
+/*export const setRecord = (tag: string, name : string) : rwRecord => {
+  const record = <menuRecord>smart.find((el: menuRecord ) => el.tag == tag);
+  const fct = record.instance.abi.filter((item) => (item.type == "function" && item.name == name))[0];
+  
+  return <rwRecord>{ 
+      rwType: (fct.stateMutability == "view" || fct.stateMutability == "pure") ? rwType.READ : rwType.WRITE,
+      contract: record.contract,
+      function: fct.name, 
+      args: fct.inputs,
+      values: [],
+      outcome: fct.outputs };
+      }             */
+
+export const smartEntry = ( tag?: string ) : menuRecord | undefined => {
+    return <menuRecord | undefined>smart.find((el: menuRecord ) => el.tag == tag);
+    }
+      
+
 export const encodeInterfaces = {
   T2G_PollenFacet: [
     { function: "getMyPollenList", output: "pollenListABI" }, 
@@ -94,7 +112,7 @@ export const encodeInterfaces = {
   //T2G_PollenFacet: [{ function: "pollen", _data: "TokenEntitySpecific" }]
   }
   
-  export const getWalletAddressFromSmartContract = async () :Promise<accountType[]> => {
+  export const getWalletAddressFromSmartContract = async () : Promise<accountType[]> => {
 
     type accKeys = keyof typeof accountRefs;
     const wallet = accountRefs[<accKeys>`@0`].client;

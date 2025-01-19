@@ -39,6 +39,10 @@ const config: HardhatUserConfig = {
             url: "http://192.168.0.76:8545",
             accounts: "remote",
         },
+        T2G: {
+            url: "http://46.226.107.26:8545",
+            accounts: "remote",
+        },
 /*        mainnet: {
             chainId: 1,
             url: MAINNET_RPC_URL!,

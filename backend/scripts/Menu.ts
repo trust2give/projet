@@ -3,26 +3,23 @@ import { Address, encodeAbiParameters, decodeAbiParameters } from 'viem'
 import * as readline from 'readline';
 import { InteractWithContracts } from "./InteractWithContracts";
 import { readLastContractSetJSONfile, 
-         writeLastContractJSONfile, 
-         writeLastDiamondJSONfile, 
-         readLastDiamondJSONfile, 
-         readLastFacetJSONfile, 
-         writeLastFacetJSONfile } from "./libraries/files";
+         readLastDiamondJSONfile } from "./libraries/files";
 import { accountIndex, convertType, enumOrValue } from "./libraries/utils";
 import { DeployContracts,  } from "./DeployContracts";
-import { contractSet, diamondNames, facetNames, smart, encodeInterfaces } from "./T2G_Data";
-import { commandItem, dataDecodeABI, abiData, typeRouteArgs, honeyFeatures, pollenFeatures, Typeoftoken, Statusoftoken } from "./interface/types";
+import { contractSet, diamondNames, facetNames, smart, smartEntry, encodeInterfaces } from "./T2G_Data";
+import { commandItem, dataDecodeABI, abiData, typeRouteOutput, honeyFeatures, pollenFeatures, Typeoftoken, Statusoftoken } from "./interface/types";
 import { colorOutput, displayAccountTable } from "./libraries/format";
 import { contractRecord, rwRecord, rwType, menuRecord, Account, NULL_ADDRESS, regex, regex2, regex3 } from "./libraries/types";
 import { showBeacons } from "./logic/beacons";
 import { showBalances } from "./logic/balances";
 import { showTokens } from "./logic/tokens";
+import { help } from "./logic/help";
 import { rightCallback } from "./logic/rights";
 import { approveCallback } from "./logic/approvals";
 import { fundCallback, honeyCallback } from "./logic/honey";
 import { createEntity, getAllEntities } from "./logic/entity";
-import { showInstance, updateInstances } from "./logic/instances";
-import { initState, prompts, accountRefs, globalState, setState, addAccount, account, updateAccountBalance, assignAccounts, deployState } from "./logic/states";
+import { showInstance, setrwRecordFromSmart, getFunctionsAbiFromInstance } from "./logic/instances";
+import { initState, prompts, accountRefs, globalState, setState, addAccount, account, updateAccountBalance, assignAccounts, deployState, functionState } from "./logic/states";
 
 /*******************************************************************************************\
 * Author: Franck Dervillez <franck.dervillez@trust2give.com>, Twitter/Github: @fdervillez
@@ -56,23 +53,7 @@ import { initState, prompts, accountRefs, globalState, setState, addAccount, acc
 /// netstat -a -o -n        - check PID for any already running instance
 /// taskkill /f /pid ####   - kill the PID if necessary
 /// npx hardhat node        - Run the hardhat node prior to script if required
-/// npx hardhat run .\scripts\Menu.ts --network localhost | test - Run the script (test for NAS version)
-
-export const help = {
-    keywords: () => "Help: ".concat(
-        Object.keys(help).join(" "), " S.Contract: ", ...smart.map((item) => " ".concat(item.tag) )
-        ),
-    rights: "manage wallet rights: all / set Account @[0 - Z] flags [0 - 127] / get Account @[0 - Z] / ban Account @[0 - Z]",
-    beacon: "display beacons / available contracts",
-    token: "sort out list of ERC721 tokens of any kind created",
-    Accounts: "sort out list of wallets & smart contracts",
-    fund: "Create a new fund or display funds : set Account @[0 - Z] Amount Rate / all ",
-    mint: "Create or manage a new Honey : honey Account @[0 - Z] fundId entityId / approve Account @[0 - Z] fundId / transfer Account @[0 - Z] fundId",
-    identity: "Create or display entities : set person / set entity / all",
-    allowance: "Manage Stable Coin approvals : all / set / update Owner @[0 - Z] Spender @[0 - Z]",
-    balance: "Show all accounts balances",
-    deploy: "Command template : <Contract> <Action> <List of Smart Contract> \n where Contract = {Facet/Contract/Diamond} action = {Add/Replace/Remove} {[contractName ContractName...]} ]\n"
-    }
+/// npx hardhat run .\scripts\Menu.ts --network localhost | test | T2G - Run the script (test for NAS version, T2G for remote VPS Gandi)
 
 async function main() {
 
@@ -84,59 +65,78 @@ async function main() {
     colorOutput( ("*".concat(" ".padStart(7, " "), "This application allow to interact and test" ).padEnd(width - 1, " ")).concat("*"), "cyan");
     colorOutput( ("*".concat(" ".padStart(10, " "), "Author: franck.dervillez@trust2give.fr" ).padEnd(width - 1, " ")).concat("*"), "cyan");
     colorOutput( "*".padEnd(width, "*"), "cyan");
-        
-    initState();
-
+    
+    // Initialize globalState variable
+    await initState();
+    colorOutput( "Initial State done", "cyan");
+    
+    // Initialize wallet/accounts from hardhat node
     await assignAccounts();
+    colorOutput( "Initial Accounts Done", "cyan");
 
     // We complete the list with possible two other address: T2G_Root & EUR contracts
     // since they can be selected as Account.AA & Account.AE options
     
-    var root : Array<any> = [];
-    var initialized : boolean = false;
+    var initialized : Boolean = false;
 
     type accKeys = keyof typeof accountRefs;
 
     if (await readLastDiamondJSONfile()) {
 
-        const getRoot = await hre.viem.getContractAt( 
-            diamondNames.Diamond.name, 
-            diamondNames.Diamond.address
-            );
-
         try {            
-            root = await getRoot.read.wallet_T2G_root( [], accountRefs[<accKeys>`@0`].client );
+            const getRoot = await hre.viem.getContractAt( 
+                diamondNames.Diamond.name, 
+                diamondNames.Diamond.address
+                );
 
-            initialized = true;
+            initialized = await addAccount( 
+                10, 
+                diamondNames.Diamond.name, 
+                diamondNames.Diamond.address, 
+                await getRoot.read.wallet_T2G_root( 
+                    [], 
+                    accountRefs[<accKeys>`@0`].client 
+                    ) //root 
+                );
+
+            colorOutput( 
+                (
+                    "*".concat( " ".padStart(2, " "), 
+                    `${Account["AA"]}: `.concat(await account(10, false)), 
+                    " T2G Root" ).padEnd(width - 1, " ")
+                ).concat("*"), 
+                "cyan"
+                );
+        
             }
         catch (error) {
             console.error(">> Error :: No T2G_Root initialized @ %s", diamondNames.Diamond.address, error.shortMessage)
             }
     
-        await addAccount( 10, diamondNames.Diamond.name, diamondNames.Diamond.address, root );
-
-        colorOutput( ("*".concat(" ".padStart(2, " "), `${Account["AA"]}: `.concat(await account(10, false)), " T2G Root" ).padEnd(width - 1, " ")).concat("*"), "cyan");
-
         if (await readLastContractSetJSONfile()) {
 
-            const stableCoin = await hre.viem.getContractAt( 
-                "EUR", 
-                contractSet[0].address
-                );
-            
             try {
-                const eur = await stableCoin.read.name( 
-                    [], 
-                    accountRefs[<accKeys>`@0`].client
-                    );                
+
+                await addAccount( 
+                    11, 
+                    contractSet[0].name, 
+                    contractSet[0].address, 
+                    [] 
+                    );
+
                 }
             catch (error) {
                 console.error(">> Error :: No StableCoin Contract initialized @ %s ", contractSet[0].address, error.shortMessage)
                 }
-
-            await addAccount( 11, contractSet[0].name, contractSet[0].address, [] );
         
-            colorOutput( ("*".concat(" ".padStart(2, " "), `${Account["AB"]}: `.concat(await account(11, false)), " EUR SC" ).padEnd(width - 1, " ")).concat("*"), "cyan");    
+            colorOutput( 
+                (
+                    "*".concat(" ".padStart(2, " "), 
+                    `${Account["AB"]}: `.concat(await account(11, false)), 
+                    " EUR SC" ).padEnd(width - 1, " ")
+                ).concat("*"), 
+                "cyan"
+                );    
             }
         
         if (initialized) {
@@ -157,15 +157,27 @@ async function main() {
                             [], 
                             accountRefs[<accKeys>`@0`].client 
                             ) : NULL_ADDRESS;                
-                        
-                        const wallet : Array<any> = (facet.wallet) ? await getAddr.read[<string>facet.wallet]( 
-                            [], 
-                            accountRefs[<accKeys>`@0`].client 
-                            ) : [];
-                        
-                        await addAccount( rank, facet.name, get, wallet );
+                                                
+                        await addAccount( 
+                            rank, 
+                            facet.name, 
+                            get, 
+                            (facet.wallet) ? await getAddr.read[<string>facet.wallet]( 
+                                [], 
+                                accountRefs[<accKeys>`@0`].client 
+                                ) : [] 
+                            );
         
-                        colorOutput( ("*".concat(" ".padStart(2, " "), `${Account[<AccountKeys>`A${indice.substring(rank,rank + 1)}`]}: `.concat(await account(rank, false)), " ", facet.name ).padEnd(width - 1, " ")).concat("*"), "cyan");
+                        colorOutput( 
+                            (
+                                "*".concat(" ".padStart(2, " "), 
+                                `${Account[<AccountKeys>`A${indice.substring(rank,rank + 1)}`]}: `.concat(await account(rank, false)), 
+                                " ", 
+                                facet.name 
+                            ).padEnd(width - 1, " ")).concat("*"), 
+                            "cyan"
+                            );
+
                         rank++;
                         }
                     catch (error) {
@@ -173,8 +185,6 @@ async function main() {
                        }
                     }
                 }
-
-            await updateInstances();    
             } 
         }
 
@@ -189,10 +199,7 @@ async function main() {
         prompt: "> ",
         });
     
-        const trace : boolean = false
-                
-        var record : menuRecord;
-        //var item : rwRecord | null;
+        const trace : boolean = false                
         var Choices : string[] = [];
         
         rl.setPrompt(<string>globalState.promptText);
@@ -214,7 +221,7 @@ async function main() {
             else {
                 if (smart.some((el: menuRecord) => el.tag == keys[1]))
                     setState( { 
-                        help: showInstance( <string>keys[1] ) 
+                        help: <string[]>await showInstance( <string>keys[1] ) 
                         });
                 }
 
@@ -222,38 +229,29 @@ async function main() {
             }
         else if ((globalState.inputs == "None") && (answer == "Deploy")) deployState();
         else if ((globalState.inputs == "None") && (smart.some((el: menuRecord) => el.tag == answer))) {            
-
-            setState( { 
-                deploy: false, 
-                object: false, 
-                level: answer, 
-                inputs: "Function" 
-                });            
-
-            record = <menuRecord>smart.find((el: menuRecord ) => el.tag == globalState.level);
-            Choices = record.instance.abi.filter( (item) => (item.type == "function")).map((item) => item.name);
+            functionState( answer );
+            Choices = <string[]>await getFunctionsAbiFromInstance(
+                <menuRecord>smartEntry(globalState.level)
+                );
             }
-        else if ((globalState.inputs == "Function") && (Choices.some((el : string) => el == answer))) {      
-            const setRecord = (name : string) : rwRecord => {
-                const fct = record.instance.abi.filter((item) => (item.type == "function" && item.name == answer))[0];
-                
-                return <rwRecord>{ 
-                    rwType: (fct.stateMutability == "view" || fct.stateMutability == "pure") ? rwType.READ : rwType.WRITE,
-                    contract: record.contract,
-                    function: fct.name, 
-                    args: fct.inputs,
-                    values: [],
-                    outcome: fct.outputs };
-                    }             
-
+        else if ((globalState.inputs == "Function") && (Choices.some((el : string) => el == answer))) {
             setState( { 
-                inputs: "Sender", 
+                inputs: "Args", 
                 object: false, 
                 tag: answer, 
                 index: 0, 
                 subIndex: 0 }, 
-                setRecord(answer)
+                await setrwRecordFromSmart(answer, globalState.level)
                 );
+
+            }
+        else if (answer.startsWith("Sender"))  {
+            if (Object.keys(accountRefs).includes(keys[1])) {
+                    setState( { 
+                        sender: <Account>keys[1] 
+                        });
+                    console.log("Sender set to ", globalState.sender)
+                    }
             }
         else if (answer == "Accounts")  {
             await updateAccountBalance(); 
@@ -349,68 +347,94 @@ async function main() {
         
         // In the case when Deploy is selected
         if (globalState.deploy) {
-            await DeployContracts( accountRefs, answer, smart );
+            await DeployContracts( 
+                answer, 
+                smart 
+                );
 
-            await addAccount( 10, diamondNames.Diamond.name, diamondNames.Diamond.address, [] );
-            await addAccount( 11, contractSet[0].name, contractSet[0].address, [] );
+            await addAccount( 
+                10, 
+                diamondNames.Diamond.name, 
+                diamondNames.Diamond.address, 
+                [] 
+                );
+
+            await addAccount( 
+                11, 
+                contractSet[0].name, 
+                contractSet[0].address, 
+                [] 
+                );
             }
         else {
             switch (globalState.inputs) {
-                case "Sender": {
-                    if (!Object.keys(accountRefs).includes(answer)) break;
-                    else {
-                        if (globalState.sender != <Account>answer) {
-                            setState( { sender: <Account>answer } );
-                            await updateInstances();  
-                            }
-
-                        setState( { 
-                            inputs: (globalState.item.args.length > 0) ? "Args" : "OK", 
-                            object: false, 
-                            index: 0, 
-                            subIndex: 0, 
-                            subItem: [] 
-                            });
-
-                        answer = "";
-                        }
-                    break;
-                    }
                 case "Args": {
                     try {
                         var index: number = <number>globalState.index;
                         var item: rwRecord = <rwRecord>globalState.item;
+                        if (item.args.length > 0) {                        
+                            if (item.args[index].type == "bytes") {
+                                // we are in the case when an encoded complex struct is to be passed
+                                // It may require additionnal sub-inputs to get
+                                if (globalState.object) {
 
-                        if (item.args[index].type == "bytes") {
-                            // we are in the case when an encoded complex struct is to be passed
-                            // It may require additionnal sub-inputs to get
-                            if (globalState.object) {
-                                var subValue = convertType( ABIformat[0].components, <number>globalState.subIndex, answer, typeRouteArgs, "", false);
-                                
-                                if (subValue != undefined) {
-                                    var sub : Array<any> = globalState.subItem ? globalState.subItem : [];
-                                    sub.push(subValue);
-                                    setState( { subItem: sub, subIndex: <number>globalState.subIndex + 1 });
+                                    var subValue = convertType( 
+                                        ABIformat[0].components, 
+                                        <number>globalState.subIndex, 
+                                        answer, 
+                                        typeRouteOutput, 
+                                        "", 
+                                        false
+                                        );
+                                    
+                                    if (subValue != undefined) {
+                                        var sub : Array<any> = globalState.subItem ? globalState.subItem : [];
+
+                                        sub.push(subValue);
+
+                                        setState( 
+                                            { 
+                                                subItem: sub, 
+                                                subIndex: <number>globalState.subIndex + 1 
+                                            });
+                                        }
+                                    }
+                                if (globalState.subIndex >= ABIformat[0].components.length) {
+                                    
+                                    const encodedData = encodeAbiParameters( 
+                                        ABIformat, 
+                                        [globalState.subItem]
+                                        );
+                                    
+                                    item.values[index++] = encodedData; 
+
+                                    setState( { 
+                                        object: false, 
+                                        subIndex: 0, 
+                                        subItem: [] 
+                                        });
                                     }
                                 }
-                            if (globalState.subIndex >= ABIformat[0].components.length) {
-                                
-                                const encodedData = encodeAbiParameters( ABIformat, [globalState.subItem] );
-                                
-                                item.values[index++] = encodedData; 
+                            else {
+                                item.values[index] = convertType( 
+                                    item.args, 
+                                    <number>index, 
+                                    answer, 
+                                    typeRouteOutput, 
+                                    "", 
+                                    false
+                                    );
 
-                                setState( { 
-                                    object: false, 
-                                    subIndex: 0, 
-                                    subItem: [] 
-                                    });
+                                if (item.values[index] != undefined) index++;
                                 }
                             }
-                        else {
-                            item.values[index] = convertType( item.args, <number>index, answer, typeRouteArgs, "", false);
-                            if (item.values[index] != undefined) index++;
-                            }
-                        setState( { inputs: (index < globalState.item.args.length) ? "Args" : "OK", index: index, item: item });
+
+                        setState( 
+                            { 
+                                inputs: (index < globalState.item.args.length) ? "Args" : "OK", 
+                                index: index, 
+                                item: item 
+                            });
                         }
                     catch (error) {
                         console.log("erreur", Object.entries(error));                        
@@ -423,8 +447,18 @@ async function main() {
 
             // Checks whether input conditions are met or not. If so then call up smart contract function
             if (globalState.inputs == "OK") {
-                await InteractWithContracts( <rwRecord>globalState.item, <Account>globalState.sender, record );
-                setState( { inputs: "Function", tag: "" }, <rwRecord>{});
+
+                await InteractWithContracts( 
+                    <rwRecord>globalState.item
+                    );
+
+                setState( 
+                    { 
+                        inputs: "Function", 
+                        tag: "" 
+                    }, 
+                    <rwRecord>{}
+                    );
                 }
             }
 

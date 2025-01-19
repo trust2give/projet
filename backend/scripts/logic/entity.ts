@@ -12,7 +12,8 @@ import { colorOutput, displayAccountTable } from "../libraries/format";
 import { contractRecord, rwRecord, rwType, menuRecord, Account, NULL_ADDRESS, regex, regex2, regex3 } from "../libraries/types";
 import { accountType, accountRefs, globalState, setState, addAccount, account, updateAccountBalance, assignAccounts } from "./states";
 import { getStableCoinBalance } from "./balances";
-import { InteractWithContracts, setRecord } from "../InteractWithContracts";
+import { InteractWithContracts } from "../InteractWithContracts";
+import { setrwRecordFromSmart } from "../logic/instances";
 
 export const createEntity = async ( person: boolean, inputs: {
     name: string,
@@ -28,10 +29,8 @@ export const createEntity = async ( person: boolean, inputs: {
 
     console.log("Create %s", (person) ? "person" : "entity")
     
-    const facet = <menuRecord>smart.find((el: menuRecord ) => el.tag == "Entity");
-
-    const setEntity :rwRecord = setRecord( "Entity", "setEntity");
-    const entity :rwRecord = setRecord( "Entity", "entity");
+    const setEntity :rwRecord = await setrwRecordFromSmart( "setEntity", "Entity");
+    const entity :rwRecord = await setrwRecordFromSmart( "entity", "Entity");
 
     try {                        
         type refKeys = keyof typeof accountRefs;
@@ -90,7 +89,6 @@ export const createEntity = async ( person: boolean, inputs: {
                         await InteractWithContracts( 
                             <rwRecord>setEntity, 
                             Account.A0, 
-                            facet, 
                             false 
                             );   
 
@@ -112,7 +110,7 @@ export const createEntity = async ( person: boolean, inputs: {
                             unitType: number,
                             unitSize: number,
                             country: number
-                            }[] = await InteractWithContracts( <rwRecord>entity, Account.A0, facet, true );   
+                            }[] = await InteractWithContracts( <rwRecord>entity, Account.A0, true );   
 
                         colorOutput( "> ".concat(
                             "[".concat(tx2,"] "), 
@@ -142,15 +140,13 @@ export const createEntity = async ( person: boolean, inputs: {
 export const getAllEntities = async ( silent?: boolean ) : Promise<string[] | undefined> => {
     console.log("Get All Entities");
 
-    const facet = <menuRecord>smart.find((el: menuRecord ) => el.tag == "Entity");
-
-    const getEntities :rwRecord = setRecord( "Entity", "getEntities");
-    const entity :rwRecord = setRecord( "Entity", "entity");
+    const getEntities :rwRecord = await setrwRecordFromSmart( "getEntities", "Entity");
+    const entity :rwRecord = await setrwRecordFromSmart( "entity", "Entity");
 
     try {                        
         getEntities.values = [];
 
-        const entitiesIds : string[] = await InteractWithContracts( <rwRecord>getEntities, Account.A0, facet, true );   
+        const entitiesIds : string[] = await InteractWithContracts( <rwRecord>getEntities, Account.A0, true );   
         
         if (!silent || silent == undefined) {
             var rank = 0;
@@ -170,7 +166,7 @@ export const getAllEntities = async ( silent?: boolean ) : Promise<string[] | un
                     unitType: number,
                     unitSize: number,
                     country: number
-                    }[] = await InteractWithContracts( <rwRecord>entity, Account.A0, facet, true );   
+                    }[] = await InteractWithContracts( <rwRecord>entity, Account.A0, true );   
                     
                 const color : string = ["blue", "yellow", "cyan", "green", "white", "red", "red"][value[0].state];
 
