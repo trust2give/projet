@@ -9,7 +9,7 @@ const HOST = '0.0.0.0';
 app.use(cors());
 
 app.use(express.json()); // Middleware pour parser le JSON
-app.use('/api/users', userRoutes); // Utilisation des routes des utilisateurs
+app.use('/T2G', userRoutes); // Utilisation des routes des utilisateurs
 
 app.listen(PORT, () => {
   console.log(`Serveur en écoute sur le port ${PORT}`);
