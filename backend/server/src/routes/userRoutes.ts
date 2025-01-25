@@ -26,7 +26,7 @@ router.get('/', (req, res) => {
             }
           } 
         catch (error) {
-          res.status(400).json({ message: 'Erreur lors de l\'analyse des données', error: error.message });
+          res.status(400).json({ message: 'Erreur lors de l\'analyse des données', error: error });
           }
         } 
       else {
