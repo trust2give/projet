@@ -262,10 +262,10 @@ export const typeRouteOutput: typeItem[] = [
                 return acc.concat(cur, ` |`);
                 }, "[" );
             }},    
-    { name: "uint256[]", 
+    /*{ name: "uint256[]", 
       callback: ( answer: bigint[] ) => {
         return (<bigint[]>answer).reduce( ( acc, cur) => {
             return acc.concat(cur, ` |`);
             }, "[" );
-        }},    
+        }},    */
     ]
