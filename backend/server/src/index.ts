@@ -3,7 +3,7 @@ import { Address, encodeAbiParameters, decodeAbiParameters } from 'viem'
 import express from 'express';
 import userRoutes from './routes/userRoutes';
 import cors from 'cors';
-import { accountRefs, initState, addAccount, accountType, globalState } from "./logic/states";
+import { accountRefs, initState, addAccount, accountType, globalState, assignAccounts, updateAccountBalance, loadWallets } from "./logic/states";
 import { readLastContractSetJSONfile, readLastDiamondJSONfile } from "./libraries/files";
 import { contractSet, diamondNames, facetNames, smart, smartEntry, encodeInterfaces } from "./T2G_Data";
 import { contractRecord, rwRecord, rwType, menuRecord, Account, NULL_ADDRESS, regex, regex2, regex3 } from "./libraries/types";
@@ -25,6 +25,12 @@ app.listen(PORT, async () => {
 
   var initialized : Boolean = false;
   type accKeys = keyof typeof accountRefs;
+
+  // Initialize wallet/accounts and their balance from hardhat node
+  await loadWallets();
+
+  await assignAccounts();
+  await updateAccountBalance();
 
   if (await readLastDiamondJSONfile()) {
 
@@ -100,6 +106,7 @@ app.listen(PORT, async () => {
             }
         } 
     }
+
   
   console.log(`Serveur en écoute sur le port ${PORT}`);
 });

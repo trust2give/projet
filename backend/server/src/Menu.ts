@@ -160,7 +160,6 @@ async function main() {
         const keys = answer.split(" ");
 
         if (answer == "back") initState();
-        else if (answer == "State")  console.log(globalState);
         else if (answer.startsWith("Help")) { 
             setState( { help: help.keywords() });
 

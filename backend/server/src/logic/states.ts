@@ -134,15 +134,14 @@ export function setState( newState: menuState, item?: rwRecord) {
     if (item != undefined) globalState.item = item; 
     }
 
-/*
-export async function updateAccountBalance() : Promise<Object> {
+
+export async function updateAccountBalance() {
     var rank = 0;
     type refKeys = keyof typeof accountRefs;
     for (const wallet of Object.entries(accountRefs)) {
         accountRefs[<refKeys>wallet[0]].balance = await globalState.clients.getBalance({ address: wallet[1].address,});
         }
     }
-  */
 
 export const addAccount = async (rank: number, name: string, addr: Address, wallet: Array<any> ) : Promise<Boolean> => {
         const indice = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";

@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { getUserById, addUser } from '../services/userService';
-import { globalState, loadWallets, assignAccounts } from '../logic/states';
+import { globalState } from '../logic/states';
 import { returnAccountTable } from "../libraries/format";
 
 const router = Router();
@@ -9,13 +9,6 @@ const router = Router();
 
 router.get('/', async (req, res) => { 
   const { call, inputs } = req.query;
-
-  console.log("GET reveived");
-
-  await loadWallets();
-
-  // Initialize wallet/accounts from hardhat node
-  await assignAccounts();
 
   console.log("GET initialized", call, inputs);
   
