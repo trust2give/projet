@@ -9,9 +9,9 @@ router.get('/:id', (req, res) => {
     const user = getUserById(userId);
   
     if (user) {
-      return res.json(user);
+      res.json(user);
     } else {
-      return res.status(404).json({ message: 'Utilisateur non trouvé' });
+      res.status(404).json({ message: 'Utilisateur non trouvé' });
     }
   });
   
