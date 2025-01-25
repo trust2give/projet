@@ -79,7 +79,7 @@ export function deployState() {
         );
     }
 
-export async function initState() {
+export function initState() {
     setState( { 
         index: 0, 
         subIndex: 0,
@@ -97,8 +97,8 @@ export async function initState() {
         <rwRecord>{}
         );
 
-    globalState.wallets = await hre.viem.getWalletClients();        
-    globalState.clients = await hre.viem.getPublicClient();
+    //globalState.wallets = await hre.viem.getWalletClients();        
+    //globalState.clients = await hre.viem.getPublicClient();
     }
 
 export function functionState( level?: string ) {
