@@ -11,11 +11,7 @@ router.get('/:id', (req, res) => {
     if (user) {
       res.json(user);
     } else {
-<<<<<<< HEAD
       res.status(404).json({ message: 'Utilisateur non trouvé' });
-=======
-      res.json({ message: 'Utilisateur non trouvé' });
->>>>>>> 54c3527a9e5e7af4667f885b2cca09f328e31fbd
     }
   });
   
