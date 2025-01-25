@@ -1,20 +1,17 @@
 import { Address, stringify } from "viem";
 import { FacetCutAction } from "../utils/diamond";
-import { listOfEnums, typeItem, typeRouteOutput } from "../interface/types";
+import { listOfEnums, typeItem } from "../interface/types";
 import { displayAddress } from "./format";
 import { Account, NULL_ADDRESS, regex, regex2, regex3 } from "./types";
 import { accountType, accountRefs, globalState, setState, addAccount, account, updateAccountBalance, assignAccounts } from "../logic/states";
 
 export var storage : object = {};
 
-export async function accountIndex( accounts: Object, label: Account, wallet: boolean | undefined ) : Promise<number | undefined> {
+export async function accountIndex( accounts: Object, label?: Account, wallet?: boolean | undefined ) : Promise<number | undefined> {
     if (label == undefined) return 0;
-
-    const wallets = await hre.viem.getWalletClients();
-    
     if (wallet) {
         if ('wallet' in accounts[label]) {
-            const find = wallets.findIndex((item) => {
+            const find = globalState.wallets.findIndex((item) => {
                 return (item.account.address.toUpperCase() == accounts[label].wallet.toUpperCase())
                 });            
             return find;
@@ -23,24 +20,38 @@ export async function accountIndex( accounts: Object, label: Account, wallet: bo
     return  "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".indexOf(label.substring(1));
     }
 
-export function parseAndDisplayInputAndOutputs( pointer : Array<any>, values : Array<any>, pad: number | false  ) : string {
-    //console.log( pointer, values, pad );
-    const dispArgs : string = values.map((arg, i) => {
-            return convertType( pointer, i, arg, typeRouteOutput, pointer[i].name, pad );
-    }).join(" | ");
-    return dispArgs;
-    }
+// convertType function that transform inputs or outcomes of a smart contract function in readable result
+// root => represents the 
+// index => 
+// answer =>
+// router =>
+// name =>
+// output => represent the length of characters to apply on a string if not false or 0
 
-export function convertType( root: Array<any>, index: number, answer: any, router: typeItem[], name: string, output: number | false ) : any {
-    //console.log( output, answer, typeof answer)
+export function convertType( 
+    root: Array<any>, 
+    index: number, 
+    answer: any, 
+    router: typeItem[], 
+    name: string, 
+    output: number | false 
+    ) : any {
+    
+    
     if ((<number>output > 0) && (typeof answer == "string")) 
-        if ((<string>answer).match('^(0x)?[0-9a-fA-F]{40}$')) return displayAddress( <Address>answer, "green", accountRefs, <number>output);
-    //console.log( router, root, index)
-    const branch : typeItem[] = router.filter( (item) => (item.name == root[index].type));
-    const convert = (answer: any) : Address | undefined => {
+        if ((<string>answer).match(regex)) 
+            return answer;
+
+    const branch : typeItem[] = router.filter( 
+        (item) => (item.name == root[index].type)
+        );
+
+    const convert = (answer: any) : Address => {
         type refKeys = keyof typeof accountRefs;
+
         if (Object.keys(accountRefs).includes(answer)) {
             const account =  (<{name: string, address: Address, wallet?: Address }>accountRefs)[<refKeys>answer]
+
             switch (account.wallet) {
                 case undefined: 
                 case NULL_ADDRESS: 
@@ -49,11 +60,16 @@ export function convertType( root: Array<any>, index: number, answer: any, route
                     return <Address>(account.wallet);
                 }
             }
-        return undefined;
+        return NULL_ADDRESS;
         }
     
     if (branch.length > 0) {
-        return branch[0].callback( answer, enumOrValue( root, index, answer ), <Address>convert(answer), name  );
+        return branch[0].callback( 
+            answer, 
+            enumOrValue( root, index, answer ), 
+            <Address>convert(answer), 
+            name
+            );
         }
     else return undefined;
     }

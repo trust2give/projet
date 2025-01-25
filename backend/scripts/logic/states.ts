@@ -3,7 +3,38 @@ import { Address } from "viem";
 import { rwRecord, Account, NULL_ADDRESS } from "../libraries/types";
 import { colorOutput, displayAccountTable } from "../libraries/format";
 
+export type  menuState = {
+    inputs?: "None" | "Function" | "Sender" | "Args" | "OK",
+    deploy?: boolean,
+    object?: boolean,
+    index?: number,
+    subIndex?: number,
+    tag?: string,
+    help?: string | string[],
+    level?: string,
+    promptText?: string,
+    preset?: string,
+    sender?: Account,
+    item?: rwRecord,
+    subItem?: Array<any>,
+    log?: string,
+    pad?: number,
+    accountIndex?: number,
+    wallets?: any,
+    clients?: any
+    }
+
+// globalState represents the set of variables that points out the current status of the interactions with user 
+// and the Smart Contracts. The global variable is exported for use in the different functions
+
 export var globalState : menuState = {};
+
+// accountReds represents the set of wallets EOA or Smwart Accounts
+// { "@X": { name: string, address: Address, balance: bigint }}
+// @0 to @9 => Wallet accounts from hardhat node
+// @A : {name: T2G_root, address: <address of wallet bound to SC, not @SC itself if present, otherwise yes, balance: <balance of address in EUR contract> }
+export var accountRefs: Object = {};
+
 
 export const prompts = {
     Deploy: "Deploy Smart Contract (<Help>, <Accounts> or Contract Name) ",
@@ -26,11 +57,13 @@ export const prompts = {
                 ` >> ` )
     }
 
-// accountReds represents the set of wallets EOA or Smwart Accounts
-// { "@X": { name: string, address: Address, balance: bigint }}
-// @0 to @9 => Wallet accounts from hardhat node
-// @A : {name: T2G_root, address: <address of wallet bound to SC, not @SC itself if present, otherwise yes, balance: <balance of address in EUR contract> }
-export var accountRefs: Object = {};
+export function addLog( log: string ) {
+    setState( { 
+        log: globalState.log?.concat(log),
+        }, 
+        );
+    }
+    
 
 export function deployState() {
     setState( { 
@@ -42,13 +75,14 @@ export function deployState() {
         inputs: "None", 
         promptText: prompts.Deploy, 
         tag: "", 
+        log: "",
         subItem: [] 
         }, 
         <rwRecord>{}
         );
     }
 
-export function initState() {
+export async function initState() {
     setState( { 
         index: 0, 
         subIndex: 0,
@@ -57,13 +91,28 @@ export function initState() {
         inputs: "None", 
         deploy: false, 
         object: false, 
+        sender: Account.A0,
         tag: "", 
+        log: "",
         level: "",
         pad: 10,
         subItem: [] 
         }, 
         <rwRecord>{}
         );
+
+    globalState.wallets = await hre.viem.getWalletClients();        
+    globalState.clients = await hre.viem.getPublicClient();
+    }
+
+export function functionState( level?: string ) {
+    setState( { 
+        inputs: "Function", 
+        object: false, 
+        deploy: false, 
+        level: level, 
+        log: ">>",
+        });            
     }
 
 export function setState( newState: menuState, item?: rwRecord) {
@@ -81,37 +130,19 @@ export type accountType = {
     decimals?: number
     }
 
-export type  menuState = {
-    inputs?: "None" | "Function" | "Sender" | "Args" | "OK",
-    deploy?: boolean,
-    object?: boolean,
-    index?: number,
-    subIndex?: number,
-    tag?: string,
-    help?: string,
-    level?: string,
-    promptText?: string,
-    preset?: string,
-    sender?: Account,
-    item?: rwRecord,
-    subItem?: Array<any>,
-    pad?: number
-    }
 
 export async function updateAccountBalance() : Promise<Object> {
-    const publicClient = await hre.viem.getPublicClient();
     var rank = 0;
     type refKeys = keyof typeof accountRefs;
     for (const wallet of Object.entries(accountRefs)) {
-        accountRefs[<refKeys>wallet[0]].balance = await publicClient.getBalance({ address: wallet[1].address,});
+        accountRefs[<refKeys>wallet[0]].balance = await globalState.clients.getBalance({ address: wallet[1].address,});
         }
     }
     
-export const addAccount = async (rank: number, name: string, addr: Address, wallet: Array<any> ) => {
-        //console.log(name, addr, rank, wallet)
-        const publicClient = await hre.viem.getPublicClient();
+export const addAccount = async (rank: number, name: string, addr: Address, wallet: Array<any> ) : Promise<Boolean> => {
         const indice = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        const balance = await publicClient.getBalance({ address: addr,})    
+        const balance = await globalState.clients.getBalance({ address: addr,})    
+
         accountRefs = Object.assign( accountRefs, Object.fromEntries(new Map(
             [ [ `@${indice.substring(rank,rank + 1)}`, 
                 {   name: name, 
@@ -119,6 +150,8 @@ export const addAccount = async (rank: number, name: string, addr: Address, wall
                     address: addr, 
                     private: wallet[1], 
                     balance: balance } ] ])));
+        
+        return true;
         }
     
 export const account = async ( rank: number, wallet: boolean ) : Promise<Address> => {
@@ -134,16 +167,15 @@ export const account = async ( rank: number, wallet: boolean ) : Promise<Address
 export const assignAccounts = async () => {
     // We get the list of available accounts from hardhat testnet
     const accounts = await hre.ethers.getSigners();
-    const publicClient = await hre.viem.getPublicClient();
-    const wallets = await hre.viem.getWalletClients();
 
     var rank = 0;
     for (const wallet of accounts.toSpliced(10)) {
-        const balance = await publicClient.getBalance({ address: wallet.address,})    
+        const balance = await globalState.clients.getBalance({ address: wallet.address,});
+
         accountRefs = Object.assign( accountRefs, Object.fromEntries(new Map([ [`@${rank}`, 
             {   name: `Wallet ${rank}`, 
                 address: wallet.address,
-                client: wallets[rank], 
+                client: globalState.wallets[rank], 
                 balance: balance 
             } 
             ] ])));

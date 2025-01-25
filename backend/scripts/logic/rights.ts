@@ -4,7 +4,8 @@ import { dataDecodeABI, abiData, typeRouteArgs, honeyFeatures, pollenFeatures, T
 import { colorOutput, displayAccountTable } from "../libraries/format";
 import { contractRecord, rwRecord, rwType, menuRecord, Account, NULL_ADDRESS, regex, regex2, regex3 } from "../libraries/types";
 import { accountRefs, globalState, setState, addAccount, account, updateAccountBalance, assignAccounts, accountType } from "../logic/states";
-import { InteractWithContracts, setRecord } from "../InteractWithContracts";
+import { InteractWithContracts } from "../InteractWithContracts";
+import { setrwRecordFromSmart } from "../logic/instances";
 
 const rights = {
     VIEW: 1,
@@ -18,28 +19,61 @@ const rights = {
 
 export const rightCallback : { tag: string, callback: (account?: Account, flags?: number | boolean) => {} }[] = [
     { tag: "all",
-      callback: async () => {
-            const wallets = await hre.viem.getWalletClients();
-            const syndic = <menuRecord>smart.find((el: menuRecord ) => el.tag == "Syndication");
-        
+      callback: async () => {        
             for ( const item of Object.entries(accountRefs)) {
                 try {                        
                     if (item[1].name.match("Wallet [0-9]")) {
-                        const isReg : string = (Number(await syndic.instance.read.isWalletRegistered( [ item[1].address ], wallets[0] )) == 1) ? "green" : "blue";
-                        const isBan = (Number(await syndic.instance.read.isWalletBanned( [ item[1].address ], wallets[0] )) == 1) ? "red" : isReg;
-                        const wRights : number = await syndic.instance.read.getWalletRights( [ item[1].address ], wallets[0] );
+
+                        const walletRights :rwRecord = await setrwRecordFromSmart( 
+                            "getWalletRights", 
+                            "Syndication"
+                            );
+
+                        const isRegistered :rwRecord = await setrwRecordFromSmart( 
+                            "isWalletRegistered", 
+                            "Syndication" 
+                            );
+
+                        const isBanned :rwRecord = await setrwRecordFromSmart( 
+                            "isWalletBanned", 
+                            "Syndication" 
+                            );
+
+                        walletRights.values = [ item[1].address ];
+                        isRegistered.values = [ item[1].address ];
+                        isBanned.values = [ item[1].address ];
                         
-                        // We format the display of rights for a wallet
-                        const flags = Object.entries(rights).reduce( ( acc, cur) => {
-                            return acc.concat( colorOutput( cur[0], (cur[1] & wRights) ? isBan : "blue", true), ` `);
-                            }, "[" );
-                        const net4 = (wRights != undefined) ? colorOutput( "[".concat( flags, "]"), "blue", true) : "_";
-                        
-                        colorOutput( "> ".concat( item[1].name.padEnd( 16, " "), " => ", net4 ), "yellow"); //  , 
+                        const isReg : boolean = await InteractWithContracts( <rwRecord>isRegistered, Account.A0, true ); 
+                        if (isReg) {
+                            const isBan : boolean = await InteractWithContracts( <rwRecord>isBanned, Account.A0, true );            
+                            if (!isBan) {
+                                const wRights = await InteractWithContracts( <rwRecord>walletRights, Account.A0, true );
+                                // We format the display of rights for a wallet
+                                const flags = Object.entries(rights).reduce( ( acc, cur) => {
+                                    return acc.concat( 
+                                        colorOutput( 
+                                            cur[0], 
+                                            (cur[1] & wRights) ? "green" : "blue", 
+                                            true
+                                            ), 
+                                        ` `
+                                        );
+                                    }, 
+                                    "[" 
+                                    );
+        
+                                const net4 = colorOutput( "[".concat( flags, "]"), "blue", true);
+
+                                colorOutput( "> ".concat( item[1].name.padEnd( 16, " "), " => ", net4 ), "yellow"); //  , 
+                                }
+                            else {
+                                colorOutput( "> ".concat( item[1].name.padEnd( 16, " "), " => Banned" ), "red"); //  , 
+                                }
+                            }                        
                         }
                     }
                 catch (error) {
-                    //console.log(error)
+                    console.log(error)
                     //colorOutput( "> ".concat( item[1].name.padEnd( 16, " "), " => Not Registered " ), "red");
                     }
                 }
@@ -49,14 +83,16 @@ export const rightCallback : { tag: string, callback: (account?: Account, flags?
       callback: async ( account?: Account, flags?: number | boolean ) => {
             console.log("Set rights %s %d", account, flags)
         
-            const syndic = <menuRecord>smart.find((el: menuRecord ) => el.tag == "Syndication");
-            const registerWallet :rwRecord = setRecord( "Syndication", "registerWallet");
+            const registerWallet :rwRecord = await setrwRecordFromSmart( "registerWallet", "Syndication");
         
             try {                        
                 if (Object.keys(accountRefs).includes(account)) {
+                    
                     type refKeys = keyof typeof accountRefs;
+                    
                     registerWallet.values = [ (<accountType>accountRefs[account]).address, flags ];
-                    await InteractWithContracts( <rwRecord>registerWallet, Account.A0, syndic );            
+
+                    await InteractWithContracts( <rwRecord>registerWallet, Account.A0, true );            
                     }
                 }
             catch (error) {
@@ -68,12 +104,10 @@ export const rightCallback : { tag: string, callback: (account?: Account, flags?
     { tag: "get",
       callback: async ( account?: Account ) => {
             console.log("Get rights %s", account)
-        
-            const syndic = <menuRecord>smart.find((el: menuRecord ) => el.tag == "Syndication");
-        
-            const walletRights :rwRecord = setRecord( "Syndication", "getWalletRights");
-            const isRegistered :rwRecord = setRecord( "Syndication", "isWalletRegistered");
-            const isBanned :rwRecord = setRecord( "Syndication", "isWalletBanned");
+                
+            const walletRights :rwRecord = await setrwRecordFromSmart( "getWalletRights", "Syndication");
+            const isRegistered :rwRecord = await setrwRecordFromSmart( "isWalletRegistered", "Syndication" );
+            const isBanned :rwRecord = await setrwRecordFromSmart( "isWalletBanned", "Syndication" );
             
             try {                        
                 if (Object.keys(accountRefs).includes(account)) {
@@ -83,9 +117,9 @@ export const rightCallback : { tag: string, callback: (account?: Account, flags?
                     isRegistered.values = [ (<accountType>accountRefs[account]).address ];
                     isBanned.values = [ (<accountType>accountRefs[account]).address ];
         
-                    const isReg = Boolean(await InteractWithContracts( <rwRecord>walletRights, Account.A0, syndic, true ));            
-                    const isBan = Boolean(await InteractWithContracts( <rwRecord>isRegistered, Account.A0, syndic, true ));            
-                    const wRights : number = Number(await InteractWithContracts( <rwRecord>isBanned, Account.A0, syndic, true ));            
+                    const isReg = Boolean(await InteractWithContracts( <rwRecord>walletRights, Account.A0, true ));            
+                    const isBan = Boolean(await InteractWithContracts( <rwRecord>isRegistered, Account.A0, true ));            
+                    const wRights : number = Number(await InteractWithContracts( <rwRecord>isBanned, Account.A0, true ));            
                     
                     // We format the display of rights for a wallet
                     const flags = Object.entries(rights).reduce( ( acc, cur) => {
@@ -97,7 +131,7 @@ export const rightCallback : { tag: string, callback: (account?: Account, flags?
                 }
                 }
             catch (error) {
-                console.log(error)
+                //console.log(error)
                 //colorOutput( "> ".concat( item[1].name.padEnd( 16, " "), " => Not Registered " ), "red");
                 }
             }
@@ -106,14 +140,13 @@ export const rightCallback : { tag: string, callback: (account?: Account, flags?
       callback: async ( account?: Account ) => {
             console.log("Ban rights %s %d", account)
         
-            const syndic = <menuRecord>smart.find((el: menuRecord ) => el.tag == "Syndication");
-            const registerWallet :rwRecord = setRecord( "Syndication", "banWallet");
+            const registerWallet :rwRecord = await setrwRecordFromSmart( "banWallet", "Syndication" );
         
             try {                        
                 if (Object.keys(accountRefs).includes(account)) {
                     type refKeys = keyof typeof accountRefs;
                     registerWallet.values = [ (<accountType>accountRefs[account]).address ];
-                    await InteractWithContracts( <rwRecord>registerWallet, Account.A0, syndic );            
+                    await InteractWithContracts( <rwRecord>registerWallet, Account.A0 );            
                     }
                 }
             catch (error) {

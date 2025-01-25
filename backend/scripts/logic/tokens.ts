@@ -5,50 +5,129 @@ import { dataDecodeABI, abiData, typeRouteArgs, honeyFeatures, pollenFeatures, T
 import { colorOutput, displayAccountTable } from "../libraries/format";
 import { contractRecord, rwRecord, rwType, menuRecord, Account, NULL_ADDRESS, regex, regex2, regex3 } from "../libraries/types";
 import { accountRefs, globalState, setState, addAccount, account, updateAccountBalance, assignAccounts } from "../logic/states";
+import { setrwRecordFromSmart } from "../logic/instances";
+import { InteractWithContracts } from "../InteractWithContracts";
 
 export const showTokens = async () => {
     
     type accKeys = keyof typeof accountRefs;
-    const wallet = accountRefs[<accKeys>`@0`].client;
 
-    const record1 = <menuRecord>smart.find((el: menuRecord ) => el.tag == "Erc721");
-    const record2 = <menuRecord>smart.find((el: menuRecord ) => el.tag == "Honey");
-    const record3 = <menuRecord>smart.find((el: menuRecord ) => el.tag == "Pollen");
-    const supply : bigint = await record1.instance.read["totalSupply"]( [], wallet );
+    const func0: rwRecord = await setrwRecordFromSmart( 
+        "totalSupply", 
+        "Erc721" 
+        );
+        
+    const supply : bigint = await InteractWithContracts( <rwRecord>func0, Account.A0, true );            
+                
     colorOutput( "Total ERC721 Tokens [".concat( `${supply}`.padStart(32,"0"), "]"), "cyan");
-
+        
     for ( var i = 0; i < supply; i++) {
         try {                
-            const tokenId : bigint = await record1.instance.read["tokenByIndex"]( [ i ], wallet );
-            const owner : Address = await record1.instance.read["ownerOf"]( [ tokenId ], wallet );
-            const wallet = Object.values(accountRefs).find((el) => el.address == owner);
-            const balanceOf : bigint = await record1.instance.read["balanceOf"]( [ owner ], wallet );
-            //console.log("sfsdf",tokenId, owner, balanceOf )
-            const isHoney = await record2.instance.read["isHoneyType"]( [ tokenId ], wallet );
-            const isPollen : boolean = await record3.instance.read["isPollenType"]( [ tokenId ], wallet );
-            //console.log(isHoney)
-            //console.log(isPollen)
+            const func1: rwRecord = await setrwRecordFromSmart( 
+                    "tokenByIndex", 
+                    "Erc721" 
+                    );
+            
+            func1.values = [ i ];
+            
+            const tokenId : bigint = await InteractWithContracts( 
+                <rwRecord>func1, 
+                Account.A0, 
+                true 
+                );                        
 
+            const func2: rwRecord = await setrwRecordFromSmart( 
+                "ownerOf", 
+                "Erc721" 
+                );
+            
+            func2.values = [ tokenId ];
+
+            const owner : Address = await InteractWithContracts( 
+                <rwRecord>func2, 
+                Account.A0, 
+                true 
+                );                        
+
+            const func3: rwRecord = await setrwRecordFromSmart( 
+                "balanceOf", 
+                "Erc721" 
+                );
+            
+            func3.values = [ owner ];
+
+            const balanceOf : bigint = await InteractWithContracts( 
+                <rwRecord>func3, 
+                Account.A0, 
+                true 
+                );                        
+                            
+            const func4: rwRecord = await setrwRecordFromSmart( 
+                "isHoneyType", 
+                "Honey" 
+                );
+            
+            func4.values = [ tokenId ];
+
+            const isHoney : boolean = await InteractWithContracts( 
+                <rwRecord>func4, 
+                Account.A0, 
+                true 
+                );                        
+
+            const func5: rwRecord = await setrwRecordFromSmart( 
+                "isHoneyType", 
+                "Honey" 
+                );
+            
+            func5.values = [ tokenId ];
+
+            const isPollen : boolean = await InteractWithContracts( 
+                <rwRecord>func5, 
+                Account.A0, 
+                true 
+                );                        
+                            
             var token;
             var display;
             if (isHoney) {
-                const raw = await record2.instance.read["honey"]( [ tokenId ], wallet );
-                //console.log(raw)
+                const func6: rwRecord = await setrwRecordFromSmart( 
+                    "honey", 
+                    "Honey" 
+                    );
+                
+                func6.values = [ tokenId ];
+    
+                const raw  : `0x{string}`= await InteractWithContracts( 
+                    <rwRecord>func6, 
+                    Account.A0, 
+                    true 
+                    );                        
+
                 token = decodeAbiParameters( [ honeyFeatures ], raw );
-                //console.log(token)
                 display = "[".concat( Typeoftoken[token[0].TokenStruct.token], "] [", Statusoftoken[token[0].TokenStruct.state], "] [", token[0].TokenFundSpecific.hash0, "]");
                 }
             else if (isPollen) {
-                const raw : `0x{string}` = await record3.instance.read["pollen"]( [ tokenId ], wallet );
-                //console.log(raw)
+                const func6: rwRecord = await setrwRecordFromSmart( 
+                    "pollen", 
+                    "Pollen" 
+                    );
+                
+                func6.values = [ tokenId ];
+    
+                const raw : `0x{string}` = await InteractWithContracts( 
+                    <rwRecord>func6, 
+                    Account.A0, 
+                    true 
+                    );                        
+
                 token = decodeAbiParameters( [ pollenFeatures ], raw );
-                //console.log(token)
                 display = "[".concat( "]");
                 }
             else throw("unrecognized");
             //console.log(token)
             colorOutput( "> Token ".concat( `${tokenId}`.padEnd( 8, " "), "| ", 
-                        `${balanceOf}`, " => ", (wallet != undefined) ? wallet.name : owner,  display  ), "yellow"); //  , 
+                        `${balanceOf}`, " => ", owner,  display  ), "yellow"); //  , 
             }
         catch (error) {
             colorOutput( "> Token ".concat( `XXX`.padEnd( 8, " "), " => Problem " ), "red");
