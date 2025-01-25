@@ -50,6 +50,7 @@ router.get('/', async (req, res) => {
         }
     case "accounts": {
       res.json(returnAccountTable());
+      break;
       }
     default:
       res.status(404).json({ message: 'fonction non trouvé' });
