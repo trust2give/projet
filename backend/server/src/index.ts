@@ -1,8 +1,12 @@
 import express from 'express';
 import userRoutes from './routes/userRoutes';
+import cors from 'cors';
 
 const app = express();
 const PORT = 8080;
+const HOST = '0.0.0.0';
+
+app.use(cors());
 
 app.use(express.json()); // Middleware pour parser le JSON
 app.use('/api/users', userRoutes); // Utilisation des routes des utilisateurs
