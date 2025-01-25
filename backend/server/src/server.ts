@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
-import { handleCommand } from './commandHandler'; // Importer la fonction
+import { handleCommand } from './routes/commandHandler'; // Importer la fonction
 
 const app = express();
 const PORT = 8080;
@@ -20,4 +20,3 @@ app.post('/command', (req: Request, res: Response) => {
 app.listen(PORT, HOST, () => {
     console.log(`Server is running on http://${HOST}:${PORT}`);
 });
-
