@@ -12,7 +12,6 @@ export type  menuState = {
     tag?: string,
     help?: string | string[],
     level?: string,
-    promptText?: string,
     preset?: string,
     sender?: Account,
     item?: rwRecord,
@@ -53,7 +52,6 @@ export const prompts = {
                 "cyan", 
                 true 
                 ), 
-                <string>globalState.promptText,
                 ` >> ` )
     }
 */
@@ -73,7 +71,6 @@ export function deployState() {
         subIndex: 0, 
         level: "Deploy", 
         inputs: "None", 
-        promptText: prompts.Deploy, 
         tag: "", 
         log: "",
         subItem: [] 
@@ -87,7 +84,6 @@ export async function initState() {
         index: 0, 
         subIndex: 0,
         help: "", 
-        promptText: "Smart Contract (<Help>, <Accounts> or <Contact Name>) >> ", 
         inputs: "None", 
         deploy: false, 
         object: false, 
@@ -130,7 +126,7 @@ export type accountType = {
     decimals?: number
     }
 
-
+/*
 export async function updateAccountBalance() : Promise<Object> {
     var rank = 0;
     type refKeys = keyof typeof accountRefs;
@@ -138,7 +134,8 @@ export async function updateAccountBalance() : Promise<Object> {
         accountRefs[<refKeys>wallet[0]].balance = await globalState.clients.getBalance({ address: wallet[1].address,});
         }
     }
-    
+  */
+
 export const addAccount = async (rank: number, name: string, addr: Address, wallet: Array<any> ) : Promise<Boolean> => {
         const indice = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
         const balance = await globalState.clients.getBalance({ address: addr,})    
@@ -153,7 +150,7 @@ export const addAccount = async (rank: number, name: string, addr: Address, wall
         
         return true;
         }
-    
+/*
 export const account = async ( rank: number, wallet: boolean ) : Promise<Address> => {
         const indice = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
         type refKeys = keyof typeof accountRefs;
@@ -163,7 +160,7 @@ export const account = async ( rank: number, wallet: boolean ) : Promise<Address
             }
         return NULL_ADDRESS;
         }
-
+*/
 export const assignAccounts = async () => {
     // We get the list of available accounts from hardhat testnet
     const accounts = await hre.ethers.getSigners();
