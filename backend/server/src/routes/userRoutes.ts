@@ -1,13 +1,15 @@
 import { Router, Request, Response } from 'express';
 import { getUserById, addUser } from '../services/userService';
-import { globalState } from '../logic/states';
+import { globalState, loadWallets } from '../logic/states';
 
 const router = Router();
 
 // Route GET pour récupérer un utilisateur par ID
 
-router.get('/', (req, res) => { 
+router.get('/', async (req, res) => { 
   const { call, inputs } = req.query;
+
+  await loadWallets();
   
   switch (call) {
     case "user": {

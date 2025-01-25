@@ -12,10 +12,11 @@ app.use(cors());
 app.use(express.json()); // Middleware pour parser le JSON
 app.use('/T2G', userRoutes); // Utilisation des routes des utilisateurs
 
-
 app.listen(PORT, () => {
   
-  initState();
+    // Initialize globalState variable (Warning : async / wait not possible so wallet / public clients deactivated)
+    // to be changed
+    initState();
   
   console.log(`Serveur en écoute sur le port ${PORT}`);
 });

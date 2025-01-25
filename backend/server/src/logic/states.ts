@@ -96,9 +96,11 @@ export function initState() {
         }, 
         <rwRecord>{}
         );
+    }
 
-    //globalState.wallets = await hre.viem.getWalletClients();        
-    //globalState.clients = await hre.viem.getPublicClient();
+export async function loadWallets() {
+    globalState.wallets = await hre.viem.getWalletClients();        
+    globalState.clients = await hre.viem.getPublicClient();
     }
 
 export function functionState( level?: string ) {
