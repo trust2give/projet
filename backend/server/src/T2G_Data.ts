@@ -1,7 +1,5 @@
 import { contractRecord, diamondCore, rwRecord, rwType, NULL_ADDRESS, menuRecord, Account } from "./libraries/types";
-const hre = require("hardhat");
-import { Address } from "viem";
-import { accountRefs, accountType, globalState, setState, addAccount, account, updateAccountBalance, assignAccounts } from "./logic/states";
+import { accountRefs, accountType, globalState, setState, addAccount, assignAccounts } from "./logic/states";
 
 /// Variables globales qui représentent l'état des smart contracts en déploiement à
 /// réaliser pour réaliser la mise à jour de l'architecture ERC2535 de la dApp Trust2Give
