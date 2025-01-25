@@ -10,14 +10,14 @@ export interface facetRecord {
     }
 
 export async function readLastContractSetJSONfile() : Promise<boolean> {
-    const jsonString = fs.readFileSync('./scripts/ContractSet.json', 'utf-8');
+    const jsonString = fs.readFileSync('./ContractSet.json', 'utf-8');
     const item : contractRecord = JSON.parse(jsonString);
     if (item.name != "EUR") return false;
     //colorOutput("Recall Last EUR Smart Contract Record >> ".concat(JSON.stringify(item)), "cyan");
     contractSet[0] = <contractRecord>item;
     return true;
     }
-/*
+
 export async function writeLastContractJSONfile( ) {
     let JsonFile = JSON.stringify(contractSet[0]);
     //colorOutput("Save last EUR Contract Record >> ".concat(JSON.stringify(contractSet[0])), "cyan");
@@ -29,7 +29,7 @@ export async function writeLastContractJSONfile( ) {
             }
         });
     }
-*/
+
 /*
 export async function readLastFacetJSONfile( facetName: string, diamond: Address ) : Promise<Address> {
     const jsonString = fs.readFileSync('./scripts/T2G_Facets.json', 'utf-8');
@@ -64,7 +64,7 @@ export async function writeLastFacetJSONfile( facets: Object, diamond: Address )
 
 export async function writeLastDiamondJSONfile( ) {
     let JsonFile = JSON.stringify(diamondNames);
-    fs.writeFile('./scripts/T2G_Root.json', JsonFile, (err) => {
+    fs.writeFile('./T2G_Root.json', JsonFile, (err) => {
         if (err) {
             console.log('Error writing file:', err);
         } else {
