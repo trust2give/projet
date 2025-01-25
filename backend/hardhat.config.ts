@@ -35,11 +35,16 @@ const config: HardhatUserConfig = {
     },
     defaultNetwork: NETWORK!,
     networks: {
-        test: {
-            url: "http://192.168.0.76:8545",
+	T2G: {
+            url: "http://46.226.107.26:8545",
             accounts: "remote",
         },
-/*        mainnet: {
+
+	    /*        hardhat: {
+	    port: 7545,
+            chainId: 1337,
+        },
+        mainnet: {
             chainId: 1,
             url: MAINNET_RPC_URL!,
             accounts,
