@@ -1,12 +1,12 @@
 import { Address, stringify } from "viem";
 import { FacetCutAction } from "../utils/diamond";
 import { listOfEnums, typeItem } from "../interface/types";
-import { displayAddress } from "./format";
 import { Account, NULL_ADDRESS, regex, regex2, regex3 } from "./types";
-import { accountType, accountRefs, globalState, setState, addAccount, account, updateAccountBalance, assignAccounts } from "../logic/states";
+import { accountType, accountRefs, globalState, setState, addAccount, assignAccounts } from "../logic/states";
 
 export var storage : object = {};
 
+/*
 export async function accountIndex( accounts: Object, label?: Account, wallet?: boolean | undefined ) : Promise<number | undefined> {
     if (label == undefined) return 0;
     if (wallet) {
@@ -19,6 +19,7 @@ export async function accountIndex( accounts: Object, label?: Account, wallet?: 
         }
     return  "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".indexOf(label.substring(1));
     }
+*/
 
 // convertType function that transform inputs or outcomes of a smart contract function in readable result
 // root => represents the 
@@ -50,7 +51,7 @@ export function convertType(
         type refKeys = keyof typeof accountRefs;
 
         if (Object.keys(accountRefs).includes(answer)) {
-            const account =  (<{name: string, address: Address, wallet?: Address }>accountRefs)[<refKeys>answer]
+            const account =  <accountType>accountRefs[<refKeys>answer]
 
             switch (account.wallet) {
                 case undefined: 

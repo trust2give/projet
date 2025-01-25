@@ -23,6 +23,20 @@ export type  menuState = {
     clients?: any
     }
 
+export type accountType = {   
+    name: string, 
+    address: Address, 
+    wallet: Address | undefined, 
+    client?:  object | undefined,
+    private?: '0x{string}' | undefined, 
+    balance?: bigint,
+    decimals?: number
+    }
+
+interface accountList {
+    [cle: string]: accountType; // Ici, 'cle' est le nom variable et 'number' est le type fixe
+}
+
 // globalState represents the set of variables that points out the current status of the interactions with user 
 // and the Smart Contracts. The global variable is exported for use in the different functions
 
@@ -32,7 +46,7 @@ export var globalState : menuState = {};
 // { "@X": { name: string, address: Address, balance: bigint }}
 // @0 to @9 => Wallet accounts from hardhat node
 // @A : {name: T2G_root, address: <address of wallet bound to SC, not @SC itself if present, otherwise yes, balance: <balance of address in EUR contract> }
-export var accountRefs: Object = {};
+export var accountRefs: accountList = {};
 
 /*
 export const prompts = {
@@ -118,16 +132,6 @@ export function functionState( level?: string ) {
 export function setState( newState: menuState, item?: rwRecord) {
     globalState = Object.assign( globalState, newState );
     if (item != undefined) globalState.item = item; 
-    }
-
-export type accountType = {   
-    name: string, 
-    address: Address, 
-    wallet: Address | undefined, 
-    client?:  object | undefined,
-    private?: '0x{string}' | undefined, 
-    balance: bigint,
-    decimals?: number
     }
 
 /*
