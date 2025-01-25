@@ -2,7 +2,6 @@ const hre = require("hardhat");
 import { Address } from "viem";
 
 import { rwRecord, Account, NULL_ADDRESS } from "../libraries/types";
-import { colorOutput, displayAccountTable } from "../libraries/format";
 
 export type  menuState = {
     inputs?: "None" | "Function" | "Sender" | "Args" | "OK",
