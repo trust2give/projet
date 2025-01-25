@@ -6,12 +6,12 @@ const router = Router();
 // Route GET pour récupérer un utilisateur par ID
 router.get('/:id', (req, res) => {
     const userId = parseInt(req.params.id);
-    const user = getUserById(userId);
-  
+    const user = getUserById(userId);	
+    //res.json([{ id: 1, name: 'Alice' }, { id: 2, name: 'Bob' }]);
     if (user) {
-      return res.json(user);
+      res.json(user);
     } else {
-      return res.status(404).json({ message: 'Utilisateur non trouvé' });
+      res.json({ message: 'Utilisateur non trouvé' });
     }
   });
   
