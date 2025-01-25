@@ -4,7 +4,7 @@ import { getUserById, addUser } from '../services/userService';
 const router = Router();
 
 // Route GET pour récupérer tous les utilisateurs
-router.get('/:id', (req: Request, res: Response) => {
+router.get('/:id', (req, res) => {
     const userId = parseInt(req.params.id);
     const user = getUserById(userId);
   
@@ -16,7 +16,7 @@ router.get('/:id', (req: Request, res: Response) => {
   });
 
 // Route POST pour ajouter un nouvel utilisateur
-router.post('/', (req: Request, res: Response) => {
+router.post('/', (req, res) => {
     const newUser = req.body;
     const addedUser = addUser(newUser);
     res.status(201).json(addedUser);
