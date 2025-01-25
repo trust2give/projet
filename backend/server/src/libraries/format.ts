@@ -1,15 +1,16 @@
 import { Address, encodeAbiParameters, decodeAbiParameters } from 'viem'
-import { accountRefs, accountType, globalState, addLog, addAccount, account, updateAccountBalance, assignAccounts } from "../logic/states";
+import { accountRefs, accountType, globalState, addLog, addAccount, assignAccounts } from "../logic/states";
 import { rwRecord, rwType, menuRecord, Account, NULL_ADDRESS, regex, regex2, regex3 } from "../libraries/types";
 import { convertType, accountIndex } from "../libraries/utils";
 import { dataDecodeABI, typeRouteOutput, abiItem } from "../interface/types";
 
-
+/*
 export function showLog( silent?: boolean ) {
     if (!silent || silent == undefined) colorOutput(<string>globalState.log);
     addLog("\n");
     }
-
+*/
+/*
 export function displayInstance( rwItem : rwRecord, pad?: number ) {
     // Formating input values for a readable shape >> stdout 
     const dispArgs = parseAndDisplayInputAndOutputs( 
@@ -32,11 +33,12 @@ export function displayInstance( rwItem : rwRecord, pad?: number ) {
     addLog( ":: ".concat( ("label" in rwItem) ? <string>rwItem.label : rwItem.function ));
     addLog( "[ ".concat( colorOutput(dispArgs, "blue", true)," ] >> " ));
     }
-
+*/
 // Display an address either as a full format or as an <Account> value
 // depends on the value for accountList
 // if pad = 0 / undefined / not present => Account format
 // if pad > 0 : display the @x format, with the <pad> first characters (22+ = full display)
+/*
 export function displayAddress( addr : Address, color: string, pad: number | boolean) {
     const item : accountType = Object.values(accountRefs).find( (item : accountType) => item.address.toUpperCase() == addr.toUpperCase() );
 
@@ -45,7 +47,8 @@ export function displayAddress( addr : Address, color: string, pad: number | boo
         }
     else addLog( ":".concat( colorOutput( "[@".concat(addr.substring(0, (!<boolean>pad) ? 64 : (<number>pad > 2) ? <number>pad : 6 ), "...]"), color, true), "::") );
     }
-
+*/
+/*
 export function displayRetunedValue( method : any, color: string, pad?: number ) {
     addLog( 
     colorOutput( 
@@ -54,7 +57,8 @@ export function displayRetunedValue( method : any, color: string, pad?: number )
         color, 
         true ));
     }
-
+        */
+/*
 export function displayEvents( EvtInputs: any, event : any, color: string, pad?: number ) {
     const dispEvents = parseAndDisplayInputAndOutputs( 
         EvtInputs, 
@@ -72,7 +76,8 @@ export function displayEvents( EvtInputs: any, event : any, color: string, pad?:
             )
         );
     }
-
+*/
+    /*
 export function displayReadValues( rwItem : rwRecord | abiItem[] | { name: string, type: string }[], result : any[], decode: boolean, color: string, pad?: number ) {
     
     var beacon = undefined;
@@ -136,13 +141,16 @@ export function displayReadValues( rwItem : rwRecord | abiItem[] | { name: strin
             )
         );
 }
-    
+        */
+
+/*
 export function displayContract( contract : string, color: string, pad?: number ) {
     const label = contract.substring(0, pad ? pad : 20).padEnd( pad ? pad : 20, '.');
     addLog( ":".concat( colorOutput( label, color, true), "::") );
     }
+*/
 
-    // used
+// used
 export function returnAccountTable() : string {
     return Object.entries(accountRefs).map( (item ) => {  
         return "*".concat( 
@@ -155,7 +163,7 @@ export function returnAccountTable() : string {
             ((<accountType>item[1]).wallet) ? <Address>(<accountType>item[1]).wallet : NULL_ADDRESS) 
         }).join("\n");
     }
-    
+
 export function colorOutput( text: string, color?: string, hide?: boolean ) : string {
     var output ="";
     switch (color) {
@@ -195,7 +203,7 @@ export function colorOutput( text: string, color?: string, hide?: boolean ) : st
     return output;
     }
 
-
+/*
 export function showObject( data: any, eol: boolean = false ) {
     var label: string = "";
     if (data == null) return "Object::Null";
@@ -220,6 +228,7 @@ export function showObject( data: any, eol: boolean = false ) {
         }
     return label;
     }
+*/
 
 function parseAndDisplayInputAndOutputs( 
     abi : Array<any>,       // Array of abi definition of input or output variables
