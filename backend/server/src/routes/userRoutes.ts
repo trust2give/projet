@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { getUserById, addUser } from '../services/userService';
-import { globalState, loadWallets } from '../logic/states';
+import { globalState, loadWallets, assignAccounts } from '../logic/states';
+import { returnAccountTable } from "../libraries/format";
 
 const router = Router();
 
@@ -10,6 +11,9 @@ router.get('/', async (req, res) => {
   const { call, inputs } = req.query;
 
   await loadWallets();
+
+  // Initialize wallet/accounts from hardhat node
+  await assignAccounts();
   
   switch (call) {
     case "user": {
@@ -40,6 +44,9 @@ router.get('/', async (req, res) => {
         res.json(globalState);
         break;
         }
+    case "accounts": {
+      res.json(returnAccountTable());
+      }
     default:
       res.status(404).json({ message: 'fonction non trouvé' });
     }

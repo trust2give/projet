@@ -8,7 +8,6 @@ import { accountIndex, convertType, enumOrValue } from "./libraries/utils";
 import { DeployContracts,  } from "./DeployContracts";
 import { contractSet, diamondNames, facetNames, smart, smartEntry, encodeInterfaces } from "./T2G_Data";
 import { commandItem, dataDecodeABI, abiData, typeRouteOutput, honeyFeatures, pollenFeatures, Typeoftoken, Statusoftoken } from "./interface/types";
-import { colorOutput, displayAccountTable } from "./libraries/format";
 import { contractRecord, rwRecord, rwType, menuRecord, Account, NULL_ADDRESS, regex, regex2, regex3 } from "./libraries/types";
 import { showBeacons } from "./logic/beacons";
 import { showBalances } from "./logic/balances";
@@ -54,12 +53,6 @@ async function main() {
     const width = 70;
     var ABIformat = [];
     
-    // Initialize globalState variable
-    await initState();
-    
-    // Initialize wallet/accounts from hardhat node
-    await assignAccounts();
-
     // We complete the list with possible two other address: T2G_Root & EUR contracts
     // since they can be selected as Account.AA & Account.AE options
     
@@ -182,7 +175,6 @@ async function main() {
                         });
                 }
 
-            colorOutput(<string>globalState.help, "yellow");
             }
         else if ((globalState.inputs == "None") && (answer == "Deploy")) deployState();
         else if ((globalState.inputs == "None") && (smart.some((el: menuRecord) => el.tag == answer))) {            
@@ -211,7 +203,7 @@ async function main() {
                     }
             }
         else if (answer == "Accounts")  {
-            await updateAccountBalance(); 
+            //await updateAccountBalance(); 
 
             displayAccountTable(width);
             }

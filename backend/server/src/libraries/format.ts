@@ -141,35 +141,19 @@ export function displayContract( contract : string, color: string, pad?: number 
     const label = contract.substring(0, pad ? pad : 20).padEnd( pad ? pad : 20, '.');
     addLog( ":".concat( colorOutput( label, color, true), "::") );
     }
-    
-export function displayAccountTable( width: number ) {
-    addLog( 
-        colorOutput( 
-            ("*".concat(" ".padStart(9, " "), "List of avaibable wallets @hardhat testnet" ).padEnd(width - 1, " ")).concat("*"), 
-            "yellow", 
-            true 
-            ) 
-        );
-    addLog( "\n" );
 
-    Object.entries(accountRefs).map( (item ) => {  
-        addLog( 
-            colorOutput( 
-                ("*".concat( " ".padStart(2, " "),  (<accountType>item[1]).name.padEnd(16, " "), " ")), 
-                "yellow",
-                true 
-                ) 
-            );             
-        addLog( colorOutput( `${item[0]}: `, "yellow", true ) );
-        displayAddress(( <accountType>item[1]).address, "yellow", false); 
-        addLog( colorOutput( `${item[0]}: `, "yellow", true));
-        displayAddress( ((<accountType>item[1]).wallet) ? <Address>(<accountType>item[1]).wallet : NULL_ADDRESS, "cyan", false); 
-        addLog( "\n" );
-
-        return item;
-        })
-
-    showLog(false);
+    // used
+export function returnAccountTable() : string {
+    return Object.entries(accountRefs).map( (item ) => {  
+        return "*".concat( 
+            " ".padStart(2, " "),  
+            (<accountType>item[1]).name.padEnd(16, " "), 
+            " ", 
+            `${item[0]}: `,
+            (<accountType>item[1]).address, 
+            `${item[0]}: `,
+            ((<accountType>item[1]).wallet) ? <Address>(<accountType>item[1]).wallet : NULL_ADDRESS) 
+        }).join("\n");
     }
     
 export function colorOutput( text: string, color?: string, hide?: boolean ) : string {

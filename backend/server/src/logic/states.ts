@@ -79,6 +79,7 @@ export function deployState() {
         );
     }
 
+// Used
 export function initState() {
     setState( { 
         index: 0, 
@@ -98,6 +99,7 @@ export function initState() {
         );
     }
 
+// Used
 export async function loadWallets() {
     globalState.wallets = await hre.viem.getWalletClients();        
     globalState.clients = await hre.viem.getPublicClient();
@@ -163,6 +165,8 @@ export const account = async ( rank: number, wallet: boolean ) : Promise<Address
         return NULL_ADDRESS;
         }
 */
+
+// Used
 export const assignAccounts = async () => {
     // We get the list of available accounts from hardhat testnet
     const accounts = await hre.ethers.getSigners();
