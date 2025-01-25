@@ -11,24 +11,36 @@ router.get('/', (req, res) => {
   
   switch (call) {
     case "user": {
-      const userId = parseInt(inputs.id);
-      const user = getUserById(userId);	
-      
-      if (user) {
-        res.json(user);
-      } 
+      if (inputs) {
+        try {
+          const jsonData = JSON.parse(decodeURIComponent(inputs as string)); // Décoder et analyser l'objet JSON
+          
+          const userId = parseInt(jsonData.id);
+          const user = getUserById(userId);	
+    
+          if (user) {
+            res.json(user);
+            } 
+          else {
+            res.status(404).json({ message: 'Utilisateur non trouvé' });
+            }
+          } 
+        catch (error) {
+          res.status(400).json({ message: 'Erreur lors de l\'analyse des données', error: error.message });
+          }
+        } 
       else {
-        res.status(404).json({ message: 'Utilisateur non trouvé' });
-      }
+        res.status(400).json({ message: 'Paramètre manquant' });
+        }  
       break;
     }
     case "state": {
         res.json(globalState);
         break;
         }
-      default:
-        res.status(404).json({ message: 'fonction non trouvé' });
-      }
+    default:
+      res.status(404).json({ message: 'fonction non trouvé' });
+    }
   });
   
   // Route POST pour ajouter un nouvel utilisateur
