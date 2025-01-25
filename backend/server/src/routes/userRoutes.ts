@@ -10,10 +10,14 @@ const router = Router();
 router.get('/', async (req, res) => { 
   const { call, inputs } = req.query;
 
+  console.log("GET reveived");
+
   await loadWallets();
 
   // Initialize wallet/accounts from hardhat node
   await assignAccounts();
+
+  console.log("GET initialized", call, inputs);
   
   switch (call) {
     case "user": {
