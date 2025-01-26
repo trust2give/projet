@@ -41,6 +41,12 @@ app.listen(PORT, async () => {
             diamondNames.Diamond.address
         );
 
+        console.log("===========================")
+        console.log(getRoot);
+        console.log("===========================")
+        console.log(globalState.wallets[0])
+        console.log("===========================")
+
         colorOutput("Connection to Root >> ", "cyan")
 
         const wallet : any[] = await getRoot.read.wallet_T2G_root( 
