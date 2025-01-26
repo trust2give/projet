@@ -51,6 +51,7 @@ export enum Account {
     export interface contractRecord { 
         name: string, 
         address: Address,
+        abi: any,
         beacon?: string | boolean,
         get?: string | boolean,
         wallet?: string
@@ -82,6 +83,5 @@ export enum Account {
         contract: string | undefined
         args: Object,
         diamond: Account | undefined,
-        instance: any,
         events: any,
         }

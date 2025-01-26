@@ -2,6 +2,7 @@ import { Address } from "viem";
 import fs from 'fs';
 import { diamondNames, contractSet } from "../T2G_Data";
 import { contractRecord, diamondCore, Account, NULL_ADDRESS, regex, regex2, regex3 } from "./types";
+import { abiItem } from "../interface/types";
 
 export interface wlist {
       [cle: string]: Address; // Ici, 'cle' est le nom variable et 'number' est le type fixe
@@ -83,7 +84,12 @@ export async function readLastDiamondJSONfile() : Promise<boolean> {
 
     if (DiamondCore.Diamond.name != "T2G_root") return false;
     if (!DiamondCore.Diamond.address.match(regex)) return false;
-    
+
+    const jsonDiamond = fs.readFileSync('../contracts/articfacts/T2G_Root.json', 'utf-8');
+    const diamondABI : any = JSON.parse(jsonDiamond);
+
+    console.log(diamondABI);
+
     diamondNames.Diamond = <contractRecord>DiamondCore.Diamond;
 
     console.log("===========================")

@@ -26,25 +26,25 @@ import { accountRefs, accountType, globalState, setState, addAccount, assignAcco
 /// Pour retrouver les addresses des derniers contracts déployés T2G_Root et EUR (Contract StableCoin Mock-up)
 
 export const contractSet : contractRecord[] = [
-  { name: "EUR", address: NULL_ADDRESS, get: 'get_EUR' },
+  { name: "EUR", abi: undefined, address: NULL_ADDRESS, get: 'get_EUR' },
   ]
 
 export const facetNames : contractRecord[] = [
-  { name: 'OwnershipFacet', address: NULL_ADDRESS },
-  { name: 'ERC721Facet', address: NULL_ADDRESS, beacon: 'beacon_ERC721Facet' },
-  { name: 'T2G_NektarFacet', address: NULL_ADDRESS, beacon: 'beacon_NektarFacet', get: 'get_T2G_NektarFacet' },
-  { name: 'T2G_PollenFacet', address: NULL_ADDRESS, beacon: 'beacon_PollenFacet', get: 'get_T2G_PollenFacet', wallet: 'wallet_PollenFacet' },
-  { name: 'T2G_HoneyFacet', address: NULL_ADDRESS, beacon: 'beacon_HoneyFacet', get: 'get_T2G_HoneyFacet', wallet: 'wallet_HoneyFacet' },
-  { name: 'T2G_PoolFacet', address: NULL_ADDRESS, beacon: 'beacon_PoolFacet', get: 'get_T2G_PoolFacet', wallet: "wallet_PoolFacet" },
-  { name: 'T2G_EntityFacet', address: NULL_ADDRESS, beacon: 'beacon_EntityFacet', get: 'get_T2G_EntityFacet' },
-  { name: 'T2G_SyndicFacet', address: NULL_ADDRESS, beacon: 'beacon_SyndicFacet', get: 'get_T2G_SyndicFacet' }
+  { name: 'OwnershipFacet', abi: undefined, address: NULL_ADDRESS },
+  { name: 'ERC721Facet', abi: undefined, address: NULL_ADDRESS, beacon: 'beacon_ERC721Facet' },
+  { name: 'T2G_NektarFacet', abi: undefined, address: NULL_ADDRESS, beacon: 'beacon_NektarFacet', get: 'get_T2G_NektarFacet' },
+  { name: 'T2G_PollenFacet', abi: undefined, address: NULL_ADDRESS, beacon: 'beacon_PollenFacet', get: 'get_T2G_PollenFacet', wallet: 'wallet_PollenFacet' },
+  { name: 'T2G_HoneyFacet', abi: undefined, address: NULL_ADDRESS, beacon: 'beacon_HoneyFacet', get: 'get_T2G_HoneyFacet', wallet: 'wallet_HoneyFacet' },
+  { name: 'T2G_PoolFacet', abi: undefined, address: NULL_ADDRESS, beacon: 'beacon_PoolFacet', get: 'get_T2G_PoolFacet', wallet: "wallet_PoolFacet" },
+  { name: 'T2G_EntityFacet', abi: undefined, address: NULL_ADDRESS, beacon: 'beacon_EntityFacet', get: 'get_T2G_EntityFacet' },
+  { name: 'T2G_SyndicFacet', abi: undefined, address: NULL_ADDRESS, beacon: 'beacon_SyndicFacet', get: 'get_T2G_SyndicFacet' }
   ]
 
 export const diamondNames : diamondCore = {
-    Diamond: { name: "T2G_root", address: NULL_ADDRESS, beacon: 'beacon_T2G_Root', wallet: "wallet_T2G_root" },
-    DiamondCutFacet: { name: "DiamondCutFacet", address: NULL_ADDRESS },
-    DiamondLoupeFacet: { name: "DiamondLoupeFacet", address: NULL_ADDRESS },
-    DiamondInit: { name: "DiamondInit", address: NULL_ADDRESS },
+    Diamond: { name: "T2G_root", abi: undefined, address: NULL_ADDRESS, beacon: 'beacon_T2G_Root', wallet: "wallet_T2G_root" },
+    DiamondCutFacet: { name: "DiamondCutFacet", abi: undefined, address: NULL_ADDRESS },
+    DiamondLoupeFacet: { name: "DiamondLoupeFacet", abi: undefined, address: NULL_ADDRESS },
+    DiamondInit: { name: "DiamondInit", abi: undefined, address: NULL_ADDRESS },
     }
 
 export const tokenCredential = { 
@@ -61,16 +61,16 @@ export const tokenCredential = {
 /// Nor similar to any function name of the facets to interact with. Make it unique.
 
 export var smart : menuRecord[] = [ 
-  { tag: "EUR", contract: "EUR", diamond: Account.AB, args: [], instance: undefined, events: undefined },
-  { tag: "Honey", contract: "T2G_HoneyFacet", diamond: Account.AA, args: [], instance: undefined, events: undefined },
-  { tag: "Diamond", contract: "T2G_root", diamond: Account.AA, args: [], instance: undefined, events: undefined },
-  { tag: "Loupe", contract: "DiamondLoupeFacet", diamond: Account.AA, args: [], instance: undefined, events: undefined },
-  { tag: "Erc721", contract: "ERC721Facet", diamond: Account.AA, args: [], instance: undefined, events: undefined }, 
-  { tag: "Pool", contract: "T2G_PoolFacet", diamond: Account.AA, args: [], instance: undefined, events: undefined },
-  { tag: "Nektar", contract: "T2G_NektarFacet", diamond: Account.AA, args: [], instance: undefined, events: undefined }, 
-  { tag: "Pollen", contract: "T2G_PollenFacet", diamond: Account.AA, args: [], instance: undefined, events: undefined },
-  { tag: "Entity", contract: "T2G_EntityFacet", diamond: Account.AA, args: [], instance: undefined, events: undefined },
-  { tag: "Syndication", contract: "T2G_SyndicFacet",  diamond: Account.AA, args: [], instance: undefined, events: undefined } 
+  { tag: "EUR", contract: "EUR", diamond: Account.AB, args: [], events: undefined },
+  { tag: "Honey", contract: "T2G_HoneyFacet", diamond: Account.AA, args: [], events: undefined },
+  { tag: "Diamond", contract: "T2G_root", diamond: Account.AA, args: [], events: undefined },
+  { tag: "Loupe", contract: "DiamondLoupeFacet", diamond: Account.AA, args: [], events: undefined },
+  { tag: "Erc721", contract: "ERC721Facet", diamond: Account.AA, args: [], events: undefined }, 
+  { tag: "Pool", contract: "T2G_PoolFacet", diamond: Account.AA, args: [], events: undefined },
+  { tag: "Nektar", contract: "T2G_NektarFacet", diamond: Account.AA, args: [], events: undefined }, 
+  { tag: "Pollen", contract: "T2G_PollenFacet", diamond: Account.AA, args: [], events: undefined },
+  { tag: "Entity", contract: "T2G_EntityFacet", diamond: Account.AA, args: [], events: undefined },
+  { tag: "Syndication", contract: "T2G_SyndicFacet",  diamond: Account.AA, args: [], events: undefined } 
   ];
 
 export const smartEntry = ( tag?: string ) : menuRecord | undefined => {
