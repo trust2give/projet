@@ -87,11 +87,10 @@ export async function readLastDiamondJSONfile() : Promise<boolean> {
 
     const jsonDiamond = fs.readFileSync('./contracts/artifacts/T2G_root.json', 'utf-8');
     const diamondABI : any = JSON.parse(jsonDiamond);
-
-    console.log(diamondABI);
-
+    
     diamondNames.Diamond = <contractRecord>DiamondCore.Diamond;
-
+    diamondNames.Diamond.abi = diamondABI.abi;
+    
     console.log("===========================")
     console.log(diamondNames.Diamond);
 

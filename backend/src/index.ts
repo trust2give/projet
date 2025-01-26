@@ -58,34 +58,22 @@ app.listen(PORT, async () => {
         
         const client : any = (globalState.clients)[0];
         
-        /*const contract = getContract({
-            address: diamondNames.Diamond.address,
-            abi: getRoot.instance.abi,
-            client: { wallet: client }
-          })*/
-
-        console.log(getRoot.instance.abi)
-
         const wallet : any[] = await client.readContract({
             address: diamondNames.Diamond.address,
-            abi: getRoot.instance.abi,
+            abi: diamondNames.Diamond.abi,
             functionName: 'wallet_T2G_root',
+            args: []
           })
-        
-        /*const wallet : any[] = await contract.read.wallet_T2G_root( 
-            [], 
-            { wallet: (<clientFormat[]>globalState.wallets)[0] } 
-            ) */ 
-           //root 
+        //root 
 
-        //colorOutput("Fectch Stable Coint Wallet@ >> ".concat(wallet[0], " ", wallet[1]), "cyan")
+        colorOutput("Fectch Stable Coint Wallet@ >> ".concat(wallet[0], " ", wallet[1]), "cyan")
 
-        /*initialized = await addAccount( 
+        initialized = await addAccount( 
             10, 
             diamondNames.Diamond.name, 
             diamondNames.Diamond.address, 
             wallet
-            );        */
+            );
 
         colorOutput("Root Diamont Initialized >> ".concat( (initialized) ? "OK" : "NOK" ), "cyan")
         }
