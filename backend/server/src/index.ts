@@ -8,6 +8,7 @@ import { readLastContractSetJSONfile, readLastDiamondJSONfile } from "./librarie
 import { contractSet, diamondNames, facetNames, smart, smartEntry, encodeInterfaces } from "./T2G_Data";
 import { contractRecord, rwRecord, rwType, menuRecord, Account, NULL_ADDRESS, regex, regex2, regex3 } from "./libraries/types";
 import { DeployContracts } from './logic/DeployContracts';
+import { colorOutput } from "../libraries/format";
 
 const app = express();
 const PORT = 8080;
@@ -34,21 +35,29 @@ app.listen(PORT, async () => {
 
   if (await readLastDiamondJSONfile()) {
 
-    try {            
+    try {                
         const getRoot = await hre.viem.getContractAt( 
             diamondNames.Diamond.name, 
             diamondNames.Diamond.address
-            );
+        );
+
+        colorOutput("Connection to Root >> ", "cyan")
+
+        const wallet : Address = await getRoot.read.wallet_T2G_root( 
+            [], 
+            { wallet: globalState.wallets[0] } 
+            ) //root 
+
+        colorOutput("Fectch Stable Coint Wallet@ >> ".concat(wallet[0], " ", wallet[1]), "cyan")
 
         initialized = await addAccount( 
             10, 
             diamondNames.Diamond.name, 
             diamondNames.Diamond.address, 
-            await getRoot.read.wallet_T2G_root( 
-                [], 
-                { wallet: globalState.wallets[0] } 
-                ) //root 
+            wallet
             );        
+
+        colorOutput("Root Diamont Initialized >> ".concat( (initialized) ? "OK" : "NOK" ), "cyan")
         }
     catch (error) {
         console.error(">> Error :: No T2G_Root initialized @ %s", diamondNames.Diamond.address, error)
