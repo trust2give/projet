@@ -6,7 +6,7 @@ import { accountType, accountRefs, globalState, setState, addAccount, assignAcco
 
 export var storage : object = {};
 
-/*
+
 export async function accountIndex( accounts: Object, label?: Account, wallet?: boolean | undefined ) : Promise<number | undefined> {
     if (label == undefined) return 0;
     if (wallet) {
@@ -19,7 +19,6 @@ export async function accountIndex( accounts: Object, label?: Account, wallet?: 
         }
     return  "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".indexOf(label.substring(1));
     }
-*/
 
 // convertType function that transform inputs or outcomes of a smart contract function in readable result
 // root => represents the 

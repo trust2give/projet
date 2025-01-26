@@ -49,7 +49,7 @@ export const setConstructorFromInstance = async (facet: string, root: Address, s
         { client: { wallet: globalState.wallets[<number>sender] } } 
         );
 
-    const constructor = (instance.abi.filter((item) => item.type == "constructor"))
+    const constructor = (instance.abi.filter((item: abiData) => item.type == "constructor"))
 
     return <rwRecord>{ 
         rwType: rwType.CONSTRUCTOR,

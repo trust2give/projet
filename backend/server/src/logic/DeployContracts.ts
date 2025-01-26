@@ -9,9 +9,11 @@ import { writeLastContractJSONfile,
          writeLastDiamondJSONfile, 
          writeLastFacetJSONfile } from "../libraries/files";
 import { colorOutput } from "../libraries/format";
+import { abiData } from "../interface/types";
 import { rwRecord, cutRecord, menuRecord, Account, NULL_ADDRESS, regex, regex2, regex3 } from "../libraries/types";
 import { accountRefs, globalState } from "./states";
 import { setConstructorFromInstance } from "./instances";
+import { Address } from "viem";
 
 /******************************************************************************\
 * Author: Franck Dervillez <franck.dervillez@trust2give.com>, Twitter/Github: @fdervillez
@@ -25,6 +27,10 @@ import { setConstructorFromInstance } from "./instances";
  * @contract = new @ of EUR contract or NULL_ADDRESS otherwise
  * cut object = [{cutfacet}] or NULL_ADDRESS
  */
+
+interface wlist {
+  [cle: string]: Address; // Ici, 'cle' est le nom variable et 'number' est le type fixe
+}
 
 export async function DeployContracts( answer : string ) {
   colorOutput("Enter DeployContracts Application", "cyan")
@@ -136,14 +142,14 @@ export async function DeployContracts( answer : string ) {
 
         const facetsToChange : menuRecord[] = (commands[0] == "Facet") ? facetList.filter((item) => commands.includes(<string>item.contract)) : [];
         
-        var writeList : Object = {};
+        var writeList : wlist = {};        
 
         const init = await hre.viem.getContractAt( 
           diamondNames.Diamond.name, 
           diamondNames.Diamond.address 
           )
 
-        for (const facet : menuRecord of facetsToChange) {
+        for (const facet of facetsToChange) {
 
           var inputArray = [];
 
@@ -155,7 +161,7 @@ export async function DeployContracts( answer : string ) {
 
           // the constructor of the smart contract requires inputs
           if (constructeur.instance.abi.length > 0) {
-            inputArray = ("inputs" in constructeur.instance.abi[0]) ? constructeur.instance.abi[0].inputs.map((item: Object) => {
+            inputArray = ("inputs" in constructeur.instance.abi[0]) ? constructeur.instance.abi[0].inputs.map((item: abiData) => {
                 // We fill in the input with the required address
                 if (item.name == "_root" && item.type == "address") {
                   return diamondNames.Diamond.address;
@@ -174,15 +180,25 @@ export async function DeployContracts( answer : string ) {
             cut
             );
 
-          writeList[facet.contract] = (<cutRecord>cut.slice().pop()).facetAddress;
-
+          writeList = Object.assign( 
+            writeList, 
+            Object.fromEntries(
+              new Map( [ 
+                  [ 
+                  `@${facet.contract}`,  
+                  (<cutRecord>cut.slice().pop()).facetAddress
+                  ] 
+                ])
+              )
+            );
+  
           const isWallet = facetNames.find((el) => el.name == facet.contract)
 
           if (choice != FacetCutAction.Remove && isWallet?.wallet) {
 
             const instance = await hre.viem.getContractAt( 
               <string>facet.contract, 
-              writeList[facet.contract] 
+              writeList[<string>facet.contract] 
               );        
             
             const walletAndKey = await instance.read[<string>isWallet.wallet]( 
@@ -191,12 +207,12 @@ export async function DeployContracts( answer : string ) {
               );
 
             const raw = await init.write.updateAddressAndKeys( 
-              [ writeList[facet.contract], walletAndKey[0], walletAndKey[1] ], 
+              [ writeList[<string>facet.contract], walletAndKey[0], walletAndKey[1] ], 
               { client: { wallet: globalState.wallets[0] } } 
               );
     
             colorOutput(
-              `Update Wallet @ ${writeList[facet.contract]} Tx: ${raw}`, 
+              `Update Wallet @ ${writeList[<string>facet.contract]} Tx: ${raw}`, 
               "magenta"
               );            
             }

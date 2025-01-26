@@ -21,7 +21,7 @@ export async function readLastContractSetJSONfile() : Promise<boolean> {
 export async function writeLastContractJSONfile( ) {
     let JsonFile = JSON.stringify(contractSet[0]);
     //colorOutput("Save last EUR Contract Record >> ".concat(JSON.stringify(contractSet[0])), "cyan");
-    fs.writeFile('./scripts/ContractSet.json', JsonFile, (err) => {
+    fs.writeFile('./ContractSet.json', JsonFile, (err) => {
         if (err) {
             console.log('Error writing file:', err);
         } else {
@@ -30,9 +30,9 @@ export async function writeLastContractJSONfile( ) {
         });
     }
 
-/*
+
 export async function readLastFacetJSONfile( facetName: string, diamond: Address ) : Promise<Address> {
-    const jsonString = fs.readFileSync('./scripts/T2G_Facets.json', 'utf-8');
+    const jsonString = fs.readFileSync('./T2G_Facets.json', 'utf-8');
     const FacetList : facetRecord = JSON.parse(jsonString);
     if (FacetList.diamond != diamond) throw("Bad Record Name for Diamond Address recovery :: ".concat(FacetList.diamond));
     if (!(facetName in FacetList.facets)) throw("Bad Record Name for Facet Address recovery :: ".concat(facetName));
@@ -40,7 +40,7 @@ export async function readLastFacetJSONfile( facetName: string, diamond: Address
     }
 
 export async function writeLastFacetJSONfile( facets: Object, diamond: Address ) {
-    const jsonString = fs.readFileSync('./scripts/T2G_Facets.json', 'utf-8');
+    const jsonString = fs.readFileSync('./T2G_Facets.json', 'utf-8');
     const FacetRecord : facetRecord = JSON.parse(jsonString);
     if (FacetRecord.diamond != diamond) {
         if (Object.keys(facets).length == 0) FacetRecord.diamond = diamond;
@@ -52,7 +52,7 @@ export async function writeLastFacetJSONfile( facets: Object, diamond: Address )
         }
 
     let JsonFile = JSON.stringify(FacetRecord);
-    fs.writeFile('./scripts/T2G_Facets.json', JsonFile, (err) => {
+    fs.writeFile('./T2G_Facets.json', JsonFile, (err) => {
         if (err) {
             console.log('Error writing file:', err);
         } else {
@@ -60,7 +60,6 @@ export async function writeLastFacetJSONfile( facets: Object, diamond: Address )
             }
         });
     }
-*/
 
 export async function writeLastDiamondJSONfile( ) {
     let JsonFile = JSON.stringify(diamondNames);
