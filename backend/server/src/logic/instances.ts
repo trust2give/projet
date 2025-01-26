@@ -1,8 +1,8 @@
 const hre = require("hardhat");
 import { Address } from "viem";
 import { contractSet, diamondNames, facetNames, smart, encodeInterfaces, smartEntry } from "../T2G_Data";
-import { dataDecodeABI, abiData, typeRouteArgs, honeyFeatures, pollenFeatures, Typeoftoken, Statusoftoken } from "../interface/types";
-import { colorOutput, displayAccountTable } from "../libraries/format";
+import { dataDecodeABI, abiData, honeyFeatures, pollenFeatures, Typeoftoken, Statusoftoken } from "../interface/types";
+import { colorOutput } from "../libraries/format";
 import { contractRecord, rwRecord, rwType, menuRecord, Account, NULL_ADDRESS, regex, regex2, regex3 } from "../libraries/types";
 import { accountIndex, convertType, enumOrValue } from "../libraries/utils";
 import { accountRefs, globalState } from "../logic/states";
@@ -66,11 +66,11 @@ export const setConstructorFromInstance = async (facet: string, root: Address, s
 export async function getFunctionsAbiFromInstance( record: menuRecord ) : Promise<string[]> {
     if (record != undefined) {
         const instance = await getInstanceFromSmartRecord( record );                
-        return instance.abi.filter( (item) => (item.type == "function")).map((item) => item.name);                
+        return instance.abi.filter( (item: abiData) => (item.type == "function")).map((item: abiData) => item.name);                
         }
     return [];
     }
-    
+/*
 export const showInstance = async ( level : string ) : Promise<Array<any>> => {
 
     const record = <menuRecord>smartEntry(level);
@@ -119,6 +119,7 @@ export const showInstance = async ( level : string ) : Promise<Array<any>> => {
                 ), "yellow");
             });
     }
+*/
 
 async function getInstanceFromSmartRecord( record: menuRecord ) : Promise<any> {
 
