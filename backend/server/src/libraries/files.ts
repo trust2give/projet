@@ -3,12 +3,16 @@ import fs from 'fs';
 import { diamondNames, contractSet } from "../T2G_Data";
 import { contractRecord, diamondCore, Account, NULL_ADDRESS, regex, regex2, regex3 } from "./types";
 
+export interface wlist {
+      [cle: string]: Address; // Ici, 'cle' est le nom variable et 'number' est le type fixe
+    }
 
 export interface facetRecord { 
     diamond: Address, 
-    facets: Object
+    facets: wlist
     }
 
+    
 export async function readLastContractSetJSONfile() : Promise<boolean> {
     const jsonString = fs.readFileSync('./ContractSet.json', 'utf-8');
     const item : contractRecord = JSON.parse(jsonString);
@@ -30,7 +34,7 @@ export async function writeLastContractJSONfile( ) {
         });
     }
 
-
+/*
 export async function readLastFacetJSONfile( facetName: string, diamond: Address ) : Promise<Address> {
     const jsonString = fs.readFileSync('./T2G_Facets.json', 'utf-8');
     const FacetList : facetRecord = JSON.parse(jsonString);
@@ -38,8 +42,9 @@ export async function readLastFacetJSONfile( facetName: string, diamond: Address
     if (!(facetName in FacetList.facets)) throw("Bad Record Name for Facet Address recovery :: ".concat(facetName));
     return FacetList.facets[facetName];
     }
+*/
 
-export async function writeLastFacetJSONfile( facets: Object, diamond: Address ) {
+export async function writeLastFacetJSONfile( facets: wlist, diamond: Address ) {
     const jsonString = fs.readFileSync('./T2G_Facets.json', 'utf-8');
     const FacetRecord : facetRecord = JSON.parse(jsonString);
     if (FacetRecord.diamond != diamond) {
@@ -48,7 +53,7 @@ export async function writeLastFacetJSONfile( facets: Object, diamond: Address )
         }
 
     for ( const facet of Object.keys(facets)) {
-        FacetRecord.facets[facet] = facets[facet];
+        FacetRecord.facets[<string>facet] = facets[facet];
         }
 
     let JsonFile = JSON.stringify(FacetRecord);

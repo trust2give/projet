@@ -5,7 +5,8 @@ import { deployDiamond,
          deployWithDiamondCut, 
          deployFacets } from "../libraries/deploy";
 import { FacetCutAction } from "../utils/diamond";
-import { writeLastContractJSONfile, 
+import { wlist,
+         writeLastContractJSONfile, 
          writeLastDiamondJSONfile, 
          writeLastFacetJSONfile } from "../libraries/files";
 import { colorOutput } from "../libraries/format";
@@ -27,10 +28,6 @@ import { Address } from "viem";
  * @contract = new @ of EUR contract or NULL_ADDRESS otherwise
  * cut object = [{cutfacet}] or NULL_ADDRESS
  */
-
-interface wlist {
-  [cle: string]: Address; // Ici, 'cle' est le nom variable et 'number' est le type fixe
-}
 
 export async function DeployContracts( answer : string ) {
   colorOutput("Enter DeployContracts Application", "cyan")
