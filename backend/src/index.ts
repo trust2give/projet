@@ -59,7 +59,7 @@ app.listen(PORT, async () => {
         console.log( diamondNames.Diamond.abi)
         
         const client : any = (globalState.clients)[0];
-        
+
         const publicClient = createPublicClient({
             chain: mainnet,
             transport: http()
@@ -73,7 +73,7 @@ app.listen(PORT, async () => {
           })
         //root 
 
-        colorOutput("Fectch Stable Coint Wallet@ >> ".concat(wallet[0], " ", wallet[1]), "cyan")
+        colorOutput("Fectch Stable Coint Wallet@ >> ".concat(wallet, " ", wallet), "cyan")
 
         /*initialized = await addAccount( 
             10, 
