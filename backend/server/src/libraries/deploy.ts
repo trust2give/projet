@@ -1,7 +1,7 @@
 import hre from "hardhat";
 import { Address, encodeFunctionData } from "viem";
 import { FacetCutAction, getSelectors } from "../utils/diamond";
-import { regex, NULL_ADDRESS, cutRecord, contractRecord, diamondCore } from "../libraries/types";
+import { Account, regex, NULL_ADDRESS, cutRecord, contractRecord, diamondCore } from "../libraries/types";
 import { diamondNames, tokenCredential, contractSet, facetNames } from "../T2G_Data";
 import { colorOutput } from "../libraries/format";
 import { accountRefs, globalState } from "../logic/states";
@@ -65,14 +65,14 @@ export async function deployDiamond() : Promise<any> {
     var diamName : string = (diamondNames.Diamond.name || "Diamond");
 
     colorOutput(
-        `Root Name: ${diamName} CutFacet Name: ${CutName} Owner@: ${globalState.wallets[0].address}`, 
+        `Root Name: ${diamName} CutFacet Name: ${CutName} Owner@: ${accountRefs[Account.A0].address}`, 
         "yellow"
         );
 
         // On est dans le cas où on créé un nouveau T2G_Root
 
     const before = await globalState.clients.getBalance({ 
-        address: globalState.wallets[0].address,
+        address: accountRefs[Account.A0].address,
         })    
 
     diamondCutFacet = await hre.viem.deployContract( CutName );
@@ -83,7 +83,7 @@ export async function deployDiamond() : Promise<any> {
         );
 
     diamond = await hre.viem.deployContract( diamName, [
-        globalState.wallets.account.address,
+        globalState.wallets[0].account.address,
         diamondCutFacet.address
         ]);
 
@@ -104,12 +104,12 @@ export async function deployDiamond() : Promise<any> {
     diamondNames.DiamondInit.address = diamondInit.address;
 
     const after = await globalState.clients.getBalance({ 
-        address: globalState.wallets[0].address,
+        address: accountRefs[Account.A0].address,
         })    
 
     colorOutput( 
         "Balance @[".concat(
-            globalState.wallets[0].address, 
+            accountRefs[Account.A0].address, 
             "] Before @[", 
             before, 
             "] After @[", 
@@ -136,7 +136,7 @@ export async function deployDiamond() : Promise<any> {
 export async function deployFacets( name: string, action: FacetCutAction, constructor: Array<any>,  cut: cutRecord[]  ) : Promise<cutRecord[]> {
 
     const before = await globalState.clients.getBalance(
-        { address: globalState.wallets[0].address,}
+        { address: accountRefs[Account.A0].address,}
         )    
 
     var facet;
@@ -164,7 +164,7 @@ export async function deployFacets( name: string, action: FacetCutAction, constr
                 facet = await hre.viem.deployContract( 
                     <string>name, 
                     constructor, 
-                    { client: { wallet: globalState.wallets }, }
+                    { client: { wallet: globalState.wallets[0] }, }
                     );
                 }
             else {
@@ -201,7 +201,7 @@ export async function deployFacets( name: string, action: FacetCutAction, constr
         }).join("\n"), "]" ), "yellow");
 
     const after = await globalState.clients.getBalance(
-        { address: globalState.wallets[0].address,}
+        { address: accountRefs[Account.A0].address,}
         )    
 
         colorOutput( 
@@ -215,7 +215,7 @@ export async function deployFacets( name: string, action: FacetCutAction, constr
 export async function deployWithDiamondCut( cut : cutRecord[], initFunc: `0x${string}`, initAddress: Address ) : Promise<Address> {
 
     const before = await globalState.clients.getBalance({ 
-        address: globalState.wallets[0].address,
+        address: accountRefs[Account.A0].address,
         })    
 
     const diamondCut = await hre.viem.getContractAt(
@@ -243,7 +243,7 @@ export async function deployWithDiamondCut( cut : cutRecord[], initFunc: `0x${st
         );
 
     const after = await globalState.clients.getBalance({ 
-        address: globalState.wallets[0].address,
+        address: accountRefs[Account.A0].address,
         })    
 
     colorOutput( 
