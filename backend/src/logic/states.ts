@@ -203,7 +203,7 @@ export const assignAccounts = async () => {
         accountRefs = Object.assign( accountRefs, Object.fromEntries(new Map([ [`@${rank}`, 
             {   name: `Wallet ${rank}`, 
                 address: wallet.address,
-                client: globalState.wallets[rank], 
+                client: (<clientFormat[]>globalState.wallets)[rank], 
                 balance: balance 
             } 
             ] ])));
