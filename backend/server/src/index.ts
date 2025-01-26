@@ -1,5 +1,6 @@
 const hre = require("hardhat");
-import { Address, encodeAbiParameters, decodeAbiParameters } from 'viem'
+import { http, Address, createPublicClient, createWalletClient } from 'viem'
+import { mainnet, hardhat } from 'viem/chains'
 import express from 'express';
 import userRoutes from './routes/userRoutes';
 import cors from 'cors';
@@ -21,6 +22,18 @@ app.use('/T2G', userRoutes); // Utilisation des routes des utilisateurs
 
 app.listen(PORT, async () => {
   
+    const publicClient = createPublicClient({
+        chain: hardhat,
+        transport: http('http://46.226.107.26:8545'), 
+        })
+    
+    const walletClient = createWalletClient({
+        chain: hardhat,
+        transport: http('http://46.226.107.26:8545'), 
+        })
+
+    console.log("Entering...", publicClient, walletClient)
+      
     // Initialize globalState variable (Warning : async / wait not possible so wallet / public clients deactivated)
     // to be changed
   initState();
@@ -45,25 +58,22 @@ app.listen(PORT, async () => {
         console.log(getRoot);
         console.log("===========================")
         console.log(globalState.wallets[0])
-        console.log("===========================")
 
         colorOutput("Connection to Root >> ", "cyan")
 
-        const wallet : string = await getRoot.read.beacon_T2G_Root( 
+        const wallet : any[] = await getRoot.read.wallet_T2G_root( 
             [], 
             { wallet: globalState.wallets[0] } 
             ) //root 
 
-        colorOutput("Fectch Stable Coint Wallet@ >> ".concat(wallet), "cyan")
+        colorOutput("Fectch Stable Coint Wallet@ >> ".concat(wallet[0], " ", wallet[1]), "cyan")
 
-        //colorOutput("Fectch Stable Coint Wallet@ >> ".concat(wallet[0], " ", wallet[1]), "cyan")
-
-        /*initialized = await addAccount( 
+        initialized = await addAccount( 
             10, 
             diamondNames.Diamond.name, 
             diamondNames.Diamond.address, 
             wallet
-            );  */      
+            );        
 
         colorOutput("Root Diamont Initialized >> ".concat( (initialized) ? "OK" : "NOK" ), "cyan")
         }
