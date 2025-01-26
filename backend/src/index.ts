@@ -1,5 +1,5 @@
 const hre = require("hardhat");
-import { http, Address, createPublicClient, createWalletClient } from 'viem'
+import { http, Address, getContract, createPublicClient, createWalletClient } from 'viem'
 import { mainnet, hardhat } from 'viem/chains'
 import express from 'express';
 import userRoutes from './routes/userRoutes';
@@ -52,11 +52,21 @@ app.listen(PORT, async () => {
         const getRoot = await hre.viem.getContractAt( 
             diamondNames.Diamond.name, 
             diamondNames.Diamond.address
-        );
-        
-        colorOutput("Connection to Root >> ", "cyan")
+            );
 
-        const wallet : any[] = await getRoot.read.wallet_T2G_root( 
+        colorOutput("Connection to Root >> ", "cyan")
+        
+        const client : any = (<clientFormat[]>globalState.wallets)[0];
+        
+        const contract = getContract({
+            address: diamondNames.Diamond.address,
+            abi: getRoot.instance.abi,
+            client: { wallet: client }
+          })
+
+        console.log(getRoot.instance.abi)
+
+        const wallet : any[] = await contract.read.wallet_T2G_root( 
             [], 
             { wallet: (<clientFormat[]>globalState.wallets)[0] } 
             ) //root 
