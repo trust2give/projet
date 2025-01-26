@@ -119,12 +119,12 @@ export const encodeInterfaces = {
           
           if (facets != undefined) {
               if (facets.wallet) {
-                  res = await facet.instance.read[<string>facets.wallet]( [], wallet );
+                  //res = await facet.instance.read[<string>facets.wallet]( [], wallet );
               }
           }
           else {
               if (diamondNames.Diamond.name == item.name) {
-                  res = await facet.instance.read[<string>diamondNames.Diamond.wallet]( [], wallet );
+                  //res = await facet.instance.read[<string>diamondNames.Diamond.wallet]( [], wallet );
                 }   
             }   
         }   
