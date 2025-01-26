@@ -33,7 +33,7 @@ export type accountType = {
     decimals?: number
     }
 
-interface accountList {
+export interface accountList {
     [cle: string]: accountType; // Ici, 'cle' est le nom variable et 'number' est le type fixe
 }
 

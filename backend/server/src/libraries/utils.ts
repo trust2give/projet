@@ -2,17 +2,17 @@ import { Address, stringify } from "viem";
 import { FacetCutAction } from "../utils/diamond";
 import { listOfEnums, typeItem } from "../interface/types";
 import { Account, NULL_ADDRESS, regex, regex2, regex3 } from "./types";
-import { accountType, accountRefs, globalState, setState, addAccount, assignAccounts } from "../logic/states";
+import { accountType, accountRefs, accountList, globalState, setState, addAccount, assignAccounts } from "../logic/states";
 
 export var storage : object = {};
 
 
-export async function accountIndex( accounts: Object, label?: Account, wallet?: boolean | undefined ) : Promise<number | undefined> {
+export async function accountIndex( accounts: accountList, label?: Account, wallet?: boolean | undefined ) : Promise<number | undefined> {
     if (label == undefined) return 0;
     if (wallet) {
         if ('wallet' in accounts[label]) {
-            const find = globalState.wallets.findIndex((item) => {
-                return (item.account.address.toUpperCase() == accounts[label].wallet.toUpperCase())
+            const find = globalState.wallets.findIndex((item: any) => {
+                return (item.account.address.toUpperCase() == (<Address>accounts[label].wallet).toUpperCase())
                 });            
             return find;
             }
