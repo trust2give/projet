@@ -30,9 +30,7 @@ import { Address } from "viem";
  */
 
 export async function DeployContracts( answer : string ) {
-  colorOutput("Enter DeployContracts Application", "cyan")
-
-  const trace : boolean = false;
+  colorOutput("Enter DeployContracts Application >> ".concat(answer), "cyan")
 
   var cut : cutRecord[] = [];
   var choice: FacetCutAction;
@@ -42,7 +40,7 @@ export async function DeployContracts( answer : string ) {
   var facetList = smart.filter((item) => (item.diamond == Account.AA && item.contract != diamondNames.Diamond.name));
 
   var commands : string[] = answer.split(' ');
-  if (trace) console.log( "commands::", commands, commands.length );
+  colorOutput( "commands:: ".concat(commands.join('|')), "yellow" );
   
   // command[0] => "Facet", "Contract" or "Diamond"
   // command[1] => "Add", "Replace", "Remove"
@@ -225,7 +223,7 @@ export async function DeployContracts( answer : string ) {
         break;
         }
       case "Contract": {
-        if (trace) console.log("Contract found", contractSet, choice);
+        console.log("Contract found", contractSet, choice);
         //contractSet[0].address = await getOrDeployContract( contractSet[0], <string>contractSet[0].name, <FacetCutAction>choice );
 
         if (choice != FacetCutAction.Remove) {
