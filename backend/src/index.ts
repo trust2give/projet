@@ -20,19 +20,19 @@ app.use(cors());
 app.use(express.json()); // Middleware pour parser le JSON
 app.use('/T2G', userRoutes); // Utilisation des routes des utilisateurs
 
+const client = createPublicClient({
+    chain: hardhat,
+    transport: http('http://localhost:8545'), // L'adresse de votre nœud Hardhat
+  });
+
 app.listen(PORT, async () => {
-  
-    /*const publicClient = createPublicClient({
-        chain: hardhat,
-        transport: http('http://46.226.107.26:8545'), 
-        })
-    
+      
     const walletClient = createWalletClient({
         chain: hardhat,
-        transport: http('http://46.226.107.26:8545'), 
+        transport: http('http://localhost:8545'), 
         })
 
-    console.log("Entering...", publicClient, walletClient)*/
+    console.log("Entering...", publicClient, walletClient)
           
     // Initialize globalState variable (Warning : async / wait not possible so wallet / public clients deactivated)
     // to be changed
@@ -49,23 +49,11 @@ app.listen(PORT, async () => {
   if (await readLastDiamondJSONfile()) {
 
     try {                
-        const getRoot = await hre.viem.getContractAt( 
-            diamondNames.Diamond.name, 
-            diamondNames.Diamond.address
-            );
-
         colorOutput("Connection to Root >> ", "cyan")
         
         console.log( diamondNames.Diamond.abi)
         
-        const client : any = (globalState.clients)[0];
-
-        const publicClient = createPublicClient({
-            chain: mainnet,
-            transport: http()
-          })
-
-        const wallet = await publicClient.readContract({
+        const wallet = await client.readContract({
             address: diamondNames.Diamond.address,
             abi: diamondNames.Diamond.abi,
             functionName: 'beacon_T2G_Root',
