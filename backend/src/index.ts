@@ -72,8 +72,8 @@ app.listen(PORT, async () => {
             args: []
           })
         //root 
-
-        colorOutput("Fectch Stable Coint Wallet@ >> ".concat(wallet, " ", wallet), "cyan")
+        console.log(wallet);
+        colorOutput("Fectch Stable Coint Wallet@ >> ", "cyan")
 
         /*initialized = await addAccount( 
             10, 
