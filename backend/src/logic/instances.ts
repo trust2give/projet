@@ -5,7 +5,7 @@ import { dataDecodeABI, abiData, honeyFeatures, pollenFeatures, Typeoftoken, Sta
 import { colorOutput } from "../libraries/format";
 import { contractRecord, rwRecord, rwType, menuRecord, Account, NULL_ADDRESS, regex, regex2, regex3 } from "../libraries/types";
 import { accountIndex, convertType, enumOrValue } from "../libraries/utils";
-import { accountRefs, globalState } from "../logic/states";
+import { accountRefs, globalState, clientFormat } from "../logic/states";
 
 /// setrwRecordFromSmart represents the first function to call up when setting up an interaction
 /// with a smart contract, to retreive the instance of the smart contract and and the abi
@@ -46,7 +46,7 @@ export const setConstructorFromInstance = async (facet: string, root: Address, s
     const instance =  await hre.viem.getContractAt( 
         record.contract, 
         root, 
-        { client: { wallet: globalState.wallets[<number>sender] } } 
+        { client: { wallet: (<clientFormat[]>globalState.wallets)[<number>sender] } } 
         );
 
     const constructor = (instance.abi.filter((item: abiData) => item.type == "constructor"))
@@ -138,6 +138,6 @@ async function getInstanceFromSmartRecord( record: menuRecord ) : Promise<any> {
     return await hre.viem.getContractAt( 
         record.contract, 
         (root != undefined) ? root : accounts[10].address, 
-        { client: { wallet: globalState.wallets[<number>index] } } 
+        { client: { wallet: (<clientFormat[]>globalState.wallets)[<number>index] } } 
         );                    
     }

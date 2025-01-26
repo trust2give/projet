@@ -1,10 +1,10 @@
-import hre from "hardhat";
+const hre = require("hardhat");
 import { Address, encodeFunctionData } from "viem";
 import { FacetCutAction, getSelectors } from "../utils/diamond";
 import { Account, regex, NULL_ADDRESS, cutRecord, contractRecord, diamondCore } from "../libraries/types";
 import { diamondNames, tokenCredential, contractSet, facetNames } from "../T2G_Data";
 import { colorOutput } from "../libraries/format";
-import { accountRefs, globalState } from "../logic/states";
+import { accountRefs, globalState, clientFormat } from "../logic/states";
 
 
 export async function getOrDeployContract( contract : contractRecord, name: string, action: FacetCutAction | undefined ) : Promise<Address> {
@@ -83,7 +83,7 @@ export async function deployDiamond() : Promise<any> {
         );
 
     diamond = await hre.viem.deployContract( diamName, [
-        globalState.wallets[0].account.address,
+        (<clientFormat[]>globalState.wallets)[0].account.address,
         diamondCutFacet.address
         ]);
 
@@ -164,7 +164,7 @@ export async function deployFacets( name: string, action: FacetCutAction, constr
                 facet = await hre.viem.deployContract( 
                     <string>name, 
                     constructor, 
-                    { client: { wallet: globalState.wallets[0] }, }
+                    { client: { wallet: (<clientFormat[]>globalState.wallets)[0] }, }
                     );
                 }
             else {
@@ -234,7 +234,7 @@ export async function deployWithDiamondCut( cut : cutRecord[], initFunc: `0x${st
             ]
         });
 
-    const tx = await globalState.wallets[0].writeContract(request);
+    const tx = await (<clientFormat[]>globalState.wallets)[0].writeContract(request);
     await globalState.clients.waitForTransactionReceipt({ hash: tx });
 
     colorOutput(

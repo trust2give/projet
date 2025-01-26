@@ -12,7 +12,7 @@ import { wlist,
 import { colorOutput } from "../libraries/format";
 import { abiData } from "../interface/types";
 import { rwRecord, cutRecord, menuRecord, Account, NULL_ADDRESS, regex, regex2, regex3 } from "../libraries/types";
-import { accountRefs, globalState } from "./states";
+import { accountRefs, globalState, clientFormat } from "./states";
 import { setConstructorFromInstance } from "./instances";
 import { Address } from "viem";
 
@@ -101,7 +101,7 @@ export async function DeployContracts( answer : string ) {
 
             const raw = await init.write.updateAddressAndKeys( 
               [ NULL_ADDRESS, contractSet[0].address, "0x0000000000000000000000000000000000000000000000000000000000000000" ], 
-              { client: { wallet: globalState.wallets[0] } } 
+              { client: { wallet: (<clientFormat[]>globalState.wallets)[0] } } 
               );
   
             colorOutput(
@@ -197,12 +197,12 @@ export async function DeployContracts( answer : string ) {
             
             const walletAndKey = await instance.read[<string>isWallet.wallet]( 
               [], 
-              { client: { wallet: globalState.wallets[0] } } 
+              { client: { wallet: (<clientFormat[]>globalState.wallets)[0] } } 
               );
 
             const raw = await init.write.updateAddressAndKeys( 
               [ writeList[<string>facet.contract], walletAndKey[0], walletAndKey[1] ], 
-              { client: { wallet: globalState.wallets[0] } } 
+              { client: { wallet: (<clientFormat[]>globalState.wallets)[0] } } 
               );
     
             colorOutput(
@@ -236,7 +236,7 @@ export async function DeployContracts( answer : string ) {
             const init = await hre.viem.getContractAt( diamondNames.Diamond.name, diamondNames.Diamond.address )
             const raw = await init.write.updateAddressAndKeys( 
               [ NULL_ADDRESS, instance.address, "0x0000000000000000000000000000000000000000000000000000000000000000" ], 
-              { client: { wallet: globalState.wallets[0] } } );
+              { client: { wallet: (<clientFormat[]>globalState.wallets)[0] } } );
 
             colorOutput(`Update EUR @ ${contractSet[0].name} Tx: ${raw}`, "magenta");            
             }
