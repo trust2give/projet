@@ -22,7 +22,7 @@ app.use('/T2G', userRoutes); // Utilisation des routes des utilisateurs
 
 app.listen(PORT, async () => {
   
-    const publicClient = createPublicClient({
+    /*const publicClient = createPublicClient({
         chain: hardhat,
         transport: http('http://46.226.107.26:8545'), 
         })
@@ -32,8 +32,8 @@ app.listen(PORT, async () => {
         transport: http('http://46.226.107.26:8545'), 
         })
 
-    console.log("Entering...", publicClient, walletClient)
-      
+    console.log("Entering...", publicClient, walletClient)*/
+          
     // Initialize globalState variable (Warning : async / wait not possible so wallet / public clients deactivated)
     // to be changed
   initState();

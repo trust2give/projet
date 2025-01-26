@@ -1,6 +1,5 @@
 const hre = require("hardhat");
-import { Address } from "viem";
-
+import { Address, parseEther, formatEther } from "viem";
 import { rwRecord, Account, NULL_ADDRESS } from "../libraries/types";
 
 export type  menuState = {
@@ -117,6 +116,22 @@ export function initState() {
 export async function loadWallets() {
     globalState.wallets = await hre.viem.getWalletClients();        
     globalState.clients = await hre.viem.getPublicClient();
+
+    const balance = await globalState.clients.getBalance({
+        address: globalState.wallets[0].account.address,
+        });
+
+    console.log(
+        `Balance of ${globalState.wallets[0].account.address}: ${formatEther(balance)} ETH`
+        );
+
+    const hash = await globalState.wallets[0].sendTransaction({
+        to: globalState.wallets[1].account.address,
+        value: parseEther("1"),
+        });
+
+    await globalState.clients.waitForTransactionReceipt({ hash });
+
     }
 
 export function functionState( level?: string ) {
