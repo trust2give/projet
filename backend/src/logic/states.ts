@@ -117,20 +117,22 @@ export async function loadWallets() {
     globalState.wallets = await hre.viem.getWalletClients();        
     globalState.clients = await hre.viem.getPublicClient();
 
-    const balance = await globalState.clients.getBalance({
-        address: globalState.wallets[0].account.address,
-        });
+    for (const account of globalState.wallets) {
+        const balance = await globalState.clients.getBalance({
+            address: account[0].account.address,
+            });
+    
+        console.log(
+            `Balance of ${account[0].account.address}: ${formatEther(balance)} ETH`
+            );
+        }
 
-    console.log(
-        `Balance of ${globalState.wallets[0].account.address}: ${formatEther(balance)} ETH`
-        );
-
-    const hash = await globalState.wallets[0].sendTransaction({
+    /*const hash = await globalState.wallets[0].sendTransaction({
         to: globalState.wallets[1].account.address,
         value: parseEther("1"),
         });
 
-    await globalState.clients.waitForTransactionReceipt({ hash });
+    await globalState.clients.waitForTransactionReceipt({ hash });*/
 
     }
 
