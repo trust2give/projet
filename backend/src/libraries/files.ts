@@ -85,9 +85,24 @@ export async function readLastDiamondJSONfile() : Promise<boolean> {
     if (!DiamondCore.Diamond.address.match(regex)) return false;
     
     diamondNames.Diamond = <contractRecord>DiamondCore.Diamond;
+
+    console.log("===========================")
+    console.log(diamondNames.Diamond);
+
     diamondNames.DiamondInit = <contractRecord>DiamondCore.DiamondInit;
+
+    console.log("===========================")
+    console.log(diamondNames.DiamondInit);
+
     diamondNames.DiamondCutFacet = <contractRecord>DiamondCore.DiamondCutFacet;
+
+    console.log("===========================")
+    console.log(diamondNames.DiamondCutFacet);
+
     diamondNames.DiamondLoupeFacet = <contractRecord>DiamondCore.DiamondLoupeFacet;
+
+    console.log("===========================")
+    console.log(diamondNames.DiamondLoupeFacet);
 
     return true;
     }
