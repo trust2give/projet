@@ -54,12 +54,22 @@ export async function deployDiamond() : Promise<any> {
     var diamondCutFacet; // on récupère l'instance DiamondCutFacet
     var diamondInit;
 
+    colorOutput(
+        `Deploying Diamond Root Smart Contract`, 
+        "cyan"
+        );
+
     var CutName : string = (diamondNames.DiamondCutFacet.name || "DiamondCutFacet");
 
     var initFunc = NULL_ADDRESS;
     var diamName : string = (diamondNames.Diamond.name || "Diamond");
 
-    // On est dans le cas où on créé un nouveau T2G_Root
+    colorOutput(
+        `Root Name: ${diamName} CutFacet Name: ${CutName} Owner@: ${globalState.wallets[0].address}`, 
+        "yellow"
+        );
+
+        // On est dans le cas où on créé un nouveau T2G_Root
 
     const before = await globalState.clients.getBalance({ 
         address: globalState.wallets[0].address,
