@@ -4,7 +4,7 @@ import { mainnet, hardhat } from 'viem/chains'
 import express from 'express';
 import userRoutes from './routes/userRoutes';
 import cors from 'cors';
-import { accountRefs, initState, addAccount, accountType, globalState, assignAccounts, updateAccountBalance, loadWallets } from "./logic/states";
+import { accountRefs, initState, addAccount, clientFormat, globalState, assignAccounts, updateAccountBalance, loadWallets } from "./logic/states";
 import { readLastContractSetJSONfile, readLastDiamondJSONfile } from "./libraries/files";
 import { contractSet, diamondNames, facetNames, smart, smartEntry, encodeInterfaces } from "./T2G_Data";
 import { contractRecord, rwRecord, rwType, menuRecord, Account, NULL_ADDRESS, regex, regex2, regex3 } from "./libraries/types";
@@ -63,7 +63,7 @@ app.listen(PORT, async () => {
 
         const wallet : any[] = await getRoot.read.wallet_T2G_root( 
             [], 
-            { wallet: globalState.wallets[0] } 
+            { wallet: (<clientFormat[]>globalState.wallets)[0] } 
             ) //root 
 
         colorOutput("Fectch Stable Coint Wallet@ >> ".concat(wallet[0], " ", wallet[1]), "cyan")
