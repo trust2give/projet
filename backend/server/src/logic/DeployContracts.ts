@@ -85,12 +85,12 @@ export async function DeployContracts( answer : string ) {
               ), 
             "green"
             );
-          
+          /*
           await writeLastFacetJSONfile( 
             {}, 
             diamondNames.Diamond.address 
             );
-
+*/
           // Here we update address registration for EUR if not exusting
           if (contractSet[0].address != NULL_ADDRESS) {
 
@@ -109,7 +109,6 @@ export async function DeployContracts( answer : string ) {
               "magenta"
               );            
             }
-        break;
         }
       case "Loupe": {
           cut = await deployLoupeDiamond( 
