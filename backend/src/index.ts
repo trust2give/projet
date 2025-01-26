@@ -56,6 +56,8 @@ app.listen(PORT, async () => {
 
         colorOutput("Connection to Root >> ", "cyan")
         
+        console.log( diamondNames.Diamond.abi)
+        
         const client : any = (globalState.clients)[0];
         
         const wallet : any[] = await globalState.clients.readContract({
