@@ -124,11 +124,11 @@ export async function loadWallets() {
 
     for (const account of globalState.wallets) {
         const balance = await globalState.clients.getBalance({
-            address: account[0].account.address,
+            address: (<clientFormat>account).account.address,
             });
     
         console.log(
-            `Balance of ${account[0].account.address}: ${formatEther(balance)} ETH`
+            `Balance of ${(<clientFormat>account).account.address}: ${formatEther(balance)} ETH`
             );
         }
 
