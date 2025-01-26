@@ -60,7 +60,12 @@ app.listen(PORT, async () => {
         
         const client : any = (globalState.clients)[0];
         
-        const wallet : any[] = await globalState.clients.readContract({
+        const publicClient = createPublicClient({
+            chain: mainnet,
+            transport: http()
+          })
+
+        const wallet = await publicClient.readContract({
             address: diamondNames.Diamond.address,
             abi: diamondNames.Diamond.abi,
             functionName: 'beacon_T2G_Root',
