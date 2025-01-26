@@ -56,19 +56,19 @@ app.listen(PORT, async () => {
         const wallet = await client.readContract({
             address: diamondNames.Diamond.address,
             abi: diamondNames.Diamond.abi,
-            functionName: 'beacon_T2G_Root',
+            functionName: 'wallet_T2G_Root',
             args: []
           })
         //root 
         console.log(wallet);
         colorOutput("Fectch Stable Coint Wallet@ >> ", "cyan")
 
-        /*initialized = await addAccount( 
+        initialized = await addAccount( 
             10, 
             diamondNames.Diamond.name, 
             diamondNames.Diamond.address, 
-            wallet
-            );*/
+            <Array<any>>wallet
+            );
 
         colorOutput("Root Diamont Initialized >> ".concat( (initialized) ? "OK" : "NOK" ), "cyan")
         }
