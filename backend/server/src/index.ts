@@ -8,7 +8,7 @@ import { readLastContractSetJSONfile, readLastDiamondJSONfile } from "./librarie
 import { contractSet, diamondNames, facetNames, smart, smartEntry, encodeInterfaces } from "./T2G_Data";
 import { contractRecord, rwRecord, rwType, menuRecord, Account, NULL_ADDRESS, regex, regex2, regex3 } from "./libraries/types";
 import { DeployContracts } from './logic/DeployContracts';
-import { colorOutput } from "../libraries/format";
+import { colorOutput } from "./libraries/format";
 
 const app = express();
 const PORT = 8080;
@@ -43,7 +43,7 @@ app.listen(PORT, async () => {
 
         colorOutput("Connection to Root >> ", "cyan")
 
-        const wallet : Address = await getRoot.read.wallet_T2G_root( 
+        const wallet : any[] = await getRoot.read.wallet_T2G_root( 
             [], 
             { wallet: globalState.wallets[0] } 
             ) //root 
