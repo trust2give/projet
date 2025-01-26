@@ -46,7 +46,7 @@ app.listen(PORT, async () => {
             diamondNames.Diamond.address, 
             await getRoot.read.wallet_T2G_root( 
                 [], 
-                accountRefs[<accKeys>`@0`].client 
+                { wallet: globalState.wallets[0] } 
                 ) //root 
             );        
         }
