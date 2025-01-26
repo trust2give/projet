@@ -186,7 +186,7 @@ export async function deployFacets( name: string, action: FacetCutAction, constr
         address: (<Address>facet.address),
         })
                     
-    colorOutput( "[".concat( eventLogs.map((event) => {
+    colorOutput( "[".concat( eventLogs.map((event: any) => {
         return " >> Event ".concat( event.eventName, "[ ", Object.values(event.args).join("| "), " ]" );
         }).join("\n"), "]" ), "yellow");
 
