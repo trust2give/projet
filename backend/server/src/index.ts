@@ -49,19 +49,21 @@ app.listen(PORT, async () => {
 
         colorOutput("Connection to Root >> ", "cyan")
 
-        const wallet : any[] = await getRoot.read.wallet_T2G_root( 
+        const wallet : string = await getRoot.read.beacon_T2G_Root( 
             [], 
             { wallet: globalState.wallets[0] } 
             ) //root 
 
-        colorOutput("Fectch Stable Coint Wallet@ >> ".concat(wallet[0], " ", wallet[1]), "cyan")
+        colorOutput("Fectch Stable Coint Wallet@ >> ".concat(wallet), "cyan")
 
-        initialized = await addAccount( 
+        //colorOutput("Fectch Stable Coint Wallet@ >> ".concat(wallet[0], " ", wallet[1]), "cyan")
+
+        /*initialized = await addAccount( 
             10, 
             diamondNames.Diamond.name, 
             diamondNames.Diamond.address, 
             wallet
-            );        
+            );  */      
 
         colorOutput("Root Diamont Initialized >> ".concat( (initialized) ? "OK" : "NOK" ), "cyan")
         }
