@@ -56,20 +56,27 @@ app.listen(PORT, async () => {
 
         colorOutput("Connection to Root >> ", "cyan")
         
-        const client : any = (<clientFormat[]>globalState.wallets)[0];
+        const client : any = (globalState.clients)[0];
         
-        const contract = getContract({
+        /*const contract = getContract({
             address: diamondNames.Diamond.address,
             abi: getRoot.instance.abi,
             client: { wallet: client }
-          })
+          })*/
 
         console.log(getRoot.instance.abi)
 
-        const wallet : any[] = await contract.read.wallet_T2G_root( 
+        const wallet : any[] = await client.readContract({
+            address: diamondNames.Diamond.address,
+            abi: getRoot.instance.abi,
+            functionName: 'wallet_T2G_root',
+          })
+        
+        /*const wallet : any[] = await contract.read.wallet_T2G_root( 
             [], 
             { wallet: (<clientFormat[]>globalState.wallets)[0] } 
-            ) //root 
+            ) */ 
+           //root 
 
         colorOutput("Fectch Stable Coint Wallet@ >> ".concat(wallet[0], " ", wallet[1]), "cyan")
 
