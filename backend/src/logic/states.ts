@@ -18,7 +18,7 @@ export type  menuState = {
     log?: string,
     pad?: number,
     accountIndex?: number,
-    wallets?: any,
+    wallets?: clientFormat[],
     clients?: any
     }
 
@@ -35,6 +35,11 @@ export type accountType = {
 export interface accountList {
     [cle: string]: accountType; // Ici, 'cle' est le nom variable et 'number' est le type fixe
 }
+
+export interface clientFormat {
+    [cle: string]: any,
+    account: { address: Address, type: string }
+    }
 
 // globalState represents the set of variables that points out the current status of the interactions with user 
 // and the Smart Contracts. The global variable is exported for use in the different functions
@@ -114,7 +119,7 @@ export function initState() {
 
 // Used
 export async function loadWallets() {
-    globalState.wallets = await hre.viem.getWalletClients();        
+    globalState.wallets = <clientFormat[]>await hre.viem.getWalletClients();        
     globalState.clients = await hre.viem.getPublicClient();
 
     for (const account of globalState.wallets) {
