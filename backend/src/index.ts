@@ -58,7 +58,7 @@ app.listen(PORT, async () => {
         
         const client : any = (globalState.clients)[0];
         
-        const wallet : any[] = await client.readContract({
+        const wallet : any[] = await globalState.clients.readContract({
             address: diamondNames.Diamond.address,
             abi: diamondNames.Diamond.abi,
             functionName: 'wallet_T2G_root',
