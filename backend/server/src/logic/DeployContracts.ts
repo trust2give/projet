@@ -86,10 +86,10 @@ export async function DeployContracts( answer : string ) {
             "green"
             );
           
-          /*await writeLastFacetJSONfile( 
+          await writeLastFacetJSONfile( 
             {}, 
             diamondNames.Diamond.address 
-            );*/
+            );
 
           // Here we update address registration for EUR if not exusting
           if (contractSet[0].address != NULL_ADDRESS) {
