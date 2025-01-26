@@ -75,7 +75,7 @@ app.listen(PORT, async () => {
     catch (error) {
         console.error(">> Error :: No T2G_Root initialized @ %s", diamondNames.Diamond.address, error)
 
-        await DeployContracts( "Diamond Add T2G_Root");
+        //await DeployContracts( "Diamond Add T2G_Root");
         }
 
     if (await readLastContractSetJSONfile()) {

@@ -85,7 +85,7 @@ export async function readLastDiamondJSONfile() : Promise<boolean> {
     if (DiamondCore.Diamond.name != "T2G_root") return false;
     if (!DiamondCore.Diamond.address.match(regex)) return false;
 
-    const jsonDiamond = fs.readFileSync('./contracts/artifacts/T2G_root.json', 'utf-8');
+    const jsonDiamond = fs.readFileSync('./artifacts/contracts/T2G_root.sol/T2G_root.json', 'utf-8');
     const diamondABI : any = JSON.parse(jsonDiamond);
     
     diamondNames.Diamond = <contractRecord>DiamondCore.Diamond;
