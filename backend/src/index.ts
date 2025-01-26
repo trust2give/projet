@@ -32,7 +32,7 @@ app.listen(PORT, async () => {
         transport: http('http://localhost:8545'), 
         })
 
-    console.log("Entering...", publicClient, walletClient)
+    console.log("Entering...", client, walletClient)
           
     // Initialize globalState variable (Warning : async / wait not possible so wallet / public clients deactivated)
     // to be changed
