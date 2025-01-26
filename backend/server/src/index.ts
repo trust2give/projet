@@ -7,6 +7,7 @@ import { accountRefs, initState, addAccount, accountType, globalState, assignAcc
 import { readLastContractSetJSONfile, readLastDiamondJSONfile } from "./libraries/files";
 import { contractSet, diamondNames, facetNames, smart, smartEntry, encodeInterfaces } from "./T2G_Data";
 import { contractRecord, rwRecord, rwType, menuRecord, Account, NULL_ADDRESS, regex, regex2, regex3 } from "./libraries/types";
+import { DeployContracts } from './logic/DeployContracts';
 
 const app = express();
 const PORT = 8080;
@@ -28,7 +29,6 @@ app.listen(PORT, async () => {
 
   // Initialize wallet/accounts and their balance from hardhat node
   await loadWallets();
-
   await assignAccounts();
   await updateAccountBalance();
 
@@ -52,6 +52,8 @@ app.listen(PORT, async () => {
         }
     catch (error) {
         console.error(">> Error :: No T2G_Root initialized @ %s", diamondNames.Diamond.address, error)
+
+        
         }
 
     if (await readLastContractSetJSONfile()) {
@@ -65,6 +67,8 @@ app.listen(PORT, async () => {
             }
         catch (error) {
             console.error(">> Error :: No StableCoin Contract initialized @ %s ", contractSet[0].address, error)
+
+            await DeployContracts( "Diamond Add T2G_Root");
             }
         }
     
