@@ -21,11 +21,6 @@ app.use(cors());
 app.use(express.json()); // Middleware pour parser le JSON
 app.use('/T2G', userRoutes); // Utilisation des routes des utilisateurs
 
-const client = createPublicClient({
-    chain: hardhat,
-    transport: http('http://localhost:8545'), // L'adresse de votre nœud Hardhat
-  });
-
 app.listen(PORT, async () => {
       
     const walletClient = createWalletClient({
@@ -33,7 +28,7 @@ app.listen(PORT, async () => {
         transport: http('http://localhost:8545'), 
         })
 
-    console.log("Entering...", client, walletClient)
+    console.log("Entering...")
           
     // Initialize globalState variable (Warning : async / wait not possible so wallet / public clients deactivated)
     // to be changed
@@ -52,7 +47,7 @@ app.listen(PORT, async () => {
     try {                
         colorOutput("Connection to Root >> ", "cyan")
                 
-        const wallet = await client.readContract({
+        const wallet = await globalState.clients.readContract({
             address: diamondNames.Diamond.address,
             abi: diamondNames.Diamond.abi.file,
             functionName: 'wallet_T2G_root',
@@ -104,14 +99,14 @@ app.listen(PORT, async () => {
 
                 const facetABI : any = JSON.parse(jsonFacet);
                 
-                const get : Address = (facet.get) ? <Address>await client.readContract({
+                const get : Address = (facet.get) ? <Address>await globalState.clients.readContract({
                     address: diamondNames.Diamond.address,
                     abi: facetABI.abi,
                     functionName: <string>facet.get,
                     args: []
                     }) : NULL_ADDRESS;
 
-                const wallet : any[] = (facet.wallet) ? <any[]>await client.readContract({
+                const wallet : any[] = (facet.wallet) ? <any[]>await globalState.clients.readContract({
                     address: diamondNames.Diamond.address,
                     abi: facetABI.abi,
                     functionName: <string>facet.wallet,
@@ -134,6 +129,5 @@ app.listen(PORT, async () => {
         } 
     }
 
-  
   console.log(`Serveur en écoute sur le port ${PORT}`);
 });

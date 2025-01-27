@@ -2,6 +2,8 @@ import { Router, Request, Response } from 'express';
 import { getUserById, addUser } from '../services/userService';
 import { globalState } from '../logic/states';
 import { returnAccountTable } from "../libraries/format";
+import { showBeacons } from "../logic/beacons";
+import { contractSet, diamondNames, facetNames, smart, smartEntry, encodeInterfaces } from "../T2G_Data";
 
 const router = Router();
 
@@ -13,6 +15,10 @@ router.get('/', async (req, res) => {
   console.log("GET initialized", call, inputs);
   
   switch (call) {
+    case "state": {
+      res.json( await showBeacons( [diamondNames.Diamond, ...facetNames, ...contractSet] ) );
+      break;
+      }
     case "user": {
       if (inputs) {
         try {
@@ -37,10 +43,6 @@ router.get('/', async (req, res) => {
         }  
       break;
     }
-    case "state": {
-        res.json(globalState);
-        break;
-        }
     case "accounts": {
       res.json(returnAccountTable());
       break;

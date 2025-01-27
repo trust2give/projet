@@ -1,6 +1,6 @@
 import { Address } from "viem";
 import fs from 'fs';
-import { diamondNames, contractSet } from "../T2G_Data";
+import { diamondNames, contractSet, facetNames } from "../T2G_Data";
 import { contractRecord, diamondCore, Account, NULL_ADDRESS, regex, regex2, regex3 } from "./types";
 import { abiItem } from "../interface/types";
 
