@@ -99,7 +99,7 @@ export async function readLastContractSetJSONfile() : Promise<boolean> {
     const jsonEUR = fs.readFileSync(contractSet[0].abi.path, 'utf-8');
     const eurABI : any = JSON.parse(jsonEUR);
 
-    console.log( eurABI );
+    console.log( "__________", eurABI );
     console.log( contractSet[0].abi );
     
     contractSet[0] = <contractRecord>item;
