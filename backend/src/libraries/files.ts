@@ -85,7 +85,11 @@ export async function readLastDiamondJSONfile() : Promise<boolean> {
 
     diamondNames.DiamondCutFacet = <contractRecord>DiamondCore.DiamondCutFacet;
 
-    diamondNames.DiamondLoupeFacet = <contractRecord>DiamondCore.DiamondLoupeFacet;
+    const jsonLoupe = fs.readFileSync( diamondNames.DiamondLoupeFacet.abi.path, 'utf-8');
+    const loupeABI : any = JSON.parse(jsonLoupe);
+
+    diamondNames.DiamondLoupeFacet.address = <Address>DiamondCore.DiamondLoupeFacet.address;
+    diamondNames.DiamondLoupeFacet.abi.file = loupeABI.abi;
 
     return true;
     }

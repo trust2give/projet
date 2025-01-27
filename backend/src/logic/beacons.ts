@@ -6,21 +6,7 @@ import { accountType, accountRefs, globalState, setState, addAccount, updateAcco
 import fs from 'fs';
 
 export const showBeacons = async ( records: contractRecord[] ) : Promise<string[]> => {
-
-    const jsonLoupe = fs.readFileSync( 
-        diamondNames.DiamondLoupeFacet.abi.path, 
-        'utf-8' 
-        );
-
-    const loupeABI : any = JSON.parse(jsonLoupe);
-    
-    const facets = await globalState.clients.readContract({
-        address: diamondNames.Diamond.address,
-        abi: loupeABI.abi,
-        functionName: "facetAddresses",
-        args: []
-        });
-    
+        
     var result : string[] = [];
 
     for ( const item of records) {
