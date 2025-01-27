@@ -26,25 +26,87 @@ import { accountRefs, accountType, globalState, setState, addAccount, assignAcco
 /// Pour retrouver les addresses des derniers contracts déployés T2G_Root et EUR (Contract StableCoin Mock-up)
 
 export const contractSet : contractRecord[] = [
-  { name: "EUR", abi: undefined, address: NULL_ADDRESS, get: 'get_EUR' },
+  { name: "EUR", 
+    abi: { path: './artifacts/contracts/EurSC.sol/EUR.json', file: undefined}, 
+    address: NULL_ADDRESS, 
+    get: 'get_EUR' 
+  },
   ]
 
 export const facetNames : contractRecord[] = [
-  { name: 'OwnershipFacet', abi: undefined, address: NULL_ADDRESS },
-  { name: 'ERC721Facet', abi: undefined, address: NULL_ADDRESS, beacon: 'beacon_ERC721Facet' },
-  { name: 'T2G_NektarFacet', abi: undefined, address: NULL_ADDRESS, beacon: 'beacon_NektarFacet', get: 'get_T2G_NektarFacet' },
-  { name: 'T2G_PollenFacet', abi: undefined, address: NULL_ADDRESS, beacon: 'beacon_PollenFacet', get: 'get_T2G_PollenFacet', wallet: 'wallet_PollenFacet' },
-  { name: 'T2G_HoneyFacet', abi: undefined, address: NULL_ADDRESS, beacon: 'beacon_HoneyFacet', get: 'get_T2G_HoneyFacet', wallet: 'wallet_HoneyFacet' },
-  { name: 'T2G_PoolFacet', abi: undefined, address: NULL_ADDRESS, beacon: 'beacon_PoolFacet', get: 'get_T2G_PoolFacet', wallet: "wallet_PoolFacet" },
-  { name: 'T2G_EntityFacet', abi: undefined, address: NULL_ADDRESS, beacon: 'beacon_EntityFacet', get: 'get_T2G_EntityFacet' },
-  { name: 'T2G_SyndicFacet', abi: undefined, address: NULL_ADDRESS, beacon: 'beacon_SyndicFacet', get: 'get_T2G_SyndicFacet' }
+  { name: 'OwnershipFacet', 
+    abi: { path: './artifacts/contracts/facets/OwnershipFacet.sol/OwnershipFacet.json', file: undefined}, 
+    address: NULL_ADDRESS 
+  },
+  { name: 'ERC721Facet', 
+    abi: { path: './artifacts/contracts/facets/ERC721Facet.sol/ERC721Facet.json', file: undefined}, 
+    address: NULL_ADDRESS, 
+    beacon: 'beacon_ERC721Facet' 
+  },
+  { name: 'T2G_NektarFacet', 
+    abi: { path: './artifacts/contracts/facets/NektarFacet.sol/T2G_NektarFacet.json', file: undefined}, 
+    address: NULL_ADDRESS, 
+    beacon: 'beacon_NektarFacet', 
+    get: 'get_T2G_NektarFacet' 
+  },
+  { name: 'T2G_PollenFacet', 
+    abi: { path: './artifacts/contracts/facets/PollenFacet.sol/T2G_PollenFacet.json', file: undefined}, 
+    address: NULL_ADDRESS, 
+    beacon: 'beacon_PollenFacet', 
+    get: 'get_T2G_PollenFacet', 
+    wallet: 'wallet_PollenFacet' 
+  },
+  { name: 'T2G_HoneyFacet', 
+    abi: { path: './artifacts/contracts/facets/HoneyFacet.sol/T2G_HoneyFacet.json', file: undefined}, 
+    address: NULL_ADDRESS, 
+    beacon: 'beacon_HoneyFacet', 
+    get: 'get_T2G_HoneyFacet', 
+    wallet: 'wallet_HoneyFacet' 
+  },
+  { name: 'T2G_PoolFacet', 
+    abi: { path: './artifacts/contracts/facets/PoolFacet.sol/T2G_PoolFacet.json', file: undefined}, 
+    address: NULL_ADDRESS, 
+    beacon: 'beacon_PoolFacet', 
+    get: 'get_T2G_PoolFacet', 
+    wallet: "wallet_PoolFacet" 
+  },
+  { name: 'T2G_EntityFacet', 
+    abi: { path: './artifacts/contracts/facets/EntityFacet.sol/T2G_EntityFacet.json', file: undefined}, 
+    address: NULL_ADDRESS, 
+    beacon: 'beacon_EntityFacet', 
+    get: 'get_T2G_EntityFacet' 
+  },
+  { name: 'T2G_SyndicFacet', 
+    abi: { path: './artifacts/contracts/facets/SyndicFacet.sol/T2G_SyndicFacet.json', file: undefined}, 
+    address: NULL_ADDRESS, 
+    beacon: 'beacon_SyndicFacet', 
+    get: 'get_T2G_SyndicFacet' 
+  }
   ]
 
 export const diamondNames : diamondCore = {
-    Diamond: { name: "T2G_root", abi: undefined, address: NULL_ADDRESS, beacon: 'beacon_T2G_Root', wallet: "wallet_T2G_root" },
-    DiamondCutFacet: { name: "DiamondCutFacet", abi: undefined, address: NULL_ADDRESS },
-    DiamondLoupeFacet: { name: "DiamondLoupeFacet", abi: undefined, address: NULL_ADDRESS },
-    DiamondInit: { name: "DiamondInit", abi: undefined, address: NULL_ADDRESS },
+    Diamond: { 
+      name: "T2G_root", 
+      abi: { path: './artifacts/contracts/T2G_root.sol/T2G_root.json', file: undefined }, 
+      address: NULL_ADDRESS, 
+      beacon: 'beacon_T2G_Root', 
+      wallet: "wallet_T2G_root" 
+      },
+    DiamondCutFacet: { 
+      name: "DiamondCutFacet", 
+      abi: { path: './artifacts/contracts/facets/DiamondCutFacet.sol/DiamondCutFacet.json', file: undefined}, 
+      address: NULL_ADDRESS 
+      },
+    DiamondLoupeFacet: { 
+      name: "DiamondLoupeFacet", 
+      abi: { path: './artifacts/contracts/facets/DiamondLoupeFacet.sol/DiamondLoupeFacet.json', file: undefined}, 
+      address: NULL_ADDRESS 
+      },
+    DiamondInit: { 
+      name: "DiamondInit", 
+      abi: { path: './artifacts/contracts/upgradeInitializers/DiamondInit.sol/DiamondInit.json', file: undefined}, 
+      address: NULL_ADDRESS 
+      },
     }
 
 export const tokenCredential = { 

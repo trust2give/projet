@@ -10,6 +10,7 @@ import { contractSet, diamondNames, facetNames, smart, smartEntry, encodeInterfa
 import { contractRecord, rwRecord, rwType, menuRecord, Account, NULL_ADDRESS, regex, regex2, regex3 } from "./libraries/types";
 import { DeployContracts } from './logic/DeployContracts';
 import { colorOutput } from "./libraries/format";
+import fs from 'fs';
 
 const app = express();
 const PORT = 8080;
@@ -50,17 +51,14 @@ app.listen(PORT, async () => {
 
     try {                
         colorOutput("Connection to Root >> ", "cyan")
-        
-        console.log( diamondNames.Diamond.abi)
-        
+                
         const wallet = await client.readContract({
             address: diamondNames.Diamond.address,
             abi: diamondNames.Diamond.abi,
             functionName: 'wallet_T2G_root',
             args: []
           })
-        //root 
-        console.log(wallet);
+
         colorOutput("Fectch Stable Coint Wallet@ >> ", "cyan")
 
         initialized = await addAccount( 
@@ -74,12 +72,13 @@ app.listen(PORT, async () => {
         }
     catch (error) {
         console.error(">> Error :: No T2G_Root initialized @ %s", diamondNames.Diamond.address, error)
-
-        //await DeployContracts( "Diamond Add T2G_Root");
         }
 
     if (await readLastContractSetJSONfile()) {
+
         try {
+            colorOutput("Connection to Eur StableCoin >> ", "cyan");
+
             await addAccount( 
                 11, 
                 contractSet[0].name, 
@@ -94,38 +93,42 @@ app.listen(PORT, async () => {
     
     if (initialized) {
         var rank = 12;
-        type AccountKeys = keyof typeof Account;
-        const indice = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        for (const facet of facetNames) {
-            if (smart.findIndex((item) => item.contract == facet.name) > -1) {
 
-                const getAddr = await hre.viem.getContractAt( 
-                    facet.name, 
-                    diamondNames.Diamond.address
+        for (const facet of facetNames) {        
+            try {    
+
+                const jsonFacet = fs.readFileSync( 
+                    facet.abi.path, 
+                    'utf-8' 
                     );
 
-                try {    
+                const facetABI : any = JSON.parse(jsonFacet);
+                
+                const get : Address = (facet.get) ? <Address>await client.readContract({
+                    address: diamondNames.Diamond.address,
+                    abi: facetABI.abi,
+                    functionName: <string>facet.get,
+                    args: []
+                    }) : NULL_ADDRESS;
 
-                    const get : Address = (facet.get) ? await getAddr.read[<string>facet.get]( 
-                        [], 
-                        accountRefs[<accKeys>`@0`].client 
-                        ) : NULL_ADDRESS;                
-                                            
-                    await addAccount( 
-                        rank, 
-                        facet.name, 
-                        get, 
-                        (facet.wallet) ? await getAddr.read[<string>facet.wallet]( 
-                            [], 
-                            accountRefs[<accKeys>`@0`].client 
-                            ) : [] 
-                        );
-    
-                    rank++;
-                    }
-                catch (error) {
-                    console.error(">> Error :: No Facet Contract initialized %s, @ %s", facet.name, diamondNames.Diamond.address)
-                   }
+                const wallet : any[] = (facet.wallet) ? <any[]>await client.readContract({
+                    address: diamondNames.Diamond.address,
+                    abi: facetABI.abi,
+                    functionName: <string>facet.wallet,
+                    args: []
+                    }) : [];
+
+                await addAccount( 
+                    rank, 
+                    facet.name, 
+                    get, 
+                    wallet 
+                    );
+
+                rank++;
+                }
+            catch (error) {
+                console.error(">> Error :: No Facet Contract initialized %s, @ %s", facet.name, diamondNames.Diamond.address)
                 }
             }
         } 

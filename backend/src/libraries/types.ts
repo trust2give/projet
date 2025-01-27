@@ -1,6 +1,6 @@
 import { Address } from "viem";
 import { FacetCutAction } from "../utils/diamond";
-
+import fs from 'fs';
 
 // Expression régulière pour détecter une adresse ETH 
 export const regex = '^(0x)?[0-9a-fA-F]{40}$';
@@ -51,10 +51,10 @@ export enum Account {
     export interface contractRecord { 
         name: string, 
         address: Address,
-        abi: any,
+        abi: { path: fs.PathOrFileDescriptor, file: any},
         beacon?: string | boolean,
         get?: string | boolean,
-        wallet?: string
+        wallet?: string,
         }
     
     export type diamondCore = {

@@ -13,16 +13,6 @@ export interface facetRecord {
     facets: wlist
     }
 
-    
-export async function readLastContractSetJSONfile() : Promise<boolean> {
-    const jsonString = fs.readFileSync('./ContractSet.json', 'utf-8');
-    const item : contractRecord = JSON.parse(jsonString);
-    if (item.name != "EUR") return false;
-    //colorOutput("Recall Last EUR Smart Contract Record >> ".concat(JSON.stringify(item)), "cyan");
-    contractSet[0] = <contractRecord>item;
-    return true;
-    }
-
 export async function writeLastContractJSONfile( ) {
     let JsonFile = JSON.stringify(contractSet[0]);
     //colorOutput("Save last EUR Contract Record >> ".concat(JSON.stringify(contractSet[0])), "cyan");
@@ -85,29 +75,33 @@ export async function readLastDiamondJSONfile() : Promise<boolean> {
     if (DiamondCore.Diamond.name != "T2G_root") return false;
     if (!DiamondCore.Diamond.address.match(regex)) return false;
 
-    const jsonDiamond = fs.readFileSync('./artifacts/contracts/T2G_root.sol/T2G_root.json', 'utf-8');
+    const jsonDiamond = fs.readFileSync( diamondNames.Diamond.abi.path, 'utf-8');
     const diamondABI : any = JSON.parse(jsonDiamond);
     
     diamondNames.Diamond = <contractRecord>DiamondCore.Diamond;
-    diamondNames.Diamond.abi = diamondABI.abi;
+    diamondNames.Diamond.abi.file = diamondABI.abi;
     
-    console.log("===========================")
-    console.log(diamondNames.Diamond);
-
     diamondNames.DiamondInit = <contractRecord>DiamondCore.DiamondInit;
-
-    console.log("===========================")
-    console.log(diamondNames.DiamondInit);
 
     diamondNames.DiamondCutFacet = <contractRecord>DiamondCore.DiamondCutFacet;
 
-    console.log("===========================")
-    console.log(diamondNames.DiamondCutFacet);
-
     diamondNames.DiamondLoupeFacet = <contractRecord>DiamondCore.DiamondLoupeFacet;
-
-    console.log("===========================")
-    console.log(diamondNames.DiamondLoupeFacet);
 
     return true;
     }
+
+export async function readLastContractSetJSONfile() : Promise<boolean> {
+    const jsonString = fs.readFileSync('./ContractSet.json', 'utf-8');
+    const item : contractRecord = JSON.parse(jsonString);
+
+    if (item.name != "EUR") return false;
+    
+    const jsonEUR = fs.readFileSync(item.abi.path, 'utf-8');
+    const eurABI : any = JSON.parse(jsonEUR);
+    
+    contractSet[0] = <contractRecord>item;
+    contractSet[0].abi.file = eurABI;
+
+    return true;
+    }
+    
