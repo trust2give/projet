@@ -96,7 +96,7 @@ export async function readLastContractSetJSONfile() : Promise<boolean> {
 
     if (item.name != "EUR") return false;
     
-    const jsonEUR = fs.readFileSync(item.abi.path, 'utf-8');
+    const jsonEUR = fs.readFileSync(contractSet[0].abi.path, 'utf-8');
     const eurABI : any = JSON.parse(jsonEUR);
     
     contractSet[0] = <contractRecord>item;
