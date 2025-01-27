@@ -100,7 +100,7 @@ export async function readLastContractSetJSONfile() : Promise<boolean> {
     const eurABI : any = JSON.parse(jsonEUR);
     
     contractSet[0] = <contractRecord>item;
-    contractSet[0].abi.file = eurABI;
+    contractSet[0].abi.file = eurABI.abi;
 
     return true;
     }
