@@ -27,7 +27,7 @@ import { accountRefs, accountType, globalState, setState, addAccount, assignAcco
 
 export const contractSet : contractRecord[] = [
   { name: "EUR", 
-    abi: { path: './artifacts/contracts/EurSC.sol/EUR.json', file: undefined}, 
+    abi: { path: './artifacts/contracts/EurSC.sol/EUR.json', file: undefined }, 
     address: NULL_ADDRESS, 
     get: 'get_EUR' 
   },
