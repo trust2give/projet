@@ -54,7 +54,7 @@ app.listen(PORT, async () => {
                 
         const wallet = await client.readContract({
             address: diamondNames.Diamond.address,
-            abi: diamondNames.Diamond.abi,
+            abi: diamondNames.Diamond.abi.file,
             functionName: 'wallet_T2G_root',
             args: []
           })
