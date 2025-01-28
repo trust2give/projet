@@ -78,7 +78,7 @@ export async function readLastDiamondJSONfile() : Promise<boolean> {
     const jsonDiamond = fs.readFileSync( diamondNames.Diamond.abi.path, 'utf-8');
     const diamondABI : any = JSON.parse(jsonDiamond);
     
-    diamondNames.Diamond = <contractRecord>DiamondCore.Diamond;
+    diamondNames.Diamond.address = <Address>DiamondCore.Diamond.address;
     diamondNames.Diamond.abi.file = diamondABI.abi;
     
     diamondNames.DiamondInit = <contractRecord>DiamondCore.DiamondInit;
