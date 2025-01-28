@@ -5,6 +5,7 @@ import { returnAccountTable } from "../libraries/format";
 import { showBeacons } from "../logic/beacons";
 import { rightCallback } from "../logic/rights";
 import { contractSet, diamondNames, facetNames, smart, smartEntry, encodeInterfaces } from "../T2G_Data";
+import { contractRecord, rwRecord, rwType, menuRecord, Account, NULL_ADDRESS, regex, regex2, regex3 } from "../libraries/types";
 
 const router = Router();
 
@@ -16,10 +17,18 @@ router.get('/', async (req, res) => {
   console.log("GET processed", call, inputs);
   
   switch (call) {
-    case "read": {
-      res.json( await rightCallback.find( (item) => item.tag == "all")?.callback());
-      if (inputs) {
+    case "rights": {
+      type refKeys = keyof typeof Account;
 
+      if (call == "get") {
+        if (inputs.length != 1)
+          res.json( 
+            await rightCallback.find( (item) => item.tag == "all")?.callback()
+            );
+        else
+          res.json( 
+            await rightCallback.find( (item) => item.tag == "get")?.callback( Account[<refKeys>`@${inputs[0]}`])
+            );
         }
       break;
       }
@@ -33,7 +42,7 @@ router.get('/', async (req, res) => {
       res.json( await showBeacons( [diamondNames.Diamond, ...facetNames, ...contractSet] ) );
       break;
       }
-    case "user": {
+    /*case "user": {
       if (inputs) {
         try {
           const jsonData = JSON.parse(decodeURIComponent(inputs as string)); // Décoder et analyser l'objet JSON
@@ -56,7 +65,7 @@ router.get('/', async (req, res) => {
         res.status(400).json({ message: 'Paramètre manquant' });
         }  
       break;
-    }
+    }*/
     case "accounts": {
       res.json(returnAccountTable());
       break;
