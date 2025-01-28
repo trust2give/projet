@@ -94,64 +94,96 @@ export const rightCallback : {
         return result;
         }
     },
-    /*{ tag: "set",
-      callback: async ( account?: Account, flags?: number | boolean ) => {
-            console.log("Set rights %s %d", account, flags)
-        
-            const registerWallet :rwRecord = await setrwRecordFromSmart( "registerWallet", "Syndication");
-        
-            try {                        
-                if (Object.keys(accountRefs).includes(account)) {
-                    
-                    type refKeys = keyof typeof accountRefs;
-                    
-                    registerWallet.values = [ (<accountType>accountRefs[account]).address, flags ];
-
-                    await InteractWithContracts( <rwRecord>registerWallet, Account.A0, true );            
-                    }
-                }
-            catch (error) {
-                console.log(error)
-                //colorOutput( "> ".concat( item[1].name.padEnd( 16, " "), " => Not Registered " ), "red");
-                }
-            }
-        },
     { tag: "get",
-      callback: async ( account?: Account ) => {
-            console.log("Get rights %s", account)
+        callback: async ( account?: Account ) : Promise<any> => {
+                    
+        const jsonRights = fs.readFileSync( 
+            (<contractRecord>facetNames.find( (item) => item.name == "T2G_SyndicFacet")).abi.path, 
+            'utf-8' 
+            );
+
+        const syndicABI : any = JSON.parse(jsonRights);
+
+        type refKeys = keyof typeof accountRefs;
+
+        var res : { 
+                wallet: Address,
+                rights: number | string,
+                isRegistered: boolean | string,
+                isBanned: boolean | string 
+                } = {
+                    wallet: <Address>(<accountType>accountRefs[<refKeys>account]).address,
+                    rights: 0,
+                    isRegistered: false,
+                    isBanned: false
+                };
                 
-            const walletRights :rwRecord = await setrwRecordFromSmart( "getWalletRights", "Syndication");
-            const isRegistered :rwRecord = await setrwRecordFromSmart( "isWalletRegistered", "Syndication" );
-            const isBanned :rwRecord = await setrwRecordFromSmart( "isWalletBanned", "Syndication" );
-            
+        try {                        
+            res.rights = await globalState.clients.readContract({
+            address: diamondNames.Diamond.address,
+            abi: syndicABI.abi,
+            functionName: "getWalletRights",
+            args: [ (<accountType>accountRefs[<refKeys>account]).address ]
+            });
+            }
+        catch (error) {
+            res.rights = "Error";
+            }
+
+        try {                        
+            res.isRegistered = await globalState.clients.readContract({
+            address: diamondNames.Diamond.address,
+            abi: syndicABI.abi,
+            functionName: "isWalletRegistered",
+            args: [ (<accountType>accountRefs[<refKeys>account]).address ]
+            });
+            }
+        catch (error) {
+            res.isRegistered = "Error";
+            }
+
+        try {                        
+            res.isBanned = await globalState.clients.readContract({
+            address: diamondNames.Diamond.address,
+            abi: syndicABI.abi,
+            functionName: "isWalletBanned",
+            args: [ (<accountType>accountRefs[<refKeys>account]).address ]
+            });
+            }
+        catch (error) {
+            res.isBanned = "Error";
+            }
+
+        return res;
+        }
+      },
+      { tag: "register",
+      callback: async ( account?: Account, flags?: number | boolean ) : Promise<any> => {
+            console.log("Register rights %s %d", account, flags)
+        
+            const jsonRights = fs.readFileSync( 
+                (<contractRecord>facetNames.find( (item) => item.name == "T2G_SyndicFacet")).abi.path, 
+                'utf-8' 
+                );
+
+            const syndicABI : any = JSON.parse(jsonRights);
+
             try {                        
-                if (Object.keys(accountRefs).includes(account)) {
-                    type refKeys = keyof typeof accountRefs;
-        
-                    walletRights.values = [ (<accountType>accountRefs[account]).address ];
-                    isRegistered.values = [ (<accountType>accountRefs[account]).address ];
-                    isBanned.values = [ (<accountType>accountRefs[account]).address ];
-        
-                    const isReg = Boolean(await InteractWithContracts( <rwRecord>walletRights, Account.A0, true ));            
-                    const isBan = Boolean(await InteractWithContracts( <rwRecord>isRegistered, Account.A0, true ));            
-                    const wRights : number = Number(await InteractWithContracts( <rwRecord>isBanned, Account.A0, true ));            
-                    
-                    // We format the display of rights for a wallet
-                    const flags = Object.entries(rights).reduce( ( acc, cur) => {
-                        return acc.concat( colorOutput( cur[0], (cur[1] & wRights) ? (isBan) ? "red" : (isReg) ? "green" : "blue" : "blue", true), ` `);
-                        }, "[" );
-                    const net4 = (wRights != undefined) ? colorOutput( "[".concat( flags, "]"), "blue", true) : "_";
-                    
-                    colorOutput( "> ".concat( (<accountType>accountRefs[account]).name.padEnd( 16, " "), " => ", net4 ), "yellow"); //  , 
-                }
+                type refKeys = keyof typeof accountRefs;
+
+                return await globalState.clients.writeContract({
+                    address: diamondNames.Diamond.address,
+                    abi: syndicABI.abi,
+                    functionName: "registerWallet",
+                    args: [ (<accountType>accountRefs[<refKeys>account]).address, flags ]
+                    });
                 }
             catch (error) {
-                //console.log(error)
-                //colorOutput( "> ".concat( item[1].name.padEnd( 16, " "), " => Not Registered " ), "red");
+                return error;
                 }
             }
         },
-    { tag: "ban",
+    /*{ tag: "ban",
       callback: async ( account?: Account ) => {
             console.log("Ban rights %s %d", account)
         
