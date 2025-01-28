@@ -12,6 +12,8 @@ export const showBeacons = async ( records: contractRecord[] ) : Promise<{ [cle:
     
     for ( const item of records) {
 
+        console.log(item);
+
         var res : { [cle: string]: string; } = {
             name: item.name,
             beacon: "",
