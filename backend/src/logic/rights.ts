@@ -159,7 +159,7 @@ export const rightCallback : {
         }
       },
       { tag: "register",
-      callback: async ( account?: Account, flags?: number | boolean ) : Promise<any> => {
+      callback: async ( account?: Account, flags?: number ) : Promise<any> => {
             console.log("Register rights %s %d", account, flags)
         
             const jsonRights = fs.readFileSync( 

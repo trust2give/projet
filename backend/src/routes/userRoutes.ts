@@ -22,8 +22,6 @@ router.get('/', async (req, res) => {
     
   switch (call) {
     case "rights": {
-      type refKeys = keyof typeof Account;
-
       if (jsonData.call == "get") {
         if (jsonData.inputs.length != 1)
           res.json( 
@@ -82,10 +80,40 @@ router.get('/', async (req, res) => {
   });
   
   // Route POST pour ajouter un nouvel utilisateur
-  router.post('/', (req, res) => {
-    const newUser = req.body;
-    const addedUser = addUser(newUser);
-    res.status(201).json(addedUser);
+  router.post('/', async (req, res) => {
+    const { call, inputs } = req.query;
+    var jsonData;
+  
+    console.log("POST processed", call, inputs);
+    
+    if (inputs)
+        jsonData = JSON.parse(decodeURIComponent(inputs as string)); // Décoder et analyser l'objet JSON
+      
+    switch (call) {
+      case "rights": {  
+        if (jsonData.call == "register") {
+          if (jsonData.inputs.length == 2)
+            res.json( 
+              await rightCallback.find( 
+                (item) => item.tag == "register")?.callback(
+                  <Account>`@${jsonData.inputs[0]}`,
+                  (Number(jsonData.inputs[1]) % 256)
+                  )
+                );
+              }
+        else if (jsonData.call == "ban") {
+          if (Number(jsonData.inputs[0]))
+            res.json( 
+              await rightCallback.find( (item) => item.tag == "ban")?.callback( <Account>`@${jsonData.inputs[0]}` )
+              );
+            }
+        break;
+        }
+      default:
+        res.status(404).json({ message: 'fonction non trouvé' });
+      }
+    
+    //res.status(201).json(addedUser);
   });
   
   export default router;
