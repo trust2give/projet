@@ -15,6 +15,18 @@ router.get('/', async (req, res) => {
   console.log("GET initialized", call, inputs);
   
   switch (call) {
+    case "read": {
+      if (inputs) {
+        
+        }
+      break;
+      }
+    case "write": {
+      if (inputs) {
+        
+        }
+      break;
+      }
     case "state": {
       res.json( await showBeacons( [diamondNames.Diamond, ...facetNames, ...contractSet] ) );
       break;

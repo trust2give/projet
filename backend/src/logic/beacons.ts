@@ -1,18 +1,14 @@
-const hre = require("hardhat");
 import { Address } from "viem";
 import { contractSet, diamondNames, facetNames, smart, smartEntry, encodeInterfaces } from "../T2G_Data";
-import { colorOutput } from "../libraries/format";
 import { contractRecord, rwRecord, rwType, menuRecord, Account, NULL_ADDRESS, regex, regex2, regex3 } from "../libraries/types";
 import { accountType, accountRefs, globalState, setState, addAccount, updateAccountBalance, assignAccounts } from "./states";
 import fs from 'fs';
 
 export const showBeacons = async ( records: contractRecord[] ) : Promise<{ [cle: string]: string | Address; }[]> => {
-        
+
     var result : { [cle: string]: string | Address; }[] = [];
     
     for ( const item of records) {
-
-        console.log(item);
 
         var res : { [cle: string]: string; } = {
             name: item.name,
@@ -20,11 +16,6 @@ export const showBeacons = async ( records: contractRecord[] ) : Promise<{ [cle:
             address: NULL_ADDRESS,
             wallet: NULL_ADDRESS
             };
-
-        // Read the beacon_<SC Name> function for each Smart Contract Facet of the Diamond
-        var beacon : string = "None";
-        var realAddress : string = NULL_ADDRESS;
-        var wallet : string = NULL_ADDRESS;
         
         const jsonBeacon = fs.readFileSync( 
             item.abi.path, 

@@ -151,18 +151,16 @@ export function displayContract( contract : string, color: string, pad?: number 
 */
 
 // used
-export function returnAccountTable() : string {
+export function returnAccountTable() : { [cle: string]: string | Address; }[] {
     return Object.entries(accountRefs).map( (item ) => {  
-        return "*".concat( 
-            " ".padStart(2, " "),  
-            (<accountType>item[1]).name.padEnd(16, " "), 
-            " ", 
-            `${item[0]}: `,
-            (<accountType>item[1]).address, 
-            `${item[0]}: `,
-            ((<accountType>item[1]).wallet) ? <Address>(<accountType>item[1]).wallet : NULL_ADDRESS) 
-        }).join("\n");
-    }
+        return { 
+            tag: item[0],
+            name: (<accountType>item[1]).name, 
+            address: (<accountType>item[1]).address, 
+            wallet: ((<accountType>item[1]).wallet) ? <Address>(<accountType>item[1]).wallet : NULL_ADDRESS
+            }
+        });
+    } 
 
 export function colorOutput( text: string, color?: string, hide?: boolean ) : string {
     var output ="";
