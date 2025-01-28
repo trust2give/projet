@@ -13,21 +13,25 @@ const router = Router();
 
 router.get('/', async (req, res) => { 
   const { call, inputs } = req.query;
+  var jsonData;
 
   console.log("GET processed", call, inputs);
   
+  if (inputs)
+      jsonData = JSON.parse(decodeURIComponent(inputs as string)); // Décoder et analyser l'objet JSON
+    
   switch (call) {
     case "rights": {
       type refKeys = keyof typeof Account;
 
-      if (call == "get") {
-        if (inputs.length != 1)
+      if (jsonData.call == "get") {
+        if (jsonData.inputs.length != 1)
           res.json( 
             await rightCallback.find( (item) => item.tag == "all")?.callback()
             );
         else
           res.json( 
-            await rightCallback.find( (item) => item.tag == "get")?.callback( Account[<refKeys>`@${inputs[0]}`])
+            await rightCallback.find( (item) => item.tag == "get")?.callback( Account[<refKeys>`@${jsonData.inputs[0]}`])
             );
         }
       break;
