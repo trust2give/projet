@@ -30,13 +30,12 @@ router.get('/', async (req, res) => {
             await rightCallback.find( (item) => item.tag == "all")?.callback()
             );
         else {
-          console.log(<refKeys>`@${jsonData.inputs[0]}`);
-
-          res.json( 
-            await rightCallback.find( (item) => item.tag == "get")?.callback( <Account>`@${jsonData.inputs[0]}` )
-            );
+          if (Number(jsonData.inputs[0]))
+            res.json( 
+              await rightCallback.find( (item) => item.tag == "get")?.callback( <Account>`@${jsonData.inputs[0]}` )
+              );
+            }
           }
-        }
       break;
       }
     case "write": {
