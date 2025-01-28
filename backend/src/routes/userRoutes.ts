@@ -30,11 +30,10 @@ router.get('/', async (req, res) => {
             await rightCallback.find( (item) => item.tag == "all")?.callback()
             );
         else {
-          const acc : Account = Account[<refKeys>`@${jsonData.inputs[0]}`];
-          console.log(<refKeys>`@${jsonData.inputs[0]}`, acc);
+          console.log(<refKeys>`@${jsonData.inputs[0]}`);
 
           res.json( 
-            await rightCallback.find( (item) => item.tag == "get")?.callback( acc )
+            await rightCallback.find( (item) => item.tag == "get")?.callback( <Account>`@${jsonData.inputs[0]}` )
             );
           }
         }
