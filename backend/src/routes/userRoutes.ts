@@ -34,7 +34,7 @@ router.get('/', async (req, res) => {
           console.log(<refKeys>`@${jsonData.inputs[0]}`, acc);
 
           res.json( 
-            await rightCallback.find( (item) => item.tag == "get")?.callback( acc );
+            await rightCallback.find( (item) => item.tag == "get")?.callback( acc )
             );
           }
         }
