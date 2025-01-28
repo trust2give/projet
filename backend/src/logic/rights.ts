@@ -94,7 +94,7 @@ export const rightCallback : {
         return result;
         }
     },
-    { tag: "set",
+    /*{ tag: "set",
       callback: async ( account?: Account, flags?: number | boolean ) => {
             console.log("Set rights %s %d", account, flags)
         
@@ -169,5 +169,5 @@ export const rightCallback : {
                 //colorOutput( "> ".concat( item[1].name.padEnd( 16, " "), " => Not Registered " ), "red");
                 }
             }
-        }
+        }*/
     ]
