@@ -106,6 +106,7 @@ export const rightCallback : {
 
         type refKeys = keyof typeof accountRefs;
 
+        console.log("account", account)
         var res : { 
                 wallet: Address,
                 rights: number | string,
