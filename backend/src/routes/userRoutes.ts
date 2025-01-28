@@ -3,6 +3,7 @@ import { getUserById, addUser } from '../services/userService';
 import { globalState } from '../logic/states';
 import { returnAccountTable } from "../libraries/format";
 import { showBeacons } from "../logic/beacons";
+import { rightCallback } from "../logic/rights";
 import { contractSet, diamondNames, facetNames, smart, smartEntry, encodeInterfaces } from "../T2G_Data";
 
 const router = Router();
@@ -12,12 +13,13 @@ const router = Router();
 router.get('/', async (req, res) => { 
   const { call, inputs } = req.query;
 
-  console.log("GET initialized", call, inputs);
+  console.log("GET processed", call, inputs);
   
   switch (call) {
     case "read": {
+      res.json( await rightCallback.find( (item) => item.tag == "all")?.callback());
       if (inputs) {
-        
+
         }
       break;
       }
