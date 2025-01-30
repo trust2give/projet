@@ -34,11 +34,9 @@ export function convertType(
     answer: any, 
     router: typeItem[], 
     name: string, 
-    output: number | false 
     ) : any {
     
-    
-    if ((<number>output > 0) && (typeof answer == "string")) 
+    if (typeof answer == "string")
         if ((<string>answer).match(regex)) 
             return answer;
 
@@ -75,17 +73,22 @@ export function convertType(
     }
     
 
-export function enumOrValue( args: Array<any>, index: number, answer: string ) : number | undefined {
+export function enumOrValue( args: Array<any>, index: number, answer: string ) : number | string | undefined {
+
     if ("internalType" in args[index]) {
+
         const parse = <string>args[index].internalType.split(' ');
+
         if (parse[0] == "enum") {
+
             const parseEnum = parse[1].split('.');
+
             const val : string = (parseEnum.length > 1) ? parseEnum[1] : parseEnum[0];
-            if (!Number.isNaN(answer) && Number(answer) < 2**8) return Number(answer); 
-            else {
+
+            if (!Number.isNaN(answer) && Number(answer) < 2**8) {
+
                 type enumKeys = keyof typeof listOfEnums;
-                const rank = (<string[]>listOfEnums[<enumKeys>val]).findIndex((item) => item == answer);
-                if (rank > -1 ) return Number(rank);
+                return <string>listOfEnums[<enumKeys>val][Number(answer)];
                 }
             }
         else if (parse[0] == "uint8") {
@@ -93,7 +96,7 @@ export function enumOrValue( args: Array<any>, index: number, answer: string ) :
                 return Number(answer); 
                 }
             } 
-        else return undefined;
+        return undefined;
         }
-    else return Number(answer);
+    return Number(answer);
     }

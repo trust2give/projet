@@ -2,7 +2,13 @@ import { Address, encodeAbiParameters, decodeAbiParameters } from 'viem'
 import { accountRefs, accountType, globalState } from "../logic/states";
 import { rwRecord, rwType, menuRecord, Account, NULL_ADDRESS, regex, regex2, regex3 } from "../libraries/types";
 import { convertType } from "../libraries/utils";
-import { dataDecodeABI, typeRouteOutput, abiItem } from "../interface/types";
+import { dataDecodeABI, typeRouteOutput, 
+    TypeofUnitType,
+    TypeofUnitSize, 
+    TypeofSector, 
+    TypeofEntityType, 
+    Statusoftoken, 
+    abiItem } from "../interface/types";
 
 /*
 export function showLog( silent?: boolean ) {
@@ -77,71 +83,70 @@ export function displayEvents( EvtInputs: any, event : any, color: string, pad?:
         );
     }
 */
-    /*
-export function displayReadValues( rwItem : rwRecord | abiItem[] | { name: string, type: string }[], result : any[], decode: boolean, color: string, pad?: number ) {
+
+export function parseReadValues( 
+    resultAbi : abiItem[] | { name: string, type: string }[], 
+    result : any,
+    decode? : boolean
+    ) : { [cle: string]: any } {
     
+    // We get the results     
+    const values = (decode && resultAbi.length > 0) ? decodeAbiParameters( resultAbi, result ) : result;  
+
+    console.log( "parseReadValue => ", values);
+    
+    return values;
     var beacon = undefined;
 
-    if (decode) {
-        const ABIformat : abiItem[] | { name: string, type: string }[] =  <abiItem[] | { name: string, type: string }[]>rwItem;
+    // resultAbi: Get the ABI format to apply to the byte coded result in dataDecodeABI "TokenEntitySpecific"
+    // abiItem { component: [ abiData ], name: string, type: string }
+    // abiData { name, type, internalType }
 
-        beacon = result.map((val) => {
-            if (Array.isArray(val)) {
-                return "\n".concat(
-                    parseAndDisplayInputAndOutputs( 
-                        ABIformat, 
-                        [val] 
-                        ));
+    /*colorOutput( "> ".concat(
+        "[".concat(transactionHash,"] "), 
+        " => ", 
+        `${value[0].name} `,
+        `${value[0].uid} `,
+        `${value[0].email} `,
+        `${value[0].postal} `,
+        TypeofEntityType[value[0].entity], " ", 
+        TypeofSector[value[0].sector], " ",
+        TypeofUnitType[value[0].unitType], " ",
+        TypeofUnitSize[value[0].unitSize], " ",
+        TypeCountries[value[0].country]
+            ), "cyan");*/
+/*
+    beacon = result.map((val) => {
+        if (Array.isArray(val)) {
+            return "\n".concat(
+                parseAndDisplayInputAndOutputs( 
+                    resultAbi, 
+                    [val] 
+                    ));
             }
-            else if (typeof val == "object") {
-                return "\n[".concat( Object.entries(val).map((item) => {
-                    if ("components" in ABIformat[0]) {
-                        const abi = ABIformat[0].components.find((el) => el.name == item[0])
-                        if ("components" in abi) return "\n".concat(
-                            parseAndDisplayInputAndOutputs( 
-                                abi.components, 
-                                Object.values(item[1]) 
-                                )
-                            );
-                        else return "\n".concat(
-                            parseAndDisplayInputAndOutputs( 
-                                [ abi ], 
-                                [ item[1] ] 
-                                )
-                            );
-                    }
-                }).join("|"), "\n]");
-            }
-            }).join("|"), "\n]";
+        else if (typeof val == "object") {
+            return "\n[".concat( Object.entries(val).map((item) => {
+                if ("components" in resultAbi[0]) {
+                    const abi = resultAbi[0].components.find((el) => el.name == item[0])
+
+                    if ("components" in abi) return "\n".concat(
+                        parseAndDisplayInputAndOutputs( 
+                            abi.components, 
+                            Object.values(item[1]) 
+                            )
+                        );
+                    else return "\n".concat(
+                        parseAndDisplayInputAndOutputs( 
+                            [ abi ], 
+                            [ item[1] ] 
+                            )
+                        );
+                }
+            }).join("|"), "\n]");
         }
-    else {
-        // For the results not concerned by the encode function
-        beacon = parseAndDisplayInputAndOutputs( 
-            rwItem.outcome, 
-            result 
-            );
-        }
-    
-    if (Array.isArray(beacon)) 
-        addLog( 
-            "\n[ ".concat(
-                colorOutput( 
-                    beacon.join("|\n"), 
-                    color, 
-                    true 
-                    ),
-                " ]" 
-                ) 
-            );
-    else addLog( 
-        colorOutput( 
-            (typeof beacon === "object") ? beacon.reduce( (acc, cur) => { return cur.concat(acc)}, "|\n" ) : <string>beacon, 
-            color, 
-            true
-            )
-        );
-}
-        */
+        }).join("|"), "\n]";
+    */
+    }
 
 /*
 export function displayContract( contract : string, color: string, pad?: number ) {
@@ -239,8 +244,7 @@ function parseAndDisplayInputAndOutputs(
                 i, 
                 arg, 
                 typeRouteOutput, 
-                abi[i].name, 
-                <number>globalState.pad 
+                abi[i].name
                 );
         }).join(" | ");
     }

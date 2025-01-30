@@ -7,6 +7,7 @@ export const regex = '^(0x)?[0-9a-fA-F]{40}$';
 export const regex2 = '^(0x)?[0-9a-fA-F]{64}$';
 export const regex3 = '^(0x)?[0-9a-fA-F]{8}$';
 export const NULL_ADDRESS = <Address>"0x0000000000000000000000000000000000000000"
+export const NULL_HASH = <typeof regex2>"0x0000000000000000000000000000000000000000000000000000000000000000"
 
 
 /// enum type qui permet de sélectionner les 6 premiers @Wallet du node hardhat

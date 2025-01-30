@@ -4,6 +4,7 @@ import { globalState } from '../logic/states';
 import { returnAccountTable } from "../libraries/format";
 import { showBeacons } from "../logic/beacons";
 import { rightCallback } from "../logic/rights";
+import { createEntity, getEntity, getAllEntities } from "./logic/entity";
 import { contractSet, diamondNames, facetNames, smart, smartEntry, encodeInterfaces } from "../T2G_Data";
 import { contractRecord, rwRecord, rwType, menuRecord, Account, NULL_ADDRESS, regex, regex2, regex3 } from "../libraries/types";
 
@@ -21,6 +22,21 @@ router.get('/', async (req, res) => {
       jsonData = JSON.parse(decodeURIComponent(inputs as string)); // Décoder et analyser l'objet JSON
     
   switch (call) {
+    case "entity": {
+      if (jsonData.call == "get") {
+        if (jsonData.inputs.length != 1)
+          res.json( 
+            await getAllEntities()
+            );
+        else {
+          if (jsonData.inputs[0].match(regex2))
+            res.json( 
+              await getEntity( jsonData.inputs[0] )
+              );
+            }
+          }
+      break;
+      }
     case "rights": {
       if (jsonData.call == "get") {
         if (jsonData.inputs.length != 1)
@@ -36,40 +52,10 @@ router.get('/', async (req, res) => {
           }
       break;
       }
-    case "write": {
-      if (inputs) {
-        
-        }
-      break;
-      }
     case "state": {
       res.json( await showBeacons( [diamondNames.Diamond, ...facetNames, ...contractSet] ) );
       break;
       }
-    /*case "user": {
-      if (inputs) {
-        try {
-          const jsonData = JSON.parse(decodeURIComponent(inputs as string)); // Décoder et analyser l'objet JSON
-          
-          const userId = parseInt(jsonData.id);
-          const user = getUserById(userId);	
-    
-          if (user) {
-            res.json(user);
-            } 
-          else {
-            res.status(404).json({ message: 'Utilisateur non trouvé' });
-            }
-          } 
-        catch (error) {
-          res.status(400).json({ message: 'Erreur lors de l\'analyse des données', error: error });
-          }
-        } 
-      else {
-        res.status(400).json({ message: 'Paramètre manquant' });
-        }  
-      break;
-    }*/
     case "accounts": {
       res.json(returnAccountTable());
       break;
@@ -82,31 +68,46 @@ router.get('/', async (req, res) => {
   // Route POST pour ajouter un nouvel utilisateur
   router.post('/', async (req, res) => {
     const { call, inputs } = req.query;
-    var jsonData;
-  
-    console.log("POST processed", call, inputs);
+
+    var jsonData : { 
+      call: string, 
+      inputs: Array<any> 
+      } = { call: "", inputs: [] };
+
+    var process : { 
+      tag: string, 
+      callback: any 
+      } | undefined;
+
+    console.log( "POST processed", call, inputs );
     
     if (inputs)
         jsonData = JSON.parse(decodeURIComponent(inputs as string)); // Décoder et analyser l'objet JSON
       
     switch (call) {
-      case "rights": {  
-        if (jsonData.call == "register") {
-          if (jsonData.inputs.length == 2)
-            res.json( 
-              await rightCallback.find( 
-                (item) => item.tag == "register")?.callback(
-                  <Account>`@${jsonData.inputs[0]}`,
-                  (Number(jsonData.inputs[1]) % 256)
+      case "rights": {
+
+        process = rightCallback.find( (item) => item.tag == jsonData.call );
+
+        if (process != undefined) {
+          if (jsonData.call == "register") {
+            if (jsonData.inputs.length == 2)
+              res.status(201).json( 
+                await process?.callback(
+                    <Account>`@${jsonData.inputs[0]}`,
+                    (Number(jsonData.inputs[1]) % 256)
+                    )
+                  );
+                }
+          else if (jsonData.call == "ban") {
+            if (Number(jsonData.inputs[0]))
+              res.status(201).json( 
+                await process?.callback( 
+                  <Account>`@${jsonData.inputs[0]}`
                   )
                 );
-              }
-        else if (jsonData.call == "ban") {
-          if (Number(jsonData.inputs[0]))
-            res.json( 
-              await rightCallback.find( (item) => item.tag == "ban")?.callback( <Account>`@${jsonData.inputs[0]}` )
-              );
             }
+          }
         break;
         }
       default:

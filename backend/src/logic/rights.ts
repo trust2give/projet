@@ -1,9 +1,6 @@
 import { contractSet, diamondNames, facetNames, smart, encodeInterfaces, getWalletAddressFromSmartContract } from "../T2G_Data";
-import { colorOutput } from "../libraries/format";
 import { contractRecord, rwRecord, rwType, menuRecord, Account, NULL_ADDRESS, regex, regex2, regex3 } from "../libraries/types";
 import { accountRefs, globalState, setState, addAccount, updateAccountBalance, assignAccounts, accountType } from "../logic/states";
-//import { InteractWithContracts } from "../InteractWithContracts";
-//import { setrwRecordFromSmart } from "../logic/instances";
 import fs from 'fs';
 import { Address } from "viem";
 
@@ -158,8 +155,8 @@ export const rightCallback : {
         return res;
         }
       },
-      { tag: "register",
-      callback: async ( account?: Account, flags?: number ) : Promise<any> => {
+    { tag: "register",
+        callback: async ( account?: Account, flags?: number ) : Promise<any> => {
             console.log("Register rights %s %d", account, flags)
         
             const jsonRights = fs.readFileSync( 
@@ -184,23 +181,30 @@ export const rightCallback : {
                 }
             }
         },
-    /*{ tag: "ban",
-      callback: async ( account?: Account ) => {
-            console.log("Ban rights %s %d", account)
-        
-            const registerWallet :rwRecord = await setrwRecordFromSmart( "banWallet", "Syndication" );
-        
-            try {                        
-                if (Object.keys(accountRefs).includes(account)) {
+    { tag: "ban",
+        callback: async ( account?: Account ) : Promise<any> => {
+                console.log("Ban rights %s %d", account )
+            
+                const jsonRights = fs.readFileSync( 
+                    (<contractRecord>facetNames.find( (item) => item.name == "T2G_SyndicFacet")).abi.path, 
+                    'utf-8' 
+                    );
+    
+                const syndicABI : any = JSON.parse(jsonRights);
+    
+                try {                        
                     type refKeys = keyof typeof accountRefs;
-                    registerWallet.values = [ (<accountType>accountRefs[account]).address ];
-                    await InteractWithContracts( <rwRecord>registerWallet, Account.A0 );            
+    
+                    return await globalState.clients.writeContract({
+                        address: diamondNames.Diamond.address,
+                        abi: syndicABI.abi,
+                        functionName: "banWallet",
+                        args: [ (<accountType>accountRefs[<refKeys>account]).address ]
+                        });
+                    }
+                catch (error) {
+                    return error;
                     }
                 }
-            catch (error) {
-                console.log(error)
-                //colorOutput( "> ".concat( item[1].name.padEnd( 16, " "), " => Not Registered " ), "red");
-                }
             }
-        }*/
-    ]
+        ]
