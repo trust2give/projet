@@ -4,7 +4,12 @@ import { contractSet, diamondNames, facetNames, smart, encodeInterfaces, getWall
 import { contractRecord, rwRecord, rwType, menuRecord, Account, NULL_ADDRESS, regex, regex2, NULL_HASH } from "../libraries/types";
 import { accountType, accountRefs, globalState, setState, addAccount, updateAccountBalance, assignAccounts } from "./states";
 import { colorOutput, parseReadValues } from "../libraries/format";
-import { dataDecodeABI, abiItem } from "../interface/types";
+import { dataDecodeABI, TypeCountries, 
+    TypeofUnitType,
+    TypeofUnitSize, 
+    TypeofSector, 
+    TypeofEntityType, 
+    Statusoftoken } from "../interface/types";
 
 export const getEntity = async ( hash: typeof regex2 ) : Promise<{
     name: string,
@@ -89,7 +94,7 @@ export const createEntity = async ( person: boolean, inputs: {
         const encodeInput = encodeInterfaces.T2G_EntityFacet.find((item) => item.function == "setEntity");
 
         type decKeys = keyof typeof dataDecodeABI;
-        /*
+        
         if (encodeInput != undefined) {
             if ("_data" in encodeInput) {
                 if (encodeInput._data in dataDecodeABI) {
@@ -140,51 +145,10 @@ export const createEntity = async ( person: boolean, inputs: {
                         }
                     catch (error) {
                         return NULL_HASH;
-                        }
-                    
-                    
-                    try {                                
-                        const value : {
-                            state: number,
-                            name: string,
-                            uid: string,
-                            email: string,
-                            postal: string,
-                            entity: number,
-                            sector: number,
-                            unitType: number,
-                            unitSize: number,
-                            country: number
-                            }[] = await globalState.clients.readContract({
-                                address: diamondNames.Diamond.address,
-                                abi: entityABI.abi,
-                                functionName: "entity",
-                                args: [ transactionHash ]
-                                });
-
-                        colorOutput( "> ".concat(
-                            "[".concat(transactionHash,"] "), 
-                            " => ", 
-                            `${value[0].name} `,
-                            `${value[0].uid} `,
-                            `${value[0].email} `,
-                            `${value[0].postal} `,
-                            TypeofEntityType[value[0].entity], " ", 
-                            TypeofSector[value[0].sector], " ",
-                            TypeofUnitType[value[0].unitType], " ",
-                            TypeofUnitSize[value[0].unitSize], " ",
-                            TypeCountries[value[0].country]
-                                ), "cyan");
-                        
-                        return value;
-                        }
-                    catch (error) {
-                        return error;
-                        }
-                           
+                        }                           
                     }
                 }
-            }*/
+            }
         }
     return NULL_HASH;
     }

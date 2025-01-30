@@ -86,9 +86,6 @@ router.get('/', async (req, res) => {
       
     switch (call) {
       case "entity": {
-        
-        console.log("enter entities", jsonData.inputs)
-
         if (jsonData.call == "company" || jsonData.call == "people") {
           if (jsonData.inputs.length == 2)
             res.status(201).json( 
