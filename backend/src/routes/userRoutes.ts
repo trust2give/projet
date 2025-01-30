@@ -85,6 +85,16 @@ router.get('/', async (req, res) => {
         jsonData = JSON.parse(decodeURIComponent(inputs as string)); // Décoder et analyser l'objet JSON
       
     switch (call) {
+      case "entity": {
+
+        if (jsonData.call == "company" || jsonData.call == "people") {
+          if (jsonData.inputs.length == 2)
+            res.status(201).json( 
+              await createEntity( jsonData.inputs[0], jsonData.inputs[1])
+                );
+              }
+        break;
+        }
       case "rights": {
 
         process = rightCallback.find( (item) => item.tag == jsonData.call );

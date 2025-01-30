@@ -62,7 +62,7 @@ export const getEntity = async ( hash: typeof regex2 ) : Promise<{
         }
     }
 
-/*
+
 export const createEntity = async ( person: boolean, inputs: {
     name: string,
     uid?: string,
@@ -75,7 +75,7 @@ export const createEntity = async ( person: boolean, inputs: {
     country: string
     } ) : Promise<typeof regex2 | undefined> => {
 
-    console.log("Create %s", (person) ? "person" : "entity")
+    console.log("Create %s", (person) ? "person" : "entity", inputs)
 
     const jsonEntity = fs.readFileSync( 
         (<contractRecord>facetNames.find( (item) => item.name == "T2G_EntityFacet")).abi.path, 
@@ -89,7 +89,7 @@ export const createEntity = async ( person: boolean, inputs: {
         const encodeInput = encodeInterfaces.T2G_EntityFacet.find((item) => item.function == "setEntity");
 
         type decKeys = keyof typeof dataDecodeABI;
-
+        /*
         if (encodeInput != undefined) {
             if ("_data" in encodeInput) {
                 if (encodeInput._data in dataDecodeABI) {
@@ -181,13 +181,15 @@ export const createEntity = async ( person: boolean, inputs: {
                     catch (error) {
                         return error;
                         }
-                            
+                           
                     }
                 }
-            }
+            }*/
         }
+    return NULL_HASH;
     }
-*/
+
+
 export const getAllEntities = async () : Promise<string[] | undefined> => {
 
     console.log("Get All Entities");
