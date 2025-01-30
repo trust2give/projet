@@ -92,12 +92,9 @@ export const createEntity = async ( person: boolean, inputs: {
     if ("T2G_EntityFacet" in encodeInterfaces) {
 
         const encodeInput = encodeInterfaces.T2G_EntityFacet.find((item) => item.function == "setEntity");
-
-        type decKeys = keyof typeof dataDecodeABI;
         
         if (encodeInput != undefined) {
             if ("_data" in encodeInput) {
-                if (encodeInput._data in dataDecodeABI) {
 
                     const setIndex = ( list: string[], value: string) : number => {
                         const maxIndex = list.length;
@@ -131,7 +128,7 @@ export const createEntity = async ( person: boolean, inputs: {
                             };
 
                     const encodedData = encodeAbiParameters( 
-                        dataDecodeABI[<decKeys>encodeInput._data], [[
+                        dataDecodeABI[<keyof typeof dataDecodeABI>encodeInput?._data], [[
                         ...Object.values(ins)
                         ]] );
 
@@ -146,7 +143,6 @@ export const createEntity = async ( person: boolean, inputs: {
                     catch (error) {
                         return NULL_HASH;
                         }                           
-                    }
                 }
             }
         }
