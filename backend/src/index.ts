@@ -23,10 +23,7 @@ app.use('/T2G', userRoutes); // Utilisation des routes des utilisateurs
 
 app.listen(PORT, async () => {
       
-    const walletClient = createWalletClient({
-        chain: hardhat,
-        transport: http('http://localhost:8545'), 
-        })
+
 
     console.log("Entering...")
           

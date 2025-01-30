@@ -1,5 +1,6 @@
 import fs from 'fs';
-import { keccak256, toHex, Address, encodeAbiParameters, decodeAbiParameters } from 'viem'
+import { http, createWalletClient, Address, encodeAbiParameters, decodeAbiParameters } from 'viem'
+import { mainnet, hardhat } from 'viem/chains'
 import { contractSet, diamondNames, facetNames, smart, encodeInterfaces, getWalletAddressFromSmartContract } from "../T2G_Data";
 import { contractRecord, rwRecord, rwType, menuRecord, Account, NULL_ADDRESS, regex, regex2, NULL_HASH } from "../libraries/types";
 import { accountType, accountRefs, globalState, setState, addAccount, updateAccountBalance, assignAccounts } from "./states";
@@ -132,13 +133,24 @@ export const createEntity = async ( person: boolean, inputs: {
                         ...Object.values(ins)
                         ]] );
 
-                    try {                                
-                        return <typeof regex2>await globalState.clients.writeContract({
+                    try {              
+                        const walletClient = createWalletClient({
+                            chain: hardhat,
+                            transport: http('http://localhost:8545'), 
+                            })
+                        
+                        const [account] = await walletClient.getAddresses()
+                        
+                        const { request } = await globalState.clients.simulateContract({
+                            account,
                             address: diamondNames.Diamond.address,
                             abi: entityABI.abi,
                             functionName: "setEntity",
                             args: [ encodedData ]
-                            });
+                            })
+                        
+                        return <typeof regex2>await walletClient.writeContract(request)
+
                         }
                     catch (error) {
                         console.error(error)
