@@ -232,7 +232,7 @@ export function showObject( data: any, eol: boolean = false ) {
     return label;
     }
 */
-
+/*
 function parseAndDisplayInputAndOutputs( 
     abi : Array<any>,       // Array of abi definition of input or output variables
     values : Array<any>,    // Array of values (inputs or output) to decode and transform
@@ -248,4 +248,4 @@ function parseAndDisplayInputAndOutputs(
                 );
         }).join(" | ");
     }
-    
+    */
