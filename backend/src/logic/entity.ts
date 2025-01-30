@@ -62,7 +62,7 @@ export const getEntity = async ( hash: typeof regex2 ) : Promise<{
         }
     }
 
-
+/*
 export const createEntity = async ( person: boolean, inputs: {
     name: string,
     uid?: string,
@@ -142,7 +142,7 @@ export const createEntity = async ( person: boolean, inputs: {
                         return NULL_HASH;
                         }
                     
-                    /*
+                    
                     try {                                
                         const value : {
                             state: number,
@@ -181,13 +181,13 @@ export const createEntity = async ( person: boolean, inputs: {
                     catch (error) {
                         return error;
                         }
-                    */        
+                            
                     }
                 }
             }
         }
     }
-
+*/
 export const getAllEntities = async () : Promise<string[] | undefined> => {
 
     console.log("Get All Entities");
