@@ -86,11 +86,13 @@ router.get('/', async (req, res) => {
       
     switch (call) {
       case "entity": {
-        console.log("enter entities")
+        
+        console.log("enter entities", jsonData.inputs)
+
         if (jsonData.call == "company" || jsonData.call == "people") {
           if (jsonData.inputs.length == 2)
             res.status(201).json( 
-              await createEntity( jsonData.inputs[0], jsonData.inputs[1])
+              await createEntity( (<Array<any>>jsonData.inputs)[0], (<Array<any>>jsonData.inputs)[1])
                 );
               }
         break;
@@ -104,16 +106,16 @@ router.get('/', async (req, res) => {
             if (jsonData.inputs.length == 2)
               res.status(201).json( 
                 await process?.callback(
-                    <Account>`@${jsonData.inputs[0]}`,
-                    (Number(jsonData.inputs[1]) % 256)
+                    <Account>`@${(<Array<any>>jsonData.inputs)[0]}`,
+                    (Number((<Array<any>>jsonData.inputs)[1]) % 256)
                     )
                   );
                 }
           else if (jsonData.call == "ban") {
-            if (Number(jsonData.inputs[0]))
+            if (Number((<Array<any>>jsonData.inputs)[0]))
               res.status(201).json( 
                 await process?.callback( 
-                  <Account>`@${jsonData.inputs[0]}`
+                  <Account>`@${(<Array<any>>jsonData.inputs)[0]}`
                   )
                 );
             }
