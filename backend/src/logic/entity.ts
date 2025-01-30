@@ -141,6 +141,7 @@ export const createEntity = async ( person: boolean, inputs: {
                             });
                         }
                     catch (error) {
+                        console.error(error)
                         return NULL_HASH;
                         }                           
                 }
