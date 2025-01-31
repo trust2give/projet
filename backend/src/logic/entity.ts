@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { http, createWalletClient, Address, encodeAbiParameters, decodeAbiParameters } from 'viem'
+import { BaseError, http, createWalletClient, Address, encodeAbiParameters, decodeAbiParameters } from 'viem'
 import { mainnet, hardhat } from 'viem/chains'
 import { contractSet, diamondNames, facetNames, smart, encodeInterfaces, getWalletAddressFromSmartContract } from "../T2G_Data";
 import { contractRecord, rwRecord, rwType, menuRecord, Account, NULL_ADDRESS, regex, regex2, NULL_HASH } from "../libraries/types";
@@ -140,23 +140,34 @@ export const createEntity = async ( person: boolean, inputs: {
                             })
                         
                         const [account] = await walletClient.getAddresses()
+
+                        console.log(account)
                         
                         const { request } = await globalState.clients.simulateContract({
-                            account,
                             address: diamondNames.Diamond.address,
                             abi: entityABI.abi,
                             functionName: "setEntity",
-                            args: [ encodedData ]
-                            })
+                            args: [ encodedData ],
+                            account
+                        })
+
+                        console.log( request )
                         
                         return <typeof regex2>await walletClient.writeContract(request)
 
                         }
-                    catch (error) {
-                        console.error(error)
-                        return NULL_HASH;
+                    catch (err) {
+                        if (err instanceof BaseError) {
+                            const revertError = err.walk(err => err instanceof ContractFunctionRevertedError)
+                            if (revertError instanceof ContractFunctionRevertedError) {
+                              const errorName = revertError.data?.errorName ?? ''
+                              console.error(err)
+                              // do something with `errorName`
+                            }
                         }                           
-                }
+                        return NULL_HASH;
+                        }
+                    }
             }
         }
     return NULL_HASH;
