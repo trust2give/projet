@@ -151,12 +151,14 @@ export const createEntity = async ( person: boolean, inputs: {
                             account
                         })
 
-                        console.log( request )
+                        console.log( "request >> ", request )
                         
                         return <typeof regex2>await walletClient.writeContract(request)
 
-                        }
+                        
+                    }
                     catch (err) {
+                        console.log( "Error >> " )
                         if (err instanceof BaseError) {
                             const revertError = err.walk(err => err instanceof ContractFunctionRevertedError)
                             if (revertError instanceof ContractFunctionRevertedError) {
