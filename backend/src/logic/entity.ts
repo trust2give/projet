@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { BaseError, http, createWalletClient, Address, encodeAbiParameters, decodeAbiParameters } from 'viem'
+import { BaseError, http, createWalletClient, ContractFunctionRevertedError, Address, encodeAbiParameters, decodeAbiParameters } from 'viem'
 import { mainnet, hardhat } from 'viem/chains'
 import { contractSet, diamondNames, facetNames, smart, encodeInterfaces, getWalletAddressFromSmartContract } from "../T2G_Data";
 import { contractRecord, rwRecord, rwType, menuRecord, Account, NULL_ADDRESS, regex, regex2, NULL_HASH } from "../libraries/types";
