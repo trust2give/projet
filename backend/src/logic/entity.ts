@@ -161,10 +161,11 @@ export const createEntity = async ( person: boolean, inputs: {
                             const revertError = err.walk(err => err instanceof ContractFunctionRevertedError)
                             if (revertError instanceof ContractFunctionRevertedError) {
                               const errorName = revertError.data?.errorName ?? ''
-                              console.error(err)
                               // do something with `errorName`
+                              console.error(errorName)
                             }
                         }                           
+                        console.error(err)
                         return NULL_HASH;
                         }
                     }
