@@ -4,6 +4,7 @@ import { globalState } from '../logic/states';
 import { returnAccountTable } from "../libraries/format";
 import { showBeacons } from "../logic/beacons";
 import { rightCallback } from "../logic/rights";
+import { DeployContracts } from "../logic/DeployContracts";
 import { createEntity, getEntity, getAllEntities } from "../logic/entity";
 import { contractSet, diamondNames, facetNames, smart, smartEntry, encodeInterfaces } from "../T2G_Data";
 import { contractRecord, rwRecord, rwType, menuRecord, Account, NULL_ADDRESS, regex, regex2, regex3 } from "../libraries/types";
@@ -85,6 +86,26 @@ router.get('/', async (req, res) => {
         jsonData = JSON.parse(decodeURIComponent(inputs as string)); // Décoder et analyser l'objet JSON
       
     switch (call) {
+      case "diamond": {
+        res.status(201).json( 
+          await DeployContracts( "Diamond Add T2G_Root" )
+          );
+        break;
+        }
+      case "stable": {
+        res.status(201).json( 
+          await DeployContracts( "Contract Add EUR" )
+          );
+        break;
+        }
+      case "facet": {
+        if (["Add", "Replace", "Remove"].includes(jsonData.call) ) {
+          if (jsonData.inputs.length == 1)
+            res.status(201).json( 
+              await DeployContracts( "Facet ".concat( jsonData.call, " ", <string>(<Array<any>>jsonData.inputs)[0] ))
+              );
+            }
+        }
       case "entity": {
         if (jsonData.call == "company" || jsonData.call == "people") {
           if (jsonData.inputs.length == 2)
