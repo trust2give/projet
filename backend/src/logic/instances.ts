@@ -4,7 +4,7 @@ import { contractSet, diamondNames, facetNames, smart, encodeInterfaces, smartEn
 import { dataDecodeABI, abiData, honeyFeatures, pollenFeatures, Typeoftoken, Statusoftoken } from "../interface/types";
 import { colorOutput } from "../libraries/format";
 import { contractRecord, rwRecord, rwType, menuRecord, Account, NULL_ADDRESS, regex, regex2, regex3 } from "../libraries/types";
-import { accountIndex, convertType, enumOrValue } from "../libraries/utils";
+import { accountIndex } from "../libraries/utils";
 import { accountRefs, globalState, clientFormat } from "../logic/states";
 
 /// setrwRecordFromSmart represents the first function to call up when setting up an interaction
