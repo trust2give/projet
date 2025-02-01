@@ -51,16 +51,10 @@ export async function deployLoupeDiamond( action: FacetCutAction, cut: cutRecord
 
 export async function deployDiamond() : Promise<any> {
   
-    var diamond; // on récupère l'instance T2G_Root
-    var diamondCutFacet; // on récupère l'instance DiamondCutFacet
-    var diamondInit;
-
     colorOutput(
         `Deploying Diamond Root Smart Contract`, 
         "cyan"
         );
-
-    var initFunc = NULL_ADDRESS;
 
     colorOutput(
         `Root Name: ${diamondNames.Diamond.name} CutFacet Name: ${diamondNames.DiamondCutFacet.name} Owner@: ${accountRefs[Account.A0].address}`, 
@@ -75,20 +69,14 @@ export async function deployDiamond() : Promise<any> {
 
     const [account] = await globalState.wallets.getAddresses()
 
-    const jsonCut = fs.readFileSync( 
-        diamondNames.DiamondCutFacet.abi.path, 
-        'utf-8' 
-        );
-    
-    const cutABI : any = JSON.parse(jsonCut);
+    const cutAbi = diamondNames.DiamondCutFacet.abi.file.abi;
 
     const hashCut = await globalState.wallets.deployContract({
-        cutABI.abi,
+        cutAbi,
         account,
-        bytecode: cutABI.bytecode,
-      })
+        bytecode: diamondNames.DiamondCutFacet.abi.file.bytecode
+        })
 
-    //diamondCutFacet = await hre.viem.deployContract( diamondNames.DiamondCutFacet.name );
     console.log( hashCut );
 
     colorOutput(
@@ -96,29 +84,18 @@ export async function deployDiamond() : Promise<any> {
         "magenta"
         );
 
-    const jsonDiamond = fs.readFileSync( 
-        diamondNames.jsonDiamond.abi.path, 
-        'utf-8' 
-        );
-    
-    const diamondABI : any = JSON.parse(jsonDiamond);
-    
+    const diamondAbi = diamondNames.Diamond.abi.file.abi;
+
     const hashDiamond = await globalState.wallets.deployContract({
-        diamondABI.abi.file,
+        diamondAbi,
         account,
-        bytecode: diamondABI.bytecode,
+        bytecode: diamondNames.Diamond.abi.file.bytecode,
         args: [
             (<clientFormat[]>globalState.wallets)[0].account.address,
             hashCut.address
             ]
             })
     
-    /*diamond = await hre.viem.deployContract( diamondNames.Diamond.name, 
-        [
-        (<clientFormat[]>globalState.wallets)[0].account.address,
-        diamondCutFacet.address
-        ]
-        );*/
     console.log( hashDiamond );
 
     colorOutput(
@@ -126,17 +103,12 @@ export async function deployDiamond() : Promise<any> {
         "magenta"
         );    
 
-    const jsonInit = fs.readFileSync( 
-        diamondNames.jsonDiamond.abi.path, 
-        'utf-8' 
-        );
-    
-    const initABI : any = JSON.parse(jsonInit);
+    const initAbi = diamondNames.DiamondInit.abi.file.abi;
 
     const hashInit = await globalState.wallets.deployContract({
-        initABI.abi.file,
+        initAbi,
         account,
-        bytecode: initABI.bytecode,
+        bytecode: diamondNames.DiamondInit.abi.file.bytecode,
         })
 
     //diamondInit = await hre.viem.deployContract("DiamondInit");
@@ -168,7 +140,7 @@ export async function deployDiamond() : Promise<any> {
         );
 
     return encodeFunctionData({
-        abi: initABI.abi.file,
+        abi: diamondNames.DiamondInit.abi.file.abi,
         functionName: "init",
         args: [ tokenCredential.name, tokenCredential.symbol, diamondNames.Diamond.address ]
         });

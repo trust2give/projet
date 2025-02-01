@@ -39,7 +39,7 @@ export const getEntity = async ( hash: typeof regex2 ) : Promise<{
         try {                                
             value = await globalState.clients.readContract({
                     address: diamondNames.Diamond.address,
-                    abi: entityABI.abi.file,
+                    abi: entityABI.abi.file.abi,
                     functionName: "entity",
                     args: [ hash ]
                     });
@@ -145,7 +145,7 @@ export const createEntity = async ( person: boolean, inputs: {
                         
                         const { request } = await globalState.clients.simulateContract({
                             address: diamondNames.Diamond.address,
-                            abi: entityABI.abi.file,
+                            abi: entityABI.abi.file.abi,
                             functionName: "setEntity",
                             args: [ encodedData ],
                             account

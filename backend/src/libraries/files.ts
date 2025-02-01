@@ -79,17 +79,25 @@ export async function readLastDiamondJSONfile() : Promise<boolean> {
     const diamondABI : any = JSON.parse(jsonDiamond);
     
     diamondNames.Diamond.address = <Address>DiamondCore.Diamond.address;
-    diamondNames.Diamond.abi.file = diamondABI.abi;
-    
-    diamondNames.DiamondInit = <contractRecord>DiamondCore.DiamondInit;
+    diamondNames.Diamond.abi.file = diamondABI;
 
-    diamondNames.DiamondCutFacet = <contractRecord>DiamondCore.DiamondCutFacet;
+    const jsonInit = fs.readFileSync( diamondNames.DiamondInit.abi.path, 'utf-8');
+    const initABI : any = JSON.parse(jsonInit);
+
+    diamondNames.DiamondInit.address = <Address>DiamondCore.DiamondInit.address;
+    diamondNames.DiamondInit.abi.file = initABI;
+
+    const jsonCut = fs.readFileSync( diamondNames.DiamondCutFacet.abi.path, 'utf-8');
+    const cutABI : any = JSON.parse(jsonCut);
+
+    diamondNames.DiamondCutFacet.address = <Address>DiamondCore.DiamondCutFacet.address;
+    diamondNames.DiamondCutFacet.abi.file = cutABI;
 
     const jsonLoupe = fs.readFileSync( diamondNames.DiamondLoupeFacet.abi.path, 'utf-8');
     const loupeABI : any = JSON.parse(jsonLoupe);
 
     diamondNames.DiamondLoupeFacet.address = <Address>DiamondCore.DiamondLoupeFacet.address;
-    diamondNames.DiamondLoupeFacet.abi.file = loupeABI.abi;
+    diamondNames.DiamondLoupeFacet.abi.file = loupeABI;
 
     return true;
     }
@@ -103,7 +111,7 @@ export async function readLastContractSetJSONfile() : Promise<boolean> {
     const jsonEUR = fs.readFileSync(contractSet[0].abi.path, 'utf-8');
     const eurABI : any = JSON.parse(jsonEUR);
     
-    contractSet[0].abi.file = <any>eurABI.abi;
+    contractSet[0].abi.file = <any>eurABI;
     contractSet[0].address = <Address>item.address;
 
     return true;
