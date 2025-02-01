@@ -42,16 +42,16 @@ app.listen(PORT, async () => {
   if (await readLastDiamondJSONfile()) {
 
     try {                
-        colorOutput("Connection to Root >> ", "cyan")
+        colorOutput("Connection to Root >> ".concat( diamondNames.Diamond.address ), "cyan")
                 
         const wallet = await globalState.clients.readContract({
             address: diamondNames.Diamond.address,
             abi: diamondNames.Diamond.abi.file,
             functionName: 'wallet_T2G_root',
             args: []
-          })
-
-        colorOutput("Fectch Stable Coint Wallet@ >> ", "cyan")
+        })
+        
+        colorOutput("Fectch Stable Coint Wallet@ >> ".concat( wallet[0] ), "cyan")
 
         initialized = await addAccount( 
             10, 
@@ -69,7 +69,7 @@ app.listen(PORT, async () => {
     if (await readLastContractSetJSONfile()) {
 
         try {
-            colorOutput("Connection to Eur StableCoin >> ", "cyan");
+            colorOutput("Connection to Eur StableCoin >> ".concat( contractSet[0].address ), "cyan");
 
             await addAccount( 
                 11, 

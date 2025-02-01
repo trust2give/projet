@@ -1,4 +1,5 @@
 const hre = require("hardhat");
+import fs from 'fs';
 import { Address, encodeFunctionData } from "viem";
 import { FacetCutAction, getSelectors } from "../utils/diamond";
 import { Account, regex, NULL_ADDRESS, cutRecord, contractRecord, diamondCore } from "../libraries/types";
@@ -59,13 +60,10 @@ export async function deployDiamond() : Promise<any> {
         "cyan"
         );
 
-    var CutName : string = (diamondNames.DiamondCutFacet.name || "DiamondCutFacet");
-
     var initFunc = NULL_ADDRESS;
-    var diamName : string = (diamondNames.Diamond.name || "Diamond");
 
     colorOutput(
-        `Root Name: ${diamName} CutFacet Name: ${CutName} Owner@: ${accountRefs[Account.A0].address}`, 
+        `Root Name: ${diamondNames.Diamond.name} CutFacet Name: ${diamondNames.DiamondCutFacet.name} Owner@: ${accountRefs[Account.A0].address}`, 
         "yellow"
         );
 
@@ -75,33 +73,83 @@ export async function deployDiamond() : Promise<any> {
         address: accountRefs[Account.A0].address,
         })    
 
-    diamondCutFacet = await hre.viem.deployContract( CutName );
+    const [account] = await globalState.wallets.getAddresses()
+
+    const jsonCut = fs.readFileSync( 
+        diamondNames.DiamondCutFacet.abi.path, 
+        'utf-8' 
+        );
+    
+    const cutABI : any = JSON.parse(jsonCut);
+
+    const hashCut = await globalState.wallets.deployContract({
+        cutABI.abi,
+        account,
+        bytecode: cutABI.bytecode,
+      })
+
+    //diamondCutFacet = await hre.viem.deployContract( diamondNames.DiamondCutFacet.name );
+    console.log( hashCut );
 
     colorOutput(
-        `Add ${CutName} @: ${diamondCutFacet.address}`, 
+        `Add ${diamondNames.DiamondCutFacet.name} @: ${hashCut.address}`, 
         "magenta"
         );
 
-    diamond = await hre.viem.deployContract( diamName, [
+    const jsonDiamond = fs.readFileSync( 
+        diamondNames.jsonDiamond.abi.path, 
+        'utf-8' 
+        );
+    
+    const diamondABI : any = JSON.parse(jsonDiamond);
+    
+    const hashDiamond = await globalState.wallets.deployContract({
+        diamondABI.abi.file,
+        account,
+        bytecode: diamondABI.bytecode,
+        args: [
+            (<clientFormat[]>globalState.wallets)[0].account.address,
+            hashCut.address
+            ]
+            })
+    
+    /*diamond = await hre.viem.deployContract( diamondNames.Diamond.name, 
+        [
         (<clientFormat[]>globalState.wallets)[0].account.address,
         diamondCutFacet.address
-        ]);
+        ]
+        );*/
+    console.log( hashDiamond );
 
     colorOutput(
-        `Add ${diamName} @: ${diamond.address}`, 
+        `Add ${diamondNames.Diamond.name} @: ${hashDiamond.address}`, 
         "magenta"
         );    
+
+    const jsonInit = fs.readFileSync( 
+        diamondNames.jsonDiamond.abi.path, 
+        'utf-8' 
+        );
     
-    diamondInit = await hre.viem.deployContract("DiamondInit");
+    const initABI : any = JSON.parse(jsonInit);
+
+    const hashInit = await globalState.wallets.deployContract({
+        initABI.abi.file,
+        account,
+        bytecode: initABI.bytecode,
+        })
+
+    //diamondInit = await hre.viem.deployContract("DiamondInit");
+    console.log( hashInit );
 
     colorOutput(
-        `Add DiamondInit @: ${diamondInit.address}`, 
+        `Add DiamondInit @: ${hashInit.address}`, 
         "magenta"
         );    
 
-    diamondNames.Diamond.address = diamond.address;
-    diamondNames.DiamondCutFacet.address = diamondCutFacet.address;
-    diamondNames.DiamondInit.address = diamondInit.address;
+    diamondNames.Diamond.address = hashDiamond.address;
+    diamondNames.DiamondCutFacet.address = hashCut.address;
+    diamondNames.DiamondInit.address = hashInit.address;
 
     const after = await globalState.clients.getBalance({ 
         address: accountRefs[Account.A0].address,
@@ -120,9 +168,9 @@ export async function deployDiamond() : Promise<any> {
         );
 
     return encodeFunctionData({
-        abi: diamondInit.abi,
+        abi: initABI.abi.file,
         functionName: "init",
-        args: [ tokenCredential.name, tokenCredential.symbol, diamond.address ]
+        args: [ tokenCredential.name, tokenCredential.symbol, diamondNames.Diamond.address ]
         });
     }
 

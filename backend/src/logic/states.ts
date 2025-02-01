@@ -20,7 +20,7 @@ export type  menuState = {
     log?: string,
     pad?: number,
     accountIndex?: number,
-    wallets?: clientFormat[],
+    wallets?: any,
     clients?: any
     }
 
@@ -121,13 +121,18 @@ export function initState() {
 
 // Used
 export async function loadWallets() {
-    globalState.wallets = <clientFormat[]>await hre.viem.getWalletClients();        
+    // <clientFormat[]>await hre.viem.getWalletClients();
+    globalState.wallets = createWalletClient({
+        chain: hardhat,
+        transport: http('http://localhost:8545'), 
+        })
+
     globalState.clients = createPublicClient({
         chain: hardhat,
         transport: http('http://localhost:8545'), // L'adresse de votre nœud Hardhat
     });
 
-    for (const account of globalState.wallets) {
+    for (const account of await hre.viem.getWalletClients()) {
         const balance = await globalState.clients.getBalance({
             address: (<clientFormat>account).account.address,
             });
@@ -200,7 +205,6 @@ export const assignAccounts = async () => {
         accountRefs = Object.assign( accountRefs, Object.fromEntries(new Map([ [`@${rank}`, 
             {   name: `Wallet ${rank}`, 
                 address: wallet.address,
-                client: (<clientFormat[]>globalState.wallets)[rank], 
                 balance: balance 
             } 
             ] ])));

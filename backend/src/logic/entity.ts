@@ -39,7 +39,7 @@ export const getEntity = async ( hash: typeof regex2 ) : Promise<{
         try {                                
             value = await globalState.clients.readContract({
                     address: diamondNames.Diamond.address,
-                    abi: entityABI.abi,
+                    abi: entityABI.abi.file,
                     functionName: "entity",
                     args: [ hash ]
                     });
@@ -134,18 +134,18 @@ export const createEntity = async ( person: boolean, inputs: {
                         ]] );
 
                     try {              
-                        const walletClient = createWalletClient({
+                        /*const walletClient = createWalletClient({
                             chain: hardhat,
                             transport: http('http://localhost:8545'), 
-                            })
+                            })*/
                         
-                        const [account] = await walletClient.getAddresses()
+                        const [account] = await globalState.wallets.getAddresses()
 
                         console.log(account)
                         
                         const { request } = await globalState.clients.simulateContract({
                             address: diamondNames.Diamond.address,
-                            abi: entityABI.abi,
+                            abi: entityABI.abi.file,
                             functionName: "setEntity",
                             args: [ encodedData ],
                             account
@@ -153,7 +153,7 @@ export const createEntity = async ( person: boolean, inputs: {
 
                         console.log( "request >> ", request )
                         
-                        return <typeof regex2>await walletClient.writeContract(request)
+                        return <typeof regex2>await globalState.wallets.writeContract(request)
 
                         
                     }
