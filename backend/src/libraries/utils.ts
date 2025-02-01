@@ -28,6 +28,7 @@ export async function accountIndex( accounts: accountList, label?: Account, wall
 // name =>
 // output => represent the length of characters to apply on a string if not false or 0
 
+/*
 export function convertType( 
     root: Array<any>, 
     index: number, 
@@ -100,3 +101,4 @@ export function enumOrValue( args: Array<any>, index: number, answer: string ) :
         }
     return Number(answer);
     }
+    */
