@@ -32,7 +32,7 @@ async function deployContractInstance( contract: contractRecord, args: Array<any
     console.log("Waiting Transaction ", hashCut )
 
     // Attendre la validation de la transaction
-    const resCut = await globalState.clients.waitForTransactionReceipt(hashCut)
+    const resCut = await globalState.clients.waitForTransactionReceipt({ hash: hashCut })
 
     console.log("resCut", resCut, account);
 
