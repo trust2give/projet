@@ -37,7 +37,7 @@ async function deployContractInstance( contract: contractRecord, args: Array<any
     console.log("resCut", resCut, account);
 
     const eventLogs = await  globalState.clients.getContractEvents({
-        abi: contract.abi.file,
+        abi: contract.abi.file.abi,
         address: resCut.contractAddress,
         })
             
