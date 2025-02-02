@@ -26,7 +26,7 @@ async function deployContractInstance( contract: contractRecord, args: Array<any
         )
 
     // Attendre la validation de la transaction
-    const resCut = await globalState.wallets.waitForTransactionReceipt(hashCut)
+    const resCut = await globalState.clients.waitForTransactionReceipt(hashCut)
 
     const eventLogs = await  globalState.clients.getContractEvents({
         abi: contract.abi.file,
