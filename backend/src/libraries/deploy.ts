@@ -4,6 +4,7 @@ import { Account, regex, NULL_ADDRESS, cutRecord, contractRecord, diamondCore } 
 import { diamondNames, tokenCredential, contractSet, facetNames } from "../T2G_Data";
 import { colorOutput } from "../libraries/format";
 import { accountRefs, globalState, clientFormat } from "../logic/states";
+import fs from 'fs';
 
 async function deployContractInstance( contract: contractRecord, args: Array<any>, action: FacetCutAction ) {
 
@@ -12,16 +13,20 @@ async function deployContractInstance( contract: contractRecord, args: Array<any
     const before = await globalState.clients.getBalance({ 
         address: account,
         })    
+    
+    const abi = contract.abi.file.abi;
 
-    const hashCut = await globalState.wallets.deployContract({
-        contract.abi.file.abi,
+    const hashCut = await (<clientFormat[]>globalState.wallets)[0].deployContract(
+        {
+        abi,
         account,
         bytecode: contract.abi.file.bytecode,
         args: args
-        })
+        }
+        )
 
     // Attendre la validation de la transaction
-    const resCut = await globalState.wallets.waitForTransactionReceipt(hashCut)
+    const resCut = await (<clientFormat[]>globalState.wallets)[0].waitForTransactionReceipt(hashCut)
 
     const eventLogs = await  globalState.clients.getContractEvents({
         abi: contract.abi.file,
