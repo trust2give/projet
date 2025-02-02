@@ -219,7 +219,6 @@ export async function DeployContracts( answer : string, smart : menuRecord[]) {
         }
       case "Contract": {
         if (trace) console.log("Contract found", contractSet, choice);
-        //contractSet[0].address = await getOrDeployContract( contractSet[0], <string>contractSet[0].name, <FacetCutAction>choice );
 
         if (choice != FacetCutAction.Remove) {
             const instance = await hre.viem.deployContract( contractSet[0].name );

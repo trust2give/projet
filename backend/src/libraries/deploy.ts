@@ -1,5 +1,3 @@
-const hre = require("hardhat");
-import fs from 'fs';
 import { Address, encodeFunctionData } from "viem";
 import { FacetCutAction, getSelectors } from "../utils/diamond";
 import { Account, regex, NULL_ADDRESS, cutRecord, contractRecord, diamondCore } from "../libraries/types";
@@ -7,10 +5,66 @@ import { diamondNames, tokenCredential, contractSet, facetNames } from "../T2G_D
 import { colorOutput } from "../libraries/format";
 import { accountRefs, globalState, clientFormat } from "../logic/states";
 
+async function deployContractInstance( contract: contractRecord, args: Array<any>, action: FacetCutAction ) {
 
-export async function getOrDeployContract( contract : contractRecord, name: string, action: FacetCutAction | undefined ) : Promise<Address> {
+    const [account] = await globalState.wallets.getAddresses()
+
+    const before = await globalState.clients.getBalance({ 
+        address: account,
+        })    
+
+    const hashCut = await globalState.wallets.deployContract({
+        contract.abi.file.abi,
+        account,
+        bytecode: contract.abi.file.bytecode,
+        args: args
+        })
+
+    // Attendre la validation de la transaction
+    const resCut = await globalState.wallets.waitForTransactionReceipt(hashCut)
+
+    const eventLogs = await  globalState.clients.getContractEvents({
+        abi: contract.abi.file,
+        address: resCut.address,
+        })
+            
+    colorOutput(
+        `${["Add", "Replace", "Remove"][action]} ${contract.name} @: ${resCut.contractAddress} Hash: ${hashCut}`, 
+        "magenta"
+    );
+
+    colorOutput( "[".concat( eventLogs.map((event: any) => {
+        return " >> Event ".concat( event.eventName, "[ ", Object.values(event.args).join("| "), " ]" );
+        }).join("\n"), "]" ), "yellow");
+        
+    const after = await globalState.clients.getBalance({ 
+        address: account,
+        })   
+    
+    contract.address = resCut.contractAddress;
+    
+    colorOutput( 
+        "Balance @[".concat(
+            account, 
+            "] Before @[", 
+            before, 
+            "] After @[", 
+            after, 
+            `] gaz used = ${(before - after)} `
+            ), 
+        "green"
+        );
+    }
+
+/*export async function getOrDeployContract( 
+    contract : contractRecord, 
+    name: string, 
+    action: FacetCutAction | undefined 
+    ) : Promise<Address> {
+
     if (action == undefined) {
-        if (String(contract.address).match(regex)) return (await hre.viem.getContractAt( name, (<Address>contract.address) )).address;
+        if (String(contract.address).match(regex)) 
+            return (await hre.viem.getContractAt( name, (<Address>contract.address) )).address;
         else throw("Wrong address format for EUR Contract ".concat(contract.address));
         }
     else if (action != <FacetCutAction>FacetCutAction.Remove) {
@@ -19,20 +73,19 @@ export async function getOrDeployContract( contract : contractRecord, name: stri
         return instance.address;
         }
     else throw("Wrong action for EUR Contract ".concat(contract.address));
-    }
+    }*/
 
 export async function deployLoupeDiamond( action: FacetCutAction, cut: cutRecord[] ) : Promise<Array<any>> { 
-    var diamondLoupe; // on récupère l'instance DiamonLoupeFacet
-    var loupeName : string = (diamondNames.DiamondLoupeFacet.name || "DiamondLoupeFacet");
 
-    switch (action) {
+    switch (action) { 
+        case (FacetCutAction.Add):
         case (FacetCutAction.Replace): {
-            colorOutput(`Replace ${loupeName} @: ${diamondNames.DiamondLoupeFacet.address}`, "magenta");    
-            } 
-        case (FacetCutAction.Add): {
-            colorOutput(`Add ${loupeName} @: ${diamondNames.DiamondLoupeFacet.address}`, "magenta");    
-
-            diamondLoupe = await hre.viem.deployContract( loupeName );                
+            
+            await deployContractInstance( 
+                diamondNames.DiamondLoupeFacet, 
+                [],  
+                action  
+                );
             break;
             } 
         default:
@@ -40,9 +93,9 @@ export async function deployLoupeDiamond( action: FacetCutAction, cut: cutRecord
         }
 
     cut.push({
-        facetAddress: diamondLoupe.address,
+        facetAddress: diamondNames.DiamondLoupeFacet.address,
         action: action,
-        functionSelectors: getSelectors(diamondLoupe)
+        functionSelectors: getSelectors(diamondNames.DiamondLoupeFacet.abi.file)
         });
 
     return cut;    
@@ -63,81 +116,20 @@ export async function deployDiamond() : Promise<any> {
 
         // On est dans le cas où on créé un nouveau T2G_Root
 
-    const before = await globalState.clients.getBalance({ 
-        address: accountRefs[Account.A0].address,
-        })    
-
-    const [account] = await globalState.wallets.getAddresses()
-
-    const cutAbi = diamondNames.DiamondCutFacet.abi.file.abi;
-
-    const hashCut = await globalState.wallets.deployContract({
-        cutAbi,
-        account,
-        bytecode: diamondNames.DiamondCutFacet.abi.file.bytecode
-        })
-
-    console.log( hashCut );
-
-    colorOutput(
-        `Add ${diamondNames.DiamondCutFacet.name} @: ${hashCut.address}`, 
-        "magenta"
+    await deployContractInstance( 
+        diamondNames.DiamondCutFacet, 
+        [],  
+        FacetCutAction.Add  
         );
 
-    const diamondAbi = diamondNames.Diamond.abi.file.abi;
-
-    const hashDiamond = await globalState.wallets.deployContract({
-        diamondAbi,
-        account,
-        bytecode: diamondNames.Diamond.abi.file.bytecode,
-        args: [
-            (<clientFormat[]>globalState.wallets)[0].account.address,
-            hashCut.address
-            ]
-            })
-    
-    console.log( hashDiamond );
-
-    colorOutput(
-        `Add ${diamondNames.Diamond.name} @: ${hashDiamond.address}`, 
-        "magenta"
-        );    
-
-    const initAbi = diamondNames.DiamondInit.abi.file.abi;
-
-    const hashInit = await globalState.wallets.deployContract({
-        initAbi,
-        account,
-        bytecode: diamondNames.DiamondInit.abi.file.bytecode,
-        })
-
-    //diamondInit = await hre.viem.deployContract("DiamondInit");
-    console.log( hashInit );
-
-    colorOutput(
-        `Add DiamondInit @: ${hashInit.address}`, 
-        "magenta"
-        );    
-
-    diamondNames.Diamond.address = hashDiamond.address;
-    diamondNames.DiamondCutFacet.address = hashCut.address;
-    diamondNames.DiamondInit.address = hashInit.address;
-
-    const after = await globalState.clients.getBalance({ 
-        address: accountRefs[Account.A0].address,
-        })    
-
-    colorOutput( 
-        "Balance @[".concat(
-            accountRefs[Account.A0].address, 
-            "] Before @[", 
-            before, 
-            "] After @[", 
-            after, 
-            `] gaz used = ${(before - after)} `
-            ), 
-        "green"
+    await deployContractInstance( diamondNames.Diamond, [
+        (<clientFormat[]>globalState.wallets)[0].account.address,
+        diamondNames.DiamondCutFacet.address
+        ], 
+        FacetCutAction.Add 
         );
+
+    await deployContractInstance( diamondNames.DiamondInit, [],  FacetCutAction.Add );
 
     return encodeFunctionData({
         abi: diamondNames.DiamondInit.abi.file.abi,
@@ -153,82 +145,48 @@ export async function deployDiamond() : Promise<any> {
 // Adds up the eventual changes to apply to the diamond architecture through the cut[] array
 // Return the cut[] to pass to DiamondCutFacet smart contract
 
-export async function deployFacets( name: string, action: FacetCutAction, constructor: Array<any>,  cut: cutRecord[]  ) : Promise<cutRecord[]> {
+export async function deployFacets( 
+    name: string, 
+    action: FacetCutAction, 
+    constructor: Array<any>, 
+    cut: cutRecord[]  
+    ) : Promise<cutRecord[]> {
 
-    const before = await globalState.clients.getBalance(
-        { address: accountRefs[Account.A0].address,}
-        )    
+    const facet = facetNames.find((item) => item.name == name);
 
-    var facet;
-    switch (action) {
-        case FacetCutAction.Remove: {
+    if (facet != undefined) {                
+        switch (action) {
+            case FacetCutAction.Remove: {
+                cut.push({ 
+                    facetAddress: NULL_ADDRESS, 
+                    action: action, 
+                    functionSelectors: getSelectors((<contractRecord>facet).abi.file) 
+                    });
 
-            facet = await hre.viem.getContractAt( 
-                <string>name, 
-                diamondNames.Diamond.address 
-                );        
-
-            cut.push({ 
-                facetAddress: NULL_ADDRESS, 
-                action: action, 
-                functionSelectors: getSelectors(facet) 
-                });
-
-            break;
-            }
-        case FacetCutAction.Add:
-        case FacetCutAction.Replace: {
-
-            if (constructor.length > 0) {
-
-                facet = await hre.viem.deployContract( 
-                    <string>name, 
-                    constructor, 
-                    { client: { wallet: (<clientFormat[]>globalState.wallets)[0] }, }
-                    );
+                break;
                 }
-            else {
-                facet = await hre.viem.deployContract(
-                    <string>name
-                    );
+            case FacetCutAction.Add:
+            case FacetCutAction.Replace: {
+
+                await deployContractInstance( facet, constructor, action );
+
+                cut.push({ 
+                    facetAddress: (<contractRecord>facet).address, 
+                    action: action, 
+                    functionSelectors: getSelectors((<contractRecord>facet).abi.file) 
+                    });
+
+                break;
                 }
-
-            cut.push({ 
-                facetAddress: facet.address, 
-                action: action, 
-                functionSelectors: getSelectors(facet) 
-                });
-
-            break;
+            case undefined: {
+                return cut;
+                }
+            default: {
+                throw new Error(`Incompatible Action ${action} for ${name} & address recorded`);
+                }
             }
-        case undefined: {
-            return cut;
-            }
-        default: {
-            throw new Error(`Incompatible Action ${action} for ${name} & address recorded`);
-            }
-        }
+         }
 
-    colorOutput(`${name} - Action ${action} @: ${diamondNames.Diamond.address}`, "green");    
-
-    const eventLogs = await  globalState.clients.getContractEvents({
-        abi: facet.abi,
-        address: (<Address>facet.address),
-        })
-                    
-    colorOutput( "[".concat( eventLogs.map((event: any) => {
-        return " >> Event ".concat( event.eventName, "[ ", Object.values(event.args).join("| "), " ]" );
-        }).join("\n"), "]" ), "yellow");
-
-    const after = await globalState.clients.getBalance(
-        { address: accountRefs[Account.A0].address,}
-        )    
-
-        colorOutput( 
-        "Facet @[".concat(name, "] Before @[", before, "] After @[", after, `] gaz used = ${(before - after)} `), 
-        "green"
-        );
-    
     return cut;
     }
 
@@ -238,14 +196,21 @@ export async function deployWithDiamondCut( cut : cutRecord[], initFunc: `0x${st
         address: accountRefs[Account.A0].address,
         })    
 
-    const diamondCut = await hre.viem.getContractAt(
+    const jsonIDiamondCut = fs.readFileSync( 
+        './artifacts/contracts/interfaces/IDiamondCut.sol/IDiamondCut.json', 
+        'utf-8'
+        );
+
+    const iDiamondCutABI : any = JSON.parse(jsonIDiamondCut);
+
+    /*const diamondCut = await hre.viem.getContractAt(
         "IDiamondCut", 
         diamondNames.Diamond.address
-        );
+        );*/
 
     const { request } = await globalState.clients.simulateContract({
         address: diamondNames.Diamond.address,
-        abi: diamondCut.abi,
+        abi: iDiamondCutABI.abi,
         functionName: "diamondCut",
         args: [
             cut,
@@ -255,6 +220,7 @@ export async function deployWithDiamondCut( cut : cutRecord[], initFunc: `0x${st
         });
 
     const tx = await (<clientFormat[]>globalState.wallets)[0].writeContract(request);
+
     await globalState.clients.waitForTransactionReceipt({ hash: tx });
 
     colorOutput(
