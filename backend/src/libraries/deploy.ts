@@ -16,6 +16,8 @@ async function deployContractInstance( contract: contractRecord, args: Array<any
     
     const abi = contract.abi.file.abi;
 
+    console.log((<clientFormat[]>globalState.wallets)[0], globalState.wallets)
+
     const hashCut = await (<clientFormat[]>globalState.wallets)[0].deployContract(
         {
         abi,
