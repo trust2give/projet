@@ -38,7 +38,7 @@ async function deployContractInstance( contract: contractRecord, args: Array<any
 
     const eventLogs = await  globalState.clients.getContractEvents({
         abi: contract.abi.file,
-        address: resCut.address,
+        address: resCut.contractAddress,
         })
             
     colorOutput(
