@@ -224,10 +224,7 @@ export async function deployWithDiamondCut( cut : cutRecord[], initFunc: `0x${st
 
     const iDiamondCutABI : any = JSON.parse(jsonIDiamondCut);
 
-    /*const diamondCut = await hre.viem.getContractAt(
-        "IDiamondCut", 
-        diamondNames.Diamond.address
-        );*/
+    const [account] = await globalState.wallets.getAddresses()
 
     const { request } = await globalState.clients.simulateContract({
         address: diamondNames.Diamond.address,
@@ -237,7 +234,8 @@ export async function deployWithDiamondCut( cut : cutRecord[], initFunc: `0x${st
             cut,
             initAddress,
             initFunc
-            ]
+        ],
+        account
         });
 
     const tx = await globalState.wallets.writeContract(request);
