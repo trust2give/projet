@@ -103,12 +103,16 @@ app.listen(PORT, async () => {
                     args: []
                     }) : NULL_ADDRESS;
 
+                console.log( "Facet >> %s (%s)", facet.name, get)
+
                 const wallet : any[] = (facet.wallet) ? <any[]>await globalState.clients.readContract({
                     address: diamondNames.Diamond.address,
                     abi: facetABI.abi,
                     functionName: <string>facet.wallet,
                     args: []
                     }) : [];
+
+                console.log( "Facet >> %s (xallet %s)", facet.name, wallet[0])
 
                 await addAccount( 
                     rank, 

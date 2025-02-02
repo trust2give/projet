@@ -39,8 +39,6 @@ export async function DeployContracts( answer : string ) {
   var initFunc = NULL_ADDRESS;
   var initAddress = NULL_ADDRESS;
 
-  var facetList = smart.filter((item) => (item.diamond == Account.AA && item.contract != diamondNames.Diamond.name));
-
   var commands : string[] = answer.split(' ');
   colorOutput( "commands:: ".concat(commands.join('|')), "yellow" );
   
