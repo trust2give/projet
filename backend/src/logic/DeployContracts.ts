@@ -202,14 +202,15 @@ export async function DeployContracts( answer : string ) {
 
           if (choice != FacetCutAction.Remove && isWallet) {
 
+            console.log( writeList[<string>facet.name], facet.abi.file.abi, facet.wallet);
+            
             const walletAndKey = await globalState.clients.readContract({
                 address: writeList[<string>facet.name],
                 abi: facet.abi.file.abi,
-                functionName: <string>facet.wallet,
-                args: []
+                functionName: <string>facet.wallet
             })
             
-            colorOutput("Fectch Stable Coint Wallet@ >> ".concat( walletAndKey[0] ), "cyan")
+            colorOutput("Fectch Stable Coin Wallet@ >> ".concat( walletAndKey[0] ), "cyan")
 
             const [account] = await globalState.wallets.getAddresses()
             
