@@ -38,7 +38,7 @@ export const setrwRecordFromSmart = async (fname : string, level?: string ) : Pr
         };
     }
 
-export const setConstructorFromInstance = async (facet: string, root: Address, sender: number ) : Promise<rwRecord> => {
+/*export const setConstructorFromInstance = async (facet: string, root: Address, sender: number ) : Promise<rwRecord> => {
 
     const record = <menuRecord>smartEntry(facet);
     if (record == undefined) return <rwRecord>{};
@@ -61,7 +61,7 @@ export const setConstructorFromInstance = async (facet: string, root: Address, s
         outcome: constructor.outputs,
         events: undefined 
         };
-    }
+    }*/
 
 export async function getFunctionsAbiFromInstance( record: menuRecord ) : Promise<string[]> {
     if (record != undefined) {

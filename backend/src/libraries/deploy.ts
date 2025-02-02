@@ -6,7 +6,7 @@ import { colorOutput } from "../libraries/format";
 import { accountRefs, globalState, clientFormat } from "../logic/states";
 import fs from 'fs';
 
-async function deployContractInstance( contract: contractRecord, args: Array<any>, action: FacetCutAction ) {
+export async function deployContractInstance( contract: contractRecord, args: Array<any>, action: FacetCutAction ) {
 
     const [account] = await globalState.wallets.getAddresses()
 
@@ -69,24 +69,6 @@ async function deployContractInstance( contract: contractRecord, args: Array<any
         );
     }
 
-/*export async function getOrDeployContract( 
-    contract : contractRecord, 
-    name: string, 
-    action: FacetCutAction | undefined 
-    ) : Promise<Address> {
-
-    if (action == undefined) {
-        if (String(contract.address).match(regex)) 
-            return (await hre.viem.getContractAt( name, (<Address>contract.address) )).address;
-        else throw("Wrong address format for EUR Contract ".concat(contract.address));
-        }
-    else if (action != <FacetCutAction>FacetCutAction.Remove) {
-        const instance = (await hre.viem.deployContract( name ));
-        colorOutput(`Add ${name} @: ${instance.address}`, "magenta");        
-        return instance.address;
-        }
-    else throw("Wrong action for EUR Contract ".concat(contract.address));
-    }*/
 
 export async function deployLoupeDiamond( action: FacetCutAction, cut: cutRecord[] ) : Promise<Array<any>> { 
 

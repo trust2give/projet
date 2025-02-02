@@ -3,7 +3,8 @@ import { diamondNames, contractSet, facetNames, smart } from "../T2G_Data";
 import { deployDiamond, 
          deployLoupeDiamond, 
          deployWithDiamondCut, 
-         deployFacets } from "../libraries/deploy";
+         deployFacets,
+         deployContractInstance } from "../libraries/deploy";
 import { FacetCutAction } from "../utils/diamond";
 import { wlist,
          writeLastContractJSONfile, 
@@ -11,9 +12,9 @@ import { wlist,
          writeLastFacetJSONfile } from "../libraries/files";
 import { colorOutput } from "../libraries/format";
 import { abiData } from "../interface/types";
-import { rwRecord, cutRecord, menuRecord, Account, NULL_ADDRESS, regex, regex2, regex3 } from "../libraries/types";
+import { rwRecord, cutRecord, rwType, Account, NULL_ADDRESS, regex, regex2, regex3, contractRecord, NULL_HASH } from "../libraries/types";
 import { accountRefs, globalState, clientFormat } from "./states";
-import { setConstructorFromInstance } from "./instances";
+//import { setConstructorFromInstance } from "./instances";
 import { Address } from "viem";
 
 /******************************************************************************\
@@ -85,12 +86,6 @@ export async function DeployContracts( answer : string ) {
               ), 
             "green"
             );
-          /*
-          await writeLastFacetJSONfile( 
-            {}, 
-            diamondNames.Diamond.address 
-            );
-*/
           // Here we update address registration for EUR if not exusting
           if (contractSet[0].address != NULL_ADDRESS) {
 
@@ -134,29 +129,33 @@ export async function DeployContracts( answer : string ) {
         if (!String(diamondNames.Diamond.address).match(regex)) 
           throw "Trying to manage facets without Diamond deployed yet :: no root address found!";
 
-        const facetsToChange : menuRecord[] = (commands[0] == "Facet") ? facetList.filter((item) => commands.includes(<string>item.contract)) : [];
+        const facetsToChange : contractRecord[] = (commands[0] == "Facet") ? facetNames.filter((item : contractRecord) => commands.includes(item.name)) : [];
         
         var writeList : wlist = {};        
-
-        const init = await hre.viem.getContractAt( 
-          diamondNames.Diamond.name, 
-          diamondNames.Diamond.address 
-          )
 
         for (const facet of facetsToChange) {
 
           var inputArray = [];
 
-          const constructeur : rwRecord = await setConstructorFromInstance(
-            facet.tag, 
-            diamondNames.Diamond.address, 
-            0
-            );
+          const constructor = (facet.abi.file.abi.filter((item: abiData) => item.type == "constructor"))
 
+          const record = { 
+            rwType: rwType.CONSTRUCTOR,
+            contract: facet.name,
+            instance: facet.abi.file,
+            function: "Constructor", 
+            args: constructor.inputs,
+            values: [],
+            outcome: constructor.outputs,
+            events: undefined 
+            };      
+              
           // the constructor of the smart contract requires inputs
-          if (constructeur.instance.abi.length > 0) {
-            inputArray = ("inputs" in constructeur.instance.abi[0]) ? constructeur.instance.abi[0].inputs.map((item: abiData) => {
+          if (record.instance.abi.length > 0) {
+            if ("inputs" in record.instance.abi[0]) {
+              inputArray = record.instance.abi[0].inputs.map((item: abiData) => {
                 // We fill in the input with the required address
+                
                 if (item.name == "_root" && item.type == "address") {
                   return diamondNames.Diamond.address;
                   }
@@ -164,11 +163,12 @@ export async function DeployContracts( answer : string ) {
                   return contractSet[0].address ;
                   }
                 return;
-                }) : [];
+                });
+              }
             }
 
           cut = await deployFacets( 
-            <string>facet.contract, 
+            <string>facet.name, 
             <FacetCutAction>choice, 
             inputArray, 
             cut
@@ -179,34 +179,42 @@ export async function DeployContracts( answer : string ) {
             Object.fromEntries(
               new Map( [ 
                   [ 
-                  `@${facet.contract}`,  
+                  `@${facet.name}`,  
                   (<cutRecord>cut.slice().pop()).facetAddress
                   ] 
                 ])
               )
             );
   
-          const isWallet = facetNames.find((el) => el.name == facet.contract)
+          const isWallet : boolean = ("wallet" in facet) && (typeof facet.wallet == "string");
 
-          if (choice != FacetCutAction.Remove && isWallet?.wallet) {
+          if (choice != FacetCutAction.Remove && isWallet) {
 
-            const instance = await hre.viem.getContractAt( 
-              <string>facet.contract, 
-              writeList[<string>facet.contract] 
-              );        
+            const walletAndKey = await globalState.clients.readContract({
+                address: writeList[<string>facet.name],
+                abi: facet.abi.file.abi,
+                functionName: <string>facet.wallet,
+                args: []
+            })
             
-            const walletAndKey = await instance.read[<string>isWallet.wallet]( 
-              [], 
-              { client: { wallet: (<clientFormat[]>globalState.wallets)[0] } } 
-              );
+            colorOutput("Fectch Stable Coint Wallet@ >> ".concat( walletAndKey[0] ), "cyan")
 
-            const raw = await init.write.updateAddressAndKeys( 
-              [ writeList[<string>facet.contract], walletAndKey[0], walletAndKey[1] ], 
-              { client: { wallet: (<clientFormat[]>globalState.wallets)[0] } } 
-              );
-    
+            const [account] = await globalState.wallets.getAddresses()
+            
+            const { request } = await globalState.clients.simulateContract({
+                address: diamondNames.Diamond.address,
+                abi: diamondNames.Diamond.abi.file.abi,
+                functionName: "updateAddressAndKeys",
+                args: [ writeList[<string>facet.name], walletAndKey[0], walletAndKey[1] ],
+                account
+            })
+
+            console.log( "updateAddressAndKeys >> ", request )
+            
+            const raw = await globalState.wallets.writeContract(request)
+                
             colorOutput(
-              `Update Wallet @ ${writeList[<string>facet.contract]} Tx: ${raw}`, 
+              `Update Wallet @ ${writeList[<string>facet.name]} Tx: ${raw}`, 
               "magenta"
               );            
             }
@@ -223,23 +231,38 @@ export async function DeployContracts( answer : string ) {
         }
       case "Contract": {
         console.log("Contract found", contractSet, choice);
-        //contractSet[0].address = await getOrDeployContract( contractSet[0], <string>contractSet[0].name, <FacetCutAction>choice );
 
         if (choice != FacetCutAction.Remove) {
-            const instance = await hre.viem.deployContract( contractSet[0].name );
-            colorOutput(`Add ${contractSet[0].name} @: ${instance.address}`, "magenta");        
-            contractSet[0].address = instance.address;
-            // We need to write down the new address in a json file
-            writeLastContractJSONfile();
 
-            // Here we update address registration for EUR
-            const init = await hre.viem.getContractAt( diamondNames.Diamond.name, diamondNames.Diamond.address )
-            const raw = await init.write.updateAddressAndKeys( 
-              [ NULL_ADDRESS, instance.address, "0x0000000000000000000000000000000000000000000000000000000000000000" ], 
-              { client: { wallet: (<clientFormat[]>globalState.wallets)[0] } } );
+          await deployContractInstance( 
+            contractSet[0], 
+            [],  
+            choice  
+            );
+              
+          colorOutput(`Add ${contractSet[0].name} @: ${contractSet[0].address}`, "magenta");        
 
-            colorOutput(`Update EUR @ ${contractSet[0].name} Tx: ${raw}`, "magenta");            
-            }
+          // We need to write down the new address in a json file
+          writeLastContractJSONfile();
+
+          // Here we update address registration for EUR
+
+          const [account] = await globalState.wallets.getAddresses()
+            
+          const { request } = await globalState.clients.simulateContract({
+              address: contractSet[0].address,
+              abi: contractSet[0].abi.file.abi,
+              functionName: "updateAddressAndKeys",
+              args: [ NULL_ADDRESS, contractSet[0].address, NULL_HASH ],
+              account
+          })
+
+          console.log( "updateAddressAndKeys >> ", request )
+          
+          const raw = await globalState.wallets.writeContract(request)
+
+          colorOutput(`Update EUR @ ${contractSet[0].name} Tx: ${raw}`, "magenta");            
+          }
         else throw("Wrong action for EUR Contract ".concat(contractSet[0].address));      
         }
       default:
