@@ -204,11 +204,21 @@ export async function DeployContracts( answer : string ) {
 
             console.log( <string>facet.name, writeList, facet.wallet, cut);
 
+            const beacon = await globalState.clients.readContract({
+              address: writeList[<string>facet.name],
+              abi: facet.abi.file.abi,
+              functionName: <string>facet.beacon,
+              args: []
+              })
+
+            console.log( "beacon", facet.beacon, beacon );
+
             const walletAndKey = await globalState.clients.readContract({
-                address: writeList[<string>facet.name],
-                abi: facet.abi.file.abi,
-                functionName: <string>facet.wallet
-            })
+              address: writeList[<string>facet.name],
+              abi: facet.abi.file.abi,
+              functionName: <string>facet.wallet,
+              args: []
+              })
             
             colorOutput("Fectch Stable Coin Wallet@ >> ".concat( walletAndKey[0] ), "cyan")
 

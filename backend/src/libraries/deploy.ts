@@ -16,7 +16,7 @@ export async function deployContractInstance( contract: contractRecord, args: Ar
         address: account,
         })    
 
-    console.log("Contract ", contract.abi, contract.abi.file );
+    //console.log("Contract ", contract.abi, contract.abi.file );
     
     const abi = contract.abi.file.abi;
 
@@ -34,7 +34,7 @@ export async function deployContractInstance( contract: contractRecord, args: Ar
     // Attendre la validation de la transaction
     const resCut = await globalState.clients.waitForTransactionReceipt({ hash: hashCut })
 
-    console.log("resCut", resCut, account);
+    //console.log("resCut", resCut, account);
 
     const eventLogs = await  globalState.clients.getContractEvents({
         abi: contract.abi.file.abi,
