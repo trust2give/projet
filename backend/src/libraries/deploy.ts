@@ -240,7 +240,7 @@ export async function deployWithDiamondCut( cut : cutRecord[], initFunc: `0x${st
             ]
         });
 
-    const tx = await (<clientFormat[]>globalState.wallets)[0].writeContract(request);
+    const tx = await globalState.wallets.writeContract(request);
 
     await globalState.clients.waitForTransactionReceipt({ hash: tx });
 
