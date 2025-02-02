@@ -189,6 +189,13 @@ export async function deployFacets(
             case FacetCutAction.Add:
             case FacetCutAction.Replace: {
 
+                const jsonFacet = fs.readFileSync( 
+                    facet.abi.path, 
+                    'utf-8'
+                    );
+                
+                facet.abi.file = JSON.parse(jsonFacet);
+                
                 await deployContractInstance( facet, constructor, action );
 
                 cut.push({ 
