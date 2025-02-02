@@ -1,4 +1,4 @@
-import { Address, encodeFunctionData } from "viem";
+import { Address, encodeFunctionData, formatGwei } from "viem";
 import { FacetCutAction, getSelectors } from "../utils/diamond";
 import { Account, regex, NULL_ADDRESS, cutRecord, contractRecord, diamondCore } from "../libraries/types";
 import { diamondNames, tokenCredential, contractSet, facetNames } from "../T2G_Data";
@@ -12,7 +12,7 @@ async function deployContractInstance( contract: contractRecord, args: Array<any
 
     console.log("Entering >> Account ", account);
 
-    const before = await globalState.clients.getBalance({ 
+    const before : BigInt = await globalState.clients.getBalance({ 
         address: account,
         })    
 
@@ -50,22 +50,20 @@ async function deployContractInstance( contract: contractRecord, args: Array<any
         return " >> Event ".concat( event.eventName, "[ ", Object.values(event.args).join("| "), " ]" );
         }).join("\n"), "]" ), "yellow");
         
-    const after = await globalState.clients.getBalance({ 
+    const after : BigInt = await globalState.clients.getBalance({ 
         address: account,
         })   
 
-    console.log("resCut", resCut);
-    
     contract.address = resCut.contractAddress;
     
     colorOutput( 
         "Balance @[".concat(
             account, 
             "] Before @[", 
-            before, 
-            "] After @[", 
-            after, 
-            `] gaz used = ${(before - after)} `
+            formatGwei(<bigint>before), 
+            " GWEI] After @[", 
+            formatGwei(<bigint>after), 
+            ` GWEI] gaz used = ${formatGwei(<bigint>before - <bigint>after)} GWEI `
             ), 
         "green"
         );
@@ -141,8 +139,10 @@ export async function deployDiamond() : Promise<any> {
 
     console.log("Deploying Diamond Root")
 
+    const [account] = await globalState.wallets.getAddresses()
+
     await deployContractInstance( diamondNames.Diamond, [
-        (<clientFormat[]>globalState.wallets)[0].account.address,
+        account,
         diamondNames.DiamondCutFacet.address
         ], 
         FacetCutAction.Add 
