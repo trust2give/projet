@@ -10,9 +10,13 @@ async function deployContractInstance( contract: contractRecord, args: Array<any
 
     const [account] = await globalState.wallets.getAddresses()
 
+    console.log("Entering >> Account ", account);
+
     const before = await globalState.clients.getBalance({ 
         address: account,
         })    
+
+    console.log("Entering >> Account ", account, before);
     
     const abi = contract.abi.file.abi;
 
@@ -24,6 +28,8 @@ async function deployContractInstance( contract: contractRecord, args: Array<any
         args: args
         }
         )
+    
+    console.log("Waiting Transaction ", hashCut )
 
     // Attendre la validation de la transaction
     const resCut = await globalState.clients.waitForTransactionReceipt(hashCut)
@@ -125,11 +131,15 @@ export async function deployDiamond() : Promise<any> {
 
         // On est dans le cas où on créé un nouveau T2G_Root
 
+    console.log("Deploying Diamond Cut")
+
     await deployContractInstance( 
         diamondNames.DiamondCutFacet, 
         [],  
         FacetCutAction.Add  
         );
+
+    console.log("Deploying Diamond Root")
 
     await deployContractInstance( diamondNames.Diamond, [
         (<clientFormat[]>globalState.wallets)[0].account.address,
@@ -137,6 +147,8 @@ export async function deployDiamond() : Promise<any> {
         ], 
         FacetCutAction.Add 
         );
+
+    console.log("Deploying Diamond Init")
 
     await deployContractInstance( diamondNames.DiamondInit, [],  FacetCutAction.Add );
 
