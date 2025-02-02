@@ -28,6 +28,8 @@ async function deployContractInstance( contract: contractRecord, args: Array<any
     // Attendre la validation de la transaction
     const resCut = await globalState.clients.waitForTransactionReceipt(hashCut)
 
+    console.log("resCut", resCut, account);
+
     const eventLogs = await  globalState.clients.getContractEvents({
         abi: contract.abi.file,
         address: resCut.address,
@@ -45,6 +47,8 @@ async function deployContractInstance( contract: contractRecord, args: Array<any
     const after = await globalState.clients.getBalance({ 
         address: account,
         })   
+
+    console.log("resCut", resCut);
     
     contract.address = resCut.contractAddress;
     
