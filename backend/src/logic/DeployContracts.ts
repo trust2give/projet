@@ -16,6 +16,7 @@ import { rwRecord, cutRecord, rwType, Account, NULL_ADDRESS, regex, regex2, rege
 import { accountRefs, globalState, clientFormat } from "./states";
 //import { setConstructorFromInstance } from "./instances";
 import { Address } from "viem";
+import fs from 'fs';
 
 /******************************************************************************\
 * Author: Franck Dervillez <franck.dervillez@trust2give.com>, Twitter/Github: @fdervillez
@@ -139,6 +140,13 @@ export async function DeployContracts( answer : string ) {
 
           console.log(facet)
 
+          const jsonFacet = fs.readFileSync( 
+              facet.abi.path, 
+              'utf-8'
+              );
+          
+          facet.abi.file = JSON.parse(jsonFacet);
+          
           var inputArray = [];
 
           const constructor = (facet.abi.file.abi.filter((item: abiData) => item.type == "constructor"))
