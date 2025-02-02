@@ -131,9 +131,13 @@ export async function DeployContracts( answer : string ) {
 
         const facetsToChange : contractRecord[] = (commands[0] == "Facet") ? facetNames.filter((item : contractRecord) => commands.includes(item.name)) : [];
         
-        var writeList : wlist = {};        
+        var writeList : wlist = {};  
+        
+        console.log(facetsToChange)
 
         for (const facet of facetsToChange) {
+
+          console.log(facet)
 
           var inputArray = [];
 
