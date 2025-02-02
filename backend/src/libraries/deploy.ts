@@ -16,7 +16,7 @@ async function deployContractInstance( contract: contractRecord, args: Array<any
         address: account,
         })    
 
-    console.log("Entering >> Account ", account, before);
+    console.log("Contract ", contract.abi, contract.abi.file );
     
     const abi = contract.abi.file.abi;
 
