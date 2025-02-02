@@ -7,7 +7,7 @@ import cors from 'cors';
 import { accountRefs, initState, addAccount, clientFormat, globalState, assignAccounts, updateAccountBalance, loadWallets } from "./logic/states";
 import { readLastContractSetJSONfile, readLastDiamondJSONfile } from "./libraries/files";
 import { contractSet, diamondNames, facetNames, smart, smartEntry, encodeInterfaces } from "./T2G_Data";
-import { contractRecord, rwRecord, rwType, menuRecord, Account, NULL_ADDRESS, regex, regex2, regex3 } from "./libraries/types";
+import { contractRecord, rwRecord, rwType, menuRecord, Account, NULL_ADDRESS, regex, regex2, regex3, NULL_HASH } from "./libraries/types";
 import { DeployContracts } from './logic/DeployContracts';
 import { colorOutput } from "./libraries/format";
 import fs from 'fs';
@@ -85,47 +85,62 @@ app.listen(PORT, async () => {
     
     if (initialized) {
         var rank = 12;
-
+        
         for (const facet of facetNames) {        
-            try {    
 
+            var get : Address = NULL_ADDRESS;
+            var wallet : any[] = [ NULL_ADDRESS, NULL_HASH ];
+
+            try {    
                 const jsonFacet = fs.readFileSync( 
                     facet.abi.path, 
                     'utf-8' 
                     );
 
                 const facetABI : any = JSON.parse(jsonFacet);
-                
-                const get : Address = (facet.get) ? <Address>await globalState.clients.readContract({
-                    address: diamondNames.Diamond.address,
-                    abi: facetABI.abi,
-                    functionName: <string>facet.get,
-                    args: []
-                    }) : NULL_ADDRESS;
 
-                console.log( "Facet >> %s (%s)", facet.name, get)
+                try {
+                    const get : Address = <Address>await globalState.clients.readContract({
+                        address: diamondNames.Diamond.address,
+                        abi: facetABI.abi,
+                        functionName: <string>facet.get,
+                        args: []
+                        });
+    
+                    console.log( "Facet >> %s (%s)", facet.name, get)    
+                    }
+                catch (error) {
+                    console.error(">> No Get Function initialized %s, @ %s", facet.name, diamondNames.Diamond.address)
+                    }
+                    
+                try {
+                    const wallet : any[] = <any[]>await globalState.clients.readContract({
+                        address: diamondNames.Diamond.address,
+                        abi: facetABI.abi,
+                        functionName: <string>facet.wallet,
+                        args: []
+                        });
+    
+                    console.log( "Facet >> %s (xallet %s)", facet.name, wallet[0])
 
-                const wallet : any[] = (facet.wallet) ? <any[]>await globalState.clients.readContract({
-                    address: diamondNames.Diamond.address,
-                    abi: facetABI.abi,
-                    functionName: <string>facet.wallet,
-                    args: []
-                    }) : [];
+                    }
+                catch (error) {
+                    console.error(">> No Wallet Function initialized %s, @ %s", facet.name, diamondNames.Diamond.address)
+                    }
 
-                console.log( "Facet >> %s (xallet %s)", facet.name, wallet[0])
-
-                await addAccount( 
-                    rank, 
-                    facet.name, 
-                    get, 
-                    wallet 
-                    );
-
-                rank++;
                 }
             catch (error) {
                 console.error(">> Error :: No Facet Contract initialized %s, @ %s", facet.name, diamondNames.Diamond.address)
                 }
+    
+            await addAccount( 
+                rank, 
+                facet.name, 
+                get, 
+                wallet 
+                );
+
+            rank++;
             }
         } 
     }
