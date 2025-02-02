@@ -202,8 +202,8 @@ export async function DeployContracts( answer : string ) {
 
           if (choice != FacetCutAction.Remove && isWallet) {
 
-            console.log( writeList[<string>facet.name], facet.abi.file.abi, facet.wallet);
-            
+            console.log( <string>facet.name, writeList, facet.wallet, cut);
+
             const walletAndKey = await globalState.clients.readContract({
                 address: writeList[<string>facet.name],
                 abi: facet.abi.file.abi,
