@@ -16,7 +16,7 @@ const router = Router();
 
 router.get('/', async (req, res) => { 
   const { call, inputs } = req.query;
-  var jsonData;
+  var jsonData : any;
 
   console.log("GET processed", call, inputs);
   
@@ -59,7 +59,7 @@ router.get('/', async (req, res) => {
       break;
       }
     case "instance": {
-      res.json( await showInstance( jsonData.call ) );
+      res.json( await showInstance( <contractRecord>facetNames.find( (el) => el.name == <string>jsonData.call ) ));
       break;
       }
     case "state": {
