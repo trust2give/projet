@@ -1,17 +1,25 @@
 'use client'
 
-import React from 'react';
+import React, {useEffect} from 'react';
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useAccount } from 'wagmi'
+import Link from "next/link";
 
 const Header = () => {
     const { address, isConnected } = useAccount();
+
+    useEffect(() => {
+        if (isConnected) {
+
+        }
+    }, [isConnected])
+
     return (
         <header>
             <nav className="relative px-4 py-4 flex justify-between items-center bg-indigo-300">
-                <a href="/">
+                <Link href="/">
                     <img src="/img/logo.png" alt="Trust2Give" className="w-48" />
-                </a>
+                </Link>
                 <div className="lg:hidden">
                     <button className="navbar-burger flex items-center text-blue-600 p-3">
                         <svg className="block h-4 w-4 fill-current" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
@@ -41,7 +49,9 @@ const Header = () => {
                     </li>
                     <li><a className="text-white" href="#">Contact</a></li>
                 </ul>
-                <a className="hidden lg:inline-block lg:ml-auto lg:mr-3 py-2 border-2 px-6 bg-indigo-500 hover:bg-indigo-400 text-white font-bold rounded-xl transition duration-200" href="#">Faire un don</a>
+                <Link className="hidden lg:inline-block lg:ml-auto lg:mr-3 py-2 border-2 px-6 bg-indigo-500 hover:bg-indigo-400 text-white font-bold rounded-xl transition duration-200" href="/donate">
+                    Faire un don
+                </Link>
                 {isConnected ? (
                     <p>Connected with {address}</p>
                 ) : (

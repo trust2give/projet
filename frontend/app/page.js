@@ -1,6 +1,8 @@
 'use client';
 
 
+import Link from "next/link";
+
 export default function Home() {
 
     return (
@@ -13,10 +15,10 @@ export default function Home() {
                         </h1>
                         <p>Le climat a besoin de vous !</p>
                         <div class="place-content-center sm:place-content-end grid">
-                        <a class="mt-4 lg:inline-block mx-auto lg:mr-3 py-2 border-2 px-6 bg-indigo-500 hover:bg-indigo-400 text-white font-bold rounded-xl transition duration-200"
-                            href="#">
-                                Faire un don
-                        </a>
+                        <Link class="mt-4 lg:inline-block mx-auto lg:mr-3 py-2 border-2 px-6 bg-indigo-500 hover:bg-indigo-400 text-white font-bold rounded-xl transition duration-200"
+                              href="#">
+                            Faire un don
+                        </Link>
                     </div>
                 </div>
                 <div class="hidden sm:inline-block w-1/2">
