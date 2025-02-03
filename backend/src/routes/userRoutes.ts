@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { getUserById, addUser } from '../services/userService';
 import { globalState } from '../logic/states';
 import { returnAccountTable } from "../libraries/format";
+import { showInstance } from "../logic/instances";
 import { showBeacons } from "../logic/beacons";
 import { rightCallback } from "../logic/rights";
 import { DeployContracts } from "../logic/DeployContracts";
@@ -51,6 +52,14 @@ router.get('/', async (req, res) => {
               );
             }
           }
+      break;
+      }
+    case "contract": {
+      res.json( facetNames.map( (el : contractRecord ) => el.name ) );
+      break;
+      }
+    case "instance": {
+      res.json( await showInstance( jsonData.call ) );
       break;
       }
     case "state": {
