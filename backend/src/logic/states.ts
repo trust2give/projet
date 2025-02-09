@@ -54,28 +54,6 @@ export var globalState : menuState = {};
 // @A : {name: T2G_root, address: <address of wallet bound to SC, not @SC itself if present, otherwise yes, balance: <balance of address in EUR contract> }
 export var accountRefs: accountList = {};
 
-/*
-export const prompts = {
-    Deploy: "Deploy Smart Contract (<Help>, <Accounts> or Contract Name) ",
-    None: "Smart Contract (<Help>, <Accounts> or <Contact Name>) >> ",
-    Function: `Which Function (<Help>, <Accounts>, <back> or Function Name ) ? `,
-    Sender: "Which Sender's Account (msg.sender) [@0 ... @9] ? ",
-    subArgs: (index: number, subIndex: number, name: string, abi: string, subName: string) => "Args ".concat( 
-        ` [${index} / ${subIndex}] - ${name} [${abi} ${subName}]`
-        ), 
-    Args: (index: number, name: string, type: string) => "Args ".concat( 
-        ` [${index}] - ${name} [${type}] ` 
-        ), 
-    display: () : string => "".concat( 
-            colorOutput( 
-                `[ ${(globalState.level != "") ? globalState.level : "None"}|${(globalState.tag != "") ? globalState.tag : "None"}|${globalState.inputs}] `, 
-                "cyan", 
-                true 
-                ), 
-                ` >> ` )
-    }
-*/
-
 export function addLog( log: string ) {
     setState( { 
         log: globalState.log?.concat(log),
@@ -181,17 +159,6 @@ export const addAccount = async (rank: number, name: string, addr: Address, wall
         
         return true;
         }
-/*
-export const account = async ( rank: number, wallet: boolean ) : Promise<Address> => {
-        const indice = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        type refKeys = keyof typeof accountRefs;
-        if (rank != undefined && rank > -1 && rank < 36) {
-            const index = <refKeys>`@${indice.substring(rank,rank + 1)}`;   
-            return (wallet) ? accountRefs[index].wallet : accountRefs[index].address;
-            }
-        return NULL_ADDRESS;
-        }
-*/
 
 // Used
 export const assignAccounts = async () => {

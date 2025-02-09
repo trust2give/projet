@@ -86,3 +86,8 @@ export enum Account {
         diamond: Account | undefined,
         events: any,
         }
+
+    export interface callbackType {
+        tag: string,
+        callback: ( inputs: Array<any> ) => {}
+        }

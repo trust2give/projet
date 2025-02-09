@@ -1,8 +1,9 @@
 import { contractSet, diamondNames, facetNames, smart, encodeInterfaces, getWalletAddressFromSmartContract } from "../T2G_Data";
-import { contractRecord, rwRecord, rwType, menuRecord, Account, NULL_ADDRESS, regex, regex2, regex3 } from "../libraries/types";
+import { contractRecord, rwRecord, rwType, menuRecord, Account, NULL_ADDRESS, NULL_HASH, regex2, regex3 } from "../libraries/types";
 import { accountRefs, globalState, setState, addAccount, updateAccountBalance, assignAccounts, accountType } from "../logic/states";
 import fs from 'fs';
 import { Address } from "viem";
+import { getGWEI, getABI, getStableABI, writeStableContract, encodeInputsAndSend, writeFacetContract } from "../logic/instances";
 
 const rights = {
     VIEW: 1,
@@ -27,12 +28,7 @@ export const rightCallback : {
             isBanned: boolean | string
         }[] = [];
         
-        const jsonRights = fs.readFileSync( 
-            (<contractRecord>facetNames.find( (item) => item.name == "T2G_SyndicFacet")).abi.path, 
-            'utf-8' 
-            );
-        
-        const syndicABI : any = JSON.parse(jsonRights);
+        const syndicABI : any = getABI("T2G_SyndicFacet");
     
         for ( const item of Object.entries(accountRefs)) {            
             if (item[1].name.match("Wallet [0-9]")) {
@@ -94,12 +90,7 @@ export const rightCallback : {
     { tag: "get",
         callback: async ( account?: Account ) : Promise<any> => {
                     
-        const jsonRights = fs.readFileSync( 
-            (<contractRecord>facetNames.find( (item) => item.name == "T2G_SyndicFacet")).abi.path, 
-            'utf-8' 
-            );
-
-        const syndicABI : any = JSON.parse(jsonRights);
+        const syndicABI : any = getABI("T2G_SyndicFacet");
 
         type refKeys = keyof typeof accountRefs;
 
@@ -155,56 +146,71 @@ export const rightCallback : {
         return res;
         }
       },
-    { tag: "register",
-        callback: async ( account?: Account, flags?: number ) : Promise<any> => {
-            console.log("Register rights %s %d", account, flags)
+    { 
+    tag: "register",
+    callback: async ( inputs: Array<{ account: Account, flags: number }> ) => {
+
+        if (inputs.length == 0) return undefined;
+
+        var registerList : Object[] = [];
+                
+        const [account] = await globalState.wallets.getAddresses()
         
-            const jsonRights = fs.readFileSync( 
-                (<contractRecord>facetNames.find( (item) => item.name == "T2G_SyndicFacet")).abi.path, 
-                'utf-8' 
+        for ( const input of inputs) {
+            var tx : typeof regex2 = NULL_HASH;
+
+            tx = <typeof regex2>await writeFacetContract(
+                "T2G_SyndicFacet", 
+                "registerWallet", 
+                [ 
+                (<accountType>accountRefs[<keyof typeof accountRefs>input.account]).address,
+                input.flags
+                ], 
+                account 
+                )
+
+                registerList.push(
+                Object.assign( { 
+                    tx: tx
+                    }, 
+                    input
+                    )
                 );
-
-            const syndicABI : any = JSON.parse(jsonRights);
-
-            try {                        
-                type refKeys = keyof typeof accountRefs;
-
-                return await globalState.clients.writeContract({
-                    address: diamondNames.Diamond.address,
-                    abi: syndicABI.abi,
-                    functionName: "registerWallet",
-                    args: [ (<accountType>accountRefs[<refKeys>account]).address, flags ]
-                    });
-                }
-            catch (error) {
-                return error;
-                }
             }
-        },
-    { tag: "ban",
-        callback: async ( account?: Account ) : Promise<any> => {
-                console.log("Ban rights %s %d", account )
-            
-                const jsonRights = fs.readFileSync( 
-                    (<contractRecord>facetNames.find( (item) => item.name == "T2G_SyndicFacet")).abi.path, 
-                    'utf-8' 
-                    );
-    
-                const syndicABI : any = JSON.parse(jsonRights);
-    
-                try {                        
-                    type refKeys = keyof typeof accountRefs;
-    
-                    return await globalState.clients.writeContract({
-                        address: diamondNames.Diamond.address,
-                        abi: syndicABI.abi,
-                        functionName: "banWallet",
-                        args: [ (<accountType>accountRefs[<refKeys>account]).address ]
-                        });
-                    }
-                catch (error) {
-                    return error;
-                    }
-                }
+        return registerList;
+        }
+    },
+    { 
+    tag: "ban",
+    callback: async ( inputs: Array<{ account: Account }> ) => {
+
+        if (inputs.length == 0) return undefined;
+
+        var banList : Object[] = [];
+                
+        const [account] = await globalState.wallets.getAddresses()
+        
+        for ( const input of inputs) {
+            var tx : typeof regex2 = NULL_HASH;
+
+            tx = <typeof regex2>await writeFacetContract(
+                "T2G_SyndicFacet", 
+                "banWallet", 
+                [ 
+                (<accountType>accountRefs[<keyof typeof accountRefs>input.account]).address 
+                ], 
+                account 
+                )
+
+                banList.push(
+                Object.assign( { 
+                    tx: tx
+                    }, 
+                    input
+                    )
+                );
             }
-        ]
+        return banList;
+        }
+    }
+    ]

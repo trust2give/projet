@@ -269,3 +269,11 @@ export const typeRouteOutput: typeItem[] = [
             }, "[" );
         }},    */
     ]
+
+
+export const setIndex = ( list: string[], value: string) : number => {
+    const maxIndex = list.length;
+    if (maxIndex == 0) return 0;
+    const found : number = list.findIndex( (item) => item == value.toUpperCase() );
+    return (found < 0) ? 0 : found;
+    }

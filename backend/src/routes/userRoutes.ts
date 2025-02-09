@@ -4,6 +4,7 @@ import { globalState } from '../logic/states';
 import { returnAccountTable } from "../libraries/format";
 import { showInstance } from "../logic/instances";
 import { showBeacons } from "../logic/beacons";
+import { approveCallback } from "../logic/approvals";
 import { rightCallback } from "../logic/rights";
 import { DeployContracts } from "../logic/DeployContracts";
 import { createEntity, getEntity, getAllEntities } from "../logic/entity";
