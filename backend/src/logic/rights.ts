@@ -140,7 +140,7 @@ export const rightCallback : callbackType[] = [
                 address: diamondNames.Diamond.address,
                 abi: syndicABI.abi,
                 functionName: "isWalletBanned",
-                args: [ (<accountType>accountRefs[<refKeys>account]).address ]
+                args: [ (<accountType>accountRefs[<refKeys>input.account]).address ]
                 });
                 }
             catch (error) {
