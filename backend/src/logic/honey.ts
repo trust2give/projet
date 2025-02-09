@@ -7,6 +7,7 @@ import { accountType, accountRefs, globalState, setState, addAccount, updateAcco
 
 export const honeyCallback : callbackType[] = [
     { 
+    call: "honey",
     tag: "mint", 
     callback: async ( inputs: Array<{ from: Account, fund: string, entity: string }> ) => {
 
@@ -47,6 +48,7 @@ export const honeyCallback : callbackType[] = [
         }
     },
     { 
+    call: "honey",
     tag: "approve", 
     callback: async ( inputs: Array<{ from: Account, fund: string }> ) => {
 
@@ -86,6 +88,7 @@ export const honeyCallback : callbackType[] = [
         }
     },
     { 
+    call: "honey",
     tag: "transfer", 
     callback: async ( inputs: Array<{ from: Account, fund: string }> ) => {
 
@@ -128,6 +131,7 @@ export const honeyCallback : callbackType[] = [
 
 export const fundCallback : callbackType[] = [
     { 
+    call: "fund",
     tag: "set",
     callback: async ( inputs: Array<{ from?: Account, value?: number, rate?: number }> ) : Promise<Object[] | undefined> => {
 
@@ -193,6 +197,7 @@ export const fundCallback : callbackType[] = [
         } 
     },
     { 
+    call: "fund",
     tag: "all",
     callback: async ( inputs?: Array<any> ) : Promise<Object[] | undefined> => {
         

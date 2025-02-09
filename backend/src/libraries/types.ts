@@ -87,7 +87,8 @@ export enum Account {
         events: any,
         }
 
-    export interface callbackType {
+    export type callbackType = {
+        call: string,
         tag: string,
         callback: ( inputs: Array<any> ) => {}
         }

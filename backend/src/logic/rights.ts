@@ -1,7 +1,6 @@
 import { contractSet, diamondNames, facetNames, smart, encodeInterfaces, getWalletAddressFromSmartContract } from "../T2G_Data";
-import { contractRecord, rwRecord, rwType, menuRecord, Account, NULL_ADDRESS, NULL_HASH, regex2, regex3 } from "../libraries/types";
+import { contractRecord, callbackType, rwType, menuRecord, Account, NULL_ADDRESS, NULL_HASH, regex2, regex3 } from "../libraries/types";
 import { accountRefs, globalState, setState, addAccount, updateAccountBalance, assignAccounts, accountType } from "../logic/states";
-import fs from 'fs';
 import { Address } from "viem";
 import { getGWEI, getABI, getStableABI, writeStableContract, encodeInputsAndSend, writeFacetContract } from "../logic/instances";
 
@@ -15,11 +14,11 @@ const rights = {
     ADMIN: 64
     }
 
-export const rightCallback : { 
-    tag: string, 
-    callback: any }[] = [
-    { tag: "all",
-      callback: async () : Promise<any> => {
+export const rightCallback : callbackType[] = [
+    {
+    call: "rights", 
+    tag: "all",
+    callback: async ( inputs?: Array<any> ) : Promise<any> => {
             
         var result : { 
             wallet: Address,
@@ -87,66 +86,80 @@ export const rightCallback : {
         return result;
         }
     },
-    { tag: "get",
-        callback: async ( account?: Account ) : Promise<any> => {
+    { 
+    call: "rights",
+    tag: "get",
+    callback: async ( inputs: Array<{ account: Account }> ) : Promise<any> => {
                     
+        if (inputs.length == 0) return undefined;
+
         const syndicABI : any = getABI("T2G_SyndicFacet");
 
         type refKeys = keyof typeof accountRefs;
 
-        console.log("account", account)
-        var res : { 
-                wallet: Address,
-                rights: number | string,
-                isRegistered: boolean | string,
-                isBanned: boolean | string 
-                } = {
-                    wallet: <Address>(<accountType>accountRefs[<refKeys>account]).address,
-                    rights: 0,
-                    isRegistered: false,
-                    isBanned: false
-                };
-                
-        try {                        
-            res.rights = await globalState.clients.readContract({
-            address: diamondNames.Diamond.address,
-            abi: syndicABI.abi,
-            functionName: "getWalletRights",
-            args: [ (<accountType>accountRefs[<refKeys>account]).address ]
-            });
-            }
-        catch (error) {
-            res.rights = "Error";
-            }
+        var rightList : Object[] = [];
 
-        try {                        
-            res.isRegistered = await globalState.clients.readContract({
-            address: diamondNames.Diamond.address,
-            abi: syndicABI.abi,
-            functionName: "isWalletRegistered",
-            args: [ (<accountType>accountRefs[<refKeys>account]).address ]
-            });
-            }
-        catch (error) {
-            res.isRegistered = "Error";
-            }
+        for (const input of inputs ) {
+            var res : { 
+                    wallet: Address,
+                    rights: number | string,
+                    isRegistered: boolean | string,
+                    isBanned: boolean | string 
+                    } = {
+                        wallet: <Address>(<accountType>accountRefs[<refKeys>input.account]).address,
+                        rights: 0,
+                        isRegistered: false,
+                        isBanned: false
+                    };
 
-        try {                        
-            res.isBanned = await globalState.clients.readContract({
-            address: diamondNames.Diamond.address,
-            abi: syndicABI.abi,
-            functionName: "isWalletBanned",
-            args: [ (<accountType>accountRefs[<refKeys>account]).address ]
-            });
-            }
-        catch (error) {
-            res.isBanned = "Error";
-            }
+            try {                        
+                res.rights = await globalState.clients.readContract({
+                address: diamondNames.Diamond.address,
+                abi: syndicABI.abi,
+                functionName: "getWalletRights",
+                args: [ (<accountType>accountRefs[<refKeys>input.account]).address ]
+                });
+                }
+            catch (error) {
+                res.rights = "Error";
+                }
 
-        return res;
+            try {                        
+                res.isRegistered = await globalState.clients.readContract({
+                address: diamondNames.Diamond.address,
+                abi: syndicABI.abi,
+                functionName: "isWalletRegistered",
+                args: [ (<accountType>accountRefs[<refKeys>input.account]).address ]
+                });
+                }
+            catch (error) {
+                res.isRegistered = "Error";
+                }
+            try {                        
+                res.isBanned = await globalState.clients.readContract({
+                address: diamondNames.Diamond.address,
+                abi: syndicABI.abi,
+                functionName: "isWalletBanned",
+                args: [ (<accountType>accountRefs[<refKeys>account]).address ]
+                });
+                }
+            catch (error) {
+                res.isBanned = "Error";
+                }
+
+                rightList.push(
+                Object.assign( { 
+                    rights: res
+                    }, 
+                    input
+                    )
+                );
+            }   
+        return rightList;
         }
       },
-    { 
+    {
+    call: "rights", 
     tag: "register",
     callback: async ( inputs: Array<{ account: Account, flags: number }> ) => {
 
@@ -181,6 +194,7 @@ export const rightCallback : {
         }
     },
     { 
+    call: "rights",
     tag: "ban",
     callback: async ( inputs: Array<{ account: Account }> ) => {
 

@@ -13,6 +13,7 @@ type approval = {
     
 export const approveCallback : callbackType[] = [
     { 
+    call: "approve",
     tag: "get",
     callback: async ( inputs: Array<{ from?: Account | accountType | accountType[] }> ) => {
 
@@ -61,6 +62,7 @@ export const approveCallback : callbackType[] = [
         }        
     },
     { 
+    call: "approve",
     tag: "update", 
     callback: async () => {
                 
@@ -87,8 +89,10 @@ export const approveCallback : callbackType[] = [
         return NULL_HASH;
         }
     },
-    { tag: "set",
-      callback: async ( from?: Account | accountType | accountType[], to?: Account ) => {
+    { 
+    call: "approve",
+    tag: "set",
+    callback: async ( from?: Account | accountType | accountType[], to?: Account ) => {
             console.log("Set Approvals %s => %s", from, to)
 
             const stableABI : any = getStableABI();

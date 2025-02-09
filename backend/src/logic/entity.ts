@@ -12,6 +12,7 @@ import { setIndex, dataDecodeABI, TypeCountries,
 
 export const entityCallback : callbackType[] = [
     { 
+    call: "entity",
     tag: "get", 
     callback: async ( inputs: Array<{  hash: typeof regex2  }> ) : Promise< Array<Object> | undefined> => {
 
@@ -65,6 +66,7 @@ export const entityCallback : callbackType[] = [
         }
     },
     {
+    call: "entity",
     tag: "set", 
     callback: async ( inputs: Array<{  person: boolean, inputs: {
         name: string,
@@ -129,6 +131,7 @@ export const entityCallback : callbackType[] = [
         }
     },
     {
+    call: "entity",
     tag: "all", 
     callback: async ( inputs?: Array<any> ) : Promise<Array<string> | undefined> => {
 

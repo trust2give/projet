@@ -1,34 +1,86 @@
 import { BaseError, Address, ContractFunctionRevertedError, encodeAbiParameters, decodeAbiParameters } from 'viem'
 import { dataDecodeABI, abiData, honeyFeatures, pollenFeatures, Typeoftoken, Statusoftoken } from "../interface/types";
-import { contractRecord, rwRecord, rwType, menuRecord, Account, NULL_ADDRESS, NULL_HASH, regex2, regex3 } from "../libraries/types";
+import { contractRecord, callbackType, rwType, menuRecord, Account, NULL_ADDRESS, NULL_HASH, regex2, regex3 } from "../libraries/types";
 import { contractSet, diamondNames, facetNames, smart, encodeInterfaces } from "../T2G_Data";
 import { accountType, accountRefs, globalState, setState, addAccount, updateAccountBalance, assignAccounts } from "./states";
 import fs from 'fs';
 
-export const showInstance = async ( contract : contractRecord ) : Promise<Array<any>> => {
-    
-    const jsonFacet = fs.readFileSync( 
-        contract.abi.path, 
-        'utf-8'
-        );
-    
-    return JSON.parse(jsonFacet).abi.map( 
-        (item : { 
-            inputs: Array<abiData>, 
-            name: string, 
-            type: string, 
-            stateMutability?: string, 
-            outputs?: string, 
-            anonymous?: boolean  
-            }) => {
-            return {
-                name: item.name,
-                type: item.type,
-                state: item.stateMutability,
-                inputs: item.inputs.map( ( el: abiData ) => el.name ),
-                }   
+export const instanceCallback : callbackType[] = [
+    { 
+    call: "state",
+    tag: "instance", 
+    callback: async ( inputs: Array<{ name: string }> ) : Promise<Array<any> | undefined> => {
+
+        if (inputs.length == 0) return undefined;
+
+        var instanceList : Object[] = [];
+                
+        const [account] = await globalState.wallets.getAddresses()
+
+        for ( const input of inputs) {
+            var result : any = [];
+
+            const record : contractRecord | undefined = [diamondNames.Diamond, ...facetNames, ...contractSet].find((item) => item.name == input.name)
+
+            if (record != undefined) {
+
+                const jsonFacet = fs.readFileSync( 
+                    (<contractRecord>record).abi.path, 
+                    'utf-8'
+                    );
+                
+                result = JSON.parse(jsonFacet).abi.map( 
+                    (item : { 
+                        inputs: Array<abiData>, 
+                        name: string, 
+                        type: string, 
+                        stateMutability?: string, 
+                        outputs?: string, 
+                        anonymous?: boolean  
+                        }) => {
+                        return {
+                            name: item.name,
+                            type: item.type,
+                            state: item.stateMutability,
+                            inputs: item.inputs.map( ( el: abiData ) => el.name ),
+                            }   
+                        });    
+
+                        instanceList.push(
+                    Object.assign( { 
+                        instance: result
+                        }, 
+                        input
+                        )
+                    );
+                }
+            }
+
+        return instanceList;
+        }
+    },
+    { 
+    call: "state",
+    tag: "accounts", 
+    callback: async ( inputs?: Array<any> ) : Promise<Array<any>> => {
+        return Object.entries(accountRefs).map( (item ) => {  
+            return { 
+                tag: item[0],
+                name: (<accountType>item[1]).name, 
+                address: (<accountType>item[1]).address, 
+                wallet: ((<accountType>item[1]).wallet) ? <Address>(<accountType>item[1]).wallet : NULL_ADDRESS
+                }
             });
-    }
+        }
+    },
+    { 
+    call: "state",
+    tag: "contracts", 
+    callback: async ( inputs?: Array<any> ) : Promise<Array<any>> => {
+        return facetNames.map( (el : contractRecord ) => el.name );
+        }
+    }    
+    ]
 
 export const getGWEI = async () : Promise<Number | undefined> => {
     const jsonStable = fs.readFileSync( 

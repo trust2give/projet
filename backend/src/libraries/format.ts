@@ -155,17 +155,6 @@ export function displayContract( contract : string, color: string, pad?: number 
     }
 */
 
-// used
-export function returnAccountTable() : { [cle: string]: string | Address; }[] {
-    return Object.entries(accountRefs).map( (item ) => {  
-        return { 
-            tag: item[0],
-            name: (<accountType>item[1]).name, 
-            address: (<accountType>item[1]).address, 
-            wallet: ((<accountType>item[1]).wallet) ? <Address>(<accountType>item[1]).wallet : NULL_ADDRESS
-            }
-        });
-    } 
 
 export function colorOutput( text: string, color?: string, hide?: boolean ) : string {
     var output ="";
