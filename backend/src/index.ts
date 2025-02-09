@@ -8,7 +8,6 @@ import { accountRefs, initState, addAccount, clientFormat, globalState, assignAc
 import { readLastContractSetJSONfile, readLastDiamondJSONfile } from "./libraries/files";
 import { contractSet, diamondNames, facetNames, smart, smartEntry, encodeInterfaces } from "./T2G_Data";
 import { contractRecord, rwRecord, rwType, menuRecord, Account, NULL_ADDRESS, regex, regex2, regex3, NULL_HASH } from "./libraries/types";
-import { DeployContracts } from './logic/DeployContracts';
 import { colorOutput } from "./libraries/format";
 import fs from 'fs';
 
