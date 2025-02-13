@@ -33,6 +33,8 @@ router.get('/', async (req : any, res : any) => {
 
   console.log("GET processed", call, inputs);
   
+  console.log( callbacks.map((item) => item.call).join(" | "));
+
   if (inputs)
       jsonData = JSON.parse(decodeURIComponent(inputs as string)); // Décoder et analyser l'objet JSON
 
