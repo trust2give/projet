@@ -15,6 +15,7 @@ export const approveCallback : callbackType[] = [
     { 
     call: "approve",
     tag: "get",
+    help: "approve | get [ { from: <Account> }] -> Get the approval state fot the given account <from>",
     callback: async ( inputs: Array<{ from?: Account | accountType | accountType[] }> ) => {
 
         if (inputs.length == 0) return [];
@@ -64,6 +65,7 @@ export const approveCallback : callbackType[] = [
     { 
     call: "approve",
     tag: "update", 
+    help: "approve | update [ ] -> Update approval for all of the accounts to transfer on behalf of",
     callback: async () => {
                 
         const accounts = [ Account.A0, Account.AA, Account.AE, Account.AF, Account.AG ];
@@ -92,6 +94,7 @@ export const approveCallback : callbackType[] = [
     { 
     call: "approve",
     tag: "set",
+    help: "approve | set [ { from: <Account>, to: <Accoun> }] -> Approve to <account> to manage transfer on behalf of from <Account>",
     callback: async ( from?: Account | accountType | accountType[], to?: Account ) => {
             console.log("Set Approvals %s => %s", from, to)
 

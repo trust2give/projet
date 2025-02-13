@@ -8,6 +8,7 @@ export const stateCallback : callbackType[] = [
     { 
     call: "state",
     tag: "beacon", 
+    help: "state | beacon [] -> Get the list of smart contract instances that respond to beacon function call",
     callback: async ( inputs?: Array<any> ) : Promise<Object[] | undefined> => {
 
         const records : contractRecord[] = [diamondNames.Diamond, ...facetNames, ...contractSet];

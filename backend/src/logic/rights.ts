@@ -18,6 +18,7 @@ export const rightCallback : callbackType[] = [
     {
     call: "rights", 
     tag: "all",
+    help: "rights | all [] -> Get the list of users and their rights",
     callback: async ( inputs?: Array<any> ) : Promise<any> => {
             
         var result : { 
@@ -89,6 +90,7 @@ export const rightCallback : callbackType[] = [
     { 
     call: "rights",
     tag: "get",
+    help: "rights | get [ { account: <Account> }] -> Get the rights fot the given account <account>",
     callback: async ( inputs: Array<{ account: Account }> ) : Promise<any> => {
                     
         if (inputs.length == 0) return undefined;
@@ -161,6 +163,7 @@ export const rightCallback : callbackType[] = [
     {
     call: "rights", 
     tag: "register",
+    help: "rights | register [ { account: <Account>, flags: number }] -> set the <flag> rights to the user <Account>",
     callback: async ( inputs: Array<{ account: Account, flags: number }> ) => {
 
         if (inputs.length == 0) return undefined;
@@ -196,6 +199,7 @@ export const rightCallback : callbackType[] = [
     { 
     call: "rights",
     tag: "ban",
+    help: "rights | ban [ { account: <Account> }] -> Ben the account <account> of the T2G access",
     callback: async ( inputs: Array<{ account: Account }> ) => {
 
         if (inputs.length == 0) return undefined;

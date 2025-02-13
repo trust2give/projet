@@ -9,6 +9,7 @@ export const honeyCallback : callbackType[] = [
     { 
     call: "honey",
     tag: "mint", 
+    help: "honey | mint [ { fund: <regex2>, entity: <regex2> }] -> Mint a new honey with entity Id <entity> & fund Id <fund>",
     callback: async ( inputs: Array<{ from: Account, fund: string, entity: string }> ) => {
 
         if (inputs.length == 0) return undefined;
@@ -50,6 +51,7 @@ export const honeyCallback : callbackType[] = [
     { 
     call: "honey",
     tag: "approve", 
+    help: "honey | approve [ { hash: <regex2> }] -> Get the details of the entity with Id <hash>",
     callback: async ( inputs: Array<{ from: Account, fund: string }> ) => {
 
         if (inputs.length == 0) return undefined;
@@ -90,6 +92,7 @@ export const honeyCallback : callbackType[] = [
     { 
     call: "honey",
     tag: "transfer", 
+    help: "honey | transfer [ { from: <Account>, fund: <regex2> }] -> Transfer the fund id ",
     callback: async ( inputs: Array<{ from: Account, fund: string }> ) => {
 
         if (inputs.length == 0) return undefined;
@@ -133,6 +136,7 @@ export const fundCallback : callbackType[] = [
     { 
     call: "fund",
     tag: "set",
+    help: "fund | set [ { from: <Account>, value: <number>, rate: <number> }] -> Create a new fund and return the Id <hash>",
     callback: async ( inputs: Array<{ from?: Account, value?: number, rate?: number }> ) : Promise<Object[] | undefined> => {
 
         if (inputs.length == 0) return undefined;
@@ -199,6 +203,7 @@ export const fundCallback : callbackType[] = [
     { 
     call: "fund",
     tag: "all",
+    help: "fund | all [ ] -> Get the list of fund Ids that exists",
     callback: async ( inputs?: Array<any> ) : Promise<Object[] | undefined> => {
         
         const honeyABI : any = getABI("T2G_HoneyFacet");

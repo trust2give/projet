@@ -14,6 +14,7 @@ export const entityCallback : callbackType[] = [
     { 
     call: "entity",
     tag: "get", 
+    help: "entity | get [ { hash: <regex2> }] -> Get the details of the entity with Id <hash>",
     callback: async ( inputs: Array<{  hash: typeof regex2  }> ) : Promise< Array<Object> | undefined> => {
 
         const entityABI : any = getABI("T2G_EntityFacet");
@@ -68,6 +69,7 @@ export const entityCallback : callbackType[] = [
     {
     call: "entity",
     tag: "set", 
+    help: "entity | set [ { person: <boolean>, inputs: <Object> }] -> Create a new entity (person or compagny) and returns the hash Id",
     callback: async ( inputs: Array<{  person: boolean, inputs: {
         name: string,
         uid?: string,
@@ -133,6 +135,7 @@ export const entityCallback : callbackType[] = [
     {
     call: "entity",
     tag: "all", 
+    help: "entity | all [] -> Get the list of all entity hash ids that exists",
     callback: async ( inputs?: Array<any> ) : Promise<Array<string> | undefined> => {
 
         var entitiesIds : string[] = [];

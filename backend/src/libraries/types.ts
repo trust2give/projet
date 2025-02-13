@@ -90,5 +90,6 @@ export enum Account {
     export type callbackType = {
         call: string,
         tag: string,
+        help?: string,
         callback: ( inputs: Array<any> ) => {}
         }

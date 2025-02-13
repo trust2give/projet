@@ -1,6 +1,4 @@
 import { Router, Request, Response } from 'express';
-import { getUserById, addUser } from '../services/userService';
-import { globalState } from '../logic/states';
 import { instanceCallback } from "../logic/instances";
 import { stateCallback } from "../logic/beacons";
 import { approveCallback } from "../logic/approvals";
@@ -33,7 +31,7 @@ router.get('/', async (req : any, res : any) => {
 
   console.log("GET processed", call, inputs);
   
-  console.log( callbacks.map((item) => item.call).join(" | "));
+  console.log( callbacks.map((item) => item.help).join(" | "));
 
   if (inputs)
       jsonData = JSON.parse(decodeURIComponent(inputs as string)); // Décoder et analyser l'objet JSON

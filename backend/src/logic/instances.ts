@@ -9,6 +9,7 @@ export const instanceCallback : callbackType[] = [
     { 
     call: "state",
     tag: "instance", 
+    help: "state | instance [ { name: <string> }] -> Get the detail of a specific smart contract <name>",
     callback: async ( inputs: Array<{ name: string }> ) : Promise<Array<any> | undefined> => {
 
         if (inputs.length == 0) return undefined;
@@ -62,6 +63,7 @@ export const instanceCallback : callbackType[] = [
     { 
     call: "state",
     tag: "accounts", 
+    help: "state | accounts [] -> Get the list of available accounts",
     callback: async ( inputs?: Array<any> ) : Promise<Array<any>> => {
         return Object.entries(accountRefs).map( (item ) => {  
             return { 
@@ -76,6 +78,7 @@ export const instanceCallback : callbackType[] = [
     { 
     call: "state",
     tag: "contracts", 
+    help: "state | accounts [] -> Get the list of available smart contracts",
     callback: async ( inputs?: Array<any> ) : Promise<Array<any>> => {
         return facetNames.map( (el : contractRecord ) => el.name );
         }
