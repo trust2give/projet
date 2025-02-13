@@ -38,6 +38,8 @@ router.get('/', async (req : any, res : any) => {
 
   const callback : callbackType | undefined = callbacks.find( (item) => (item.call == call && item.tag == jsonData.call));
 
+  console.log( "Callback function found %s %s", callback?.call, callback?.tag );
+
   if (callback == undefined) {
     res.status(404).json({ message: 'fonction non trouvé' });
     return;
