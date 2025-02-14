@@ -214,7 +214,7 @@ export const deployCallback : callbackType[] = [
   
     const isWallet : boolean = ("wallet" in (<contractRecord>facet)) && (typeof (<contractRecord>facet).wallet == "string");
 
-    if (input.command != FacetCutAction.Remove && isWallet) {
+    if (cutAction != FacetCutAction.Remove && isWallet) {
 
       console.log( <string>(<contractRecord>facet).name, writeList, (<contractRecord>facet).wallet, cut);
 
