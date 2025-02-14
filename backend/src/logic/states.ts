@@ -156,7 +156,7 @@ export const addAccount = async (rank: number, name: string, addr: Address, wall
 export const assignAccounts = async () => {
 
     var rank = 0;
-    const wallets = globalState.wallets.getAddresses();
+    const wallets = await globalState.wallets.getAddresses();
 
     console.log(wallets);
 
