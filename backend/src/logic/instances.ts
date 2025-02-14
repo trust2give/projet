@@ -153,6 +153,8 @@ export const writeFacetContract = async ( contractName: string, fName: string, a
 
     const facetABI : any = getABI(contractName);
 
+    console.log( contractName, fName, args, account, facetABI );
+    
     try {                                    
                 
         const { request } = await globalState.clients.simulateContract({
