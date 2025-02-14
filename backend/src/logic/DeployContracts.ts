@@ -40,51 +40,46 @@ export const deployCallback : callbackType[] = [
     var cut : cutRecord[] = [];
     var initFunc = NULL_ADDRESS;
 
-    if (inputs.length == 0) return undefined;
-
     const [account] = await globalState.wallets.getAddresses()
 
-    for (const input of inputs) {
-      if (input.command != FacetCutAction.Add) throw("Bad action <Remove> for Diamond Smart Contract ERC 2535 - Only Add possible")          
+    initFunc = await deployDiamond();
+    
+    // We need to write down the new address in a json file
 
-      initFunc = await deployDiamond();
+    colorOutput( 
+      "Diamond Root @[".concat(
+        diamondNames.Diamond.address, 
+        "] CutFacet @[", 
+        diamondNames.DiamondCutFacet.address, 
+        "] Init @[", 
+        diamondNames.DiamondInit.address
+        ), 
+      "green"
+      );
+
+    // Here we update address registration for EUR if not exusting
+    if (contractSet[0].address != NULL_ADDRESS) {
+
+      const { request } = await globalState.clients.simulateContract({
+          address: diamondNames.Diamond.address,
+          abi: diamondNames.Diamond.abi.file.abi,
+          functionName: "updateAddressAndKeys",
+          args: [ NULL_ADDRESS, contractSet[0].address, NULL_HASH ],
+          account
+      })
+
+      console.log( "updateAddressAndKeys >> ", request )
       
-      // We need to write down the new address in a json file
+      const raw = await globalState.wallets.writeContract(request)
 
-      colorOutput( 
-        "Diamond Root @[".concat(
-          diamondNames.Diamond.address, 
-          "] CutFacet @[", 
-          diamondNames.DiamondCutFacet.address, 
-          "] Init @[", 
-          diamondNames.DiamondInit.address
-          ), 
-        "green"
-        );
-
-      // Here we update address registration for EUR if not exusting
-      if (contractSet[0].address != NULL_ADDRESS) {
-
-        const { request } = await globalState.clients.simulateContract({
-            address: diamondNames.Diamond.address,
-            abi: diamondNames.Diamond.abi.file.abi,
-            functionName: "updateAddressAndKeys",
-            args: [ NULL_ADDRESS, contractSet[0].address, NULL_HASH ],
-            account
-        })
-  
-        console.log( "updateAddressAndKeys >> ", request )
-        
-        const raw = await globalState.wallets.writeContract(request)
-
-        colorOutput(
-          `Update EUR @ ${contractSet[0].name} Tx: ${raw}`, 
-          "magenta"
-          );            
-        }
+      colorOutput(
+        `Update EUR @ ${contractSet[0].name} Tx: ${raw}`, 
+        "magenta"
+        );            
+      }
 
     cut = await deployLoupeDiamond( 
-      <FacetCutAction>input.command , 
+      <FacetCutAction>FacetCutAction.Add , 
       cut
       );
 
@@ -97,51 +92,41 @@ export const deployCallback : callbackType[] = [
     diamondNames.DiamondLoupeFacet.address = cut[cut.length - 1].facetAddress;
 
     await writeLastDiamondJSONfile();
-    }
   }
   },
   { 
   call: "deploy",
   tag: "stable", 
   callback: async ( inputs: Array<{ command: FacetCutAction }> ) => {
-
-    if (inputs.length == 0) return undefined;
     
     const [account] = await globalState.wallets.getAddresses()
-
-    for (const input of inputs) {
       
-      if (input.command != FacetCutAction.Remove) {
-  
-        await deployContractInstance( 
-          contractSet[0], 
-          [],  
-          input.command  
-          );
-            
-        colorOutput(`Add ${contractSet[0].name} @: ${contractSet[0].address}`, "magenta");        
-  
-        // We need to write down the new address in a json file
-        writeLastContractJSONfile();
-  
-        // Here we update address registration for EUR
-
-        const { request } = await globalState.clients.simulateContract({
-            address: diamondNames.Diamond.address,
-            abi: diamondNames.Diamond.abi.file.abi,
-            functionName: "updateAddressAndKeys",
-            args: [ NULL_ADDRESS, contractSet[0].address, NULL_HASH ],
-            account
-        })
-  
-        console.log( "updateAddressAndKeys >> ", request )
+    await deployContractInstance( 
+      contractSet[0], 
+      [],  
+      FacetCutAction.Add 
+      );
         
-        const raw = await globalState.wallets.writeContract(request)
-  
-        colorOutput(`Update EUR @ ${contractSet[0].name} Tx: ${raw}`, "magenta");            
-        }
-      else throw("Wrong action for EUR Contract ".concat(contractSet[0].address));   
-      }   
+    colorOutput(`Add ${contractSet[0].name} @: ${contractSet[0].address}`, "magenta");        
+
+    // We need to write down the new address in a json file
+    writeLastContractJSONfile();
+
+    // Here we update address registration for EUR
+
+    const { request } = await globalState.clients.simulateContract({
+        address: diamondNames.Diamond.address,
+        abi: diamondNames.Diamond.abi.file.abi,
+        functionName: "updateAddressAndKeys",
+        args: [ NULL_ADDRESS, contractSet[0].address, NULL_HASH ],
+        account
+    })
+
+    console.log( "updateAddressAndKeys >> ", request )
+    
+    const raw = await globalState.wallets.writeContract(request)
+
+    colorOutput(`Update EUR @ ${contractSet[0].name} Tx: ${raw}`, "magenta");            
     }
   },
   { 
