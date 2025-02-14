@@ -138,6 +138,8 @@ export const deployCallback : callbackType[] = [
 
     if (inputs.length == 0) return undefined;
 
+    console.log( inputs[0].command, typeof inputs[0].command )
+
     if (!String(diamondNames.Diamond.address).match(regex)) 
       throw "Trying to manage facets without Diamond deployed yet :: no root address found!";
     
