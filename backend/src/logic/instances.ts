@@ -4,6 +4,7 @@ import { contractRecord, callbackType, rwType, menuRecord, Account, NULL_ADDRESS
 import { contractSet, diamondNames, facetNames, smart, encodeInterfaces } from "../T2G_Data";
 import { accountType, accountRefs, globalState, setState, addAccount, updateAccountBalance, assignAccounts } from "./states";
 import fs from 'fs';
+import { colorOutput } from '../libraries/format';
 
 export const instanceCallback : callbackType[] = [
     { 
@@ -11,6 +12,8 @@ export const instanceCallback : callbackType[] = [
     tag: "instance", 
     help: "state | instance [ { name: <string> }] -> Get the detail of a specific smart contract <name>",
     callback: async ( inputs: Array<{ name: string }> ) : Promise<Array<any> | undefined> => {
+
+        console.log( "state instance ", inputs);
 
         if (inputs.length == 0) return undefined;
 

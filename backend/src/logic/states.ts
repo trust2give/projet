@@ -158,8 +158,6 @@ export const assignAccounts = async () => {
     var rank = 0;
     const wallets = await globalState.wallets.getAddresses();
 
-    console.log(wallets);
-
     for (const wallet of wallets.toSpliced(10)) {
 
         const balance = await globalState.clients.getBalance({
