@@ -132,13 +132,18 @@ export const deployCallback : callbackType[] = [
   { 
   call: "deploy",
   tag: "facet", 
-  callback: async ( inputs: Array<{ command: FacetCutAction, facet: string }> ) => {
+  callback: async ( inputs: Array<{ command: string, facet: string }> ) => {
       
     var cut : cutRecord[] = [];
 
+    type encKeys = keyof typeof FacetCutAction;
+    
     if (inputs.length == 0) return undefined;
+    if (!inputs[0].command.match("[012]")) return undefined;
 
-    console.log( inputs[0].command, typeof inputs[0].command )
+    var cutAction : FacetCutAction = parseInt( inputs[0].command );
+
+    console.log( cutAction, typeof cutAction )
 
     if (!String(diamondNames.Diamond.address).match(regex)) 
       throw "Trying to manage facets without Diamond deployed yet :: no root address found!";
@@ -190,7 +195,7 @@ export const deployCallback : callbackType[] = [
 
       cut = await deployFacets( 
         <string>(<contractRecord>facet).name, 
-        <FacetCutAction>input.command, 
+        <FacetCutAction>cutAction, 
         inputArray, 
         cut
         );
