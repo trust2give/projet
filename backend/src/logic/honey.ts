@@ -3,7 +3,7 @@ import { contractSet, diamondNames, facetNames, smart, encodeInterfaces } from "
 import { getGWEI, getABI, writeStableContract, encodeInputsAndSend, writeFacetContract } from "../logic/instances";
 import { Statusoftoken, dataDecodeABI, setIndex, honeyFeatures, pollenFeatures, TypeofUnit } from "../interface/types";
 import { contractRecord, callbackType, rwType, menuRecord, Account, NULL_ADDRESS, NULL_HASH, regex, regex2, regex3 } from "../libraries/types";
-import { accountType, accountRefs, globalState, setState, addAccount, updateAccountBalance, assignAccounts } from "./states";
+import { accountType, accountRefs, globalState, setState } from "./states";
 
 export const honeyCallback : callbackType[] = [
     { 

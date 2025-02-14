@@ -1,6 +1,6 @@
 import { contractSet, diamondNames, facetNames, smart, encodeInterfaces, getWalletAddressFromSmartContract } from "../T2G_Data";
 import { contractRecord, callbackType, rwType, menuRecord, Account, NULL_ADDRESS, regex, regex2, NULL_HASH } from "../libraries/types";
-import { accountType, accountRefs, globalState, setState, addAccount, updateAccountBalance, assignAccounts } from "./states";
+import { globalState, setState } from "./states";
 import { getGWEI, getABI, writeStableContract, encodeInputsAndSend, writeFacetContract } from "../logic/instances";
 import { colorOutput, parseReadValues } from "../libraries/format";
 import { setIndex, dataDecodeABI, TypeCountries, 

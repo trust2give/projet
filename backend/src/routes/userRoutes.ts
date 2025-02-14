@@ -46,7 +46,7 @@ router.get('/', async (req : any, res : any) => {
     }
   const result = await callback.callback( jsonData.inputs );
   res.status(201).json( result );
-});
+  });
   
   // Route POST pour ajouter un nouvel utilisateur
   router.post('/', async (req : any, res : any) => {

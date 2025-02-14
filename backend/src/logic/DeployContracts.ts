@@ -13,7 +13,7 @@ import { wlist,
 import { colorOutput } from "../libraries/format";
 import { abiData } from "../interface/types";
 import { callbackType, cutRecord, rwType, Account, NULL_ADDRESS, regex, regex2, regex3, contractRecord, NULL_HASH } from "../libraries/types";
-import { accountRefs, globalState, clientFormat } from "./states";
+import { globalState } from "./states";
 //import { setConstructorFromInstance } from "./instances";
 import { Address } from "viem";
 import fs from 'fs';

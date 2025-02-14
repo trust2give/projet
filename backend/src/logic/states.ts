@@ -99,16 +99,23 @@ export function initState() {
 
 // Used
 export async function loadWallets() {
-    // <clientFormat[]>await hre.viem.getWalletClients();
+    const accounts = await hre.ethers.getSigners();
+
+    console.log("hre.ethers.getSigners", accounts)
+
     globalState.wallets = createWalletClient({
         chain: hardhat,
         transport: http('http://localhost:8545'), 
         })
 
+    console.log("createWalletClient", globalState.wallets)
+
     globalState.clients = createPublicClient({
         chain: hardhat,
         transport: http('http://localhost:8545'), // L'adresse de votre nœud Hardhat
     });
+
+    console.log("createPublicClient", globalState.clients)
 
     for (const account of await hre.viem.getWalletClients()) {
         const balance = await globalState.clients.getBalance({

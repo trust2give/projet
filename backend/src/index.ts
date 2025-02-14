@@ -31,12 +31,11 @@ app.listen(PORT, async () => {
   initState();
 
   var initialized : Boolean = false;
-  type accKeys = keyof typeof accountRefs;
 
   // Initialize wallet/accounts and their balance from hardhat node
   await loadWallets();
-  await assignAccounts();
-  await updateAccountBalance();
+  //await assignAccounts();
+  //await updateAccountBalance();
 
   if (await readLastDiamondJSONfile()) {
 

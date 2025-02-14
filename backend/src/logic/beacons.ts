@@ -1,7 +1,7 @@
 import { Address } from "viem";
 import { contractSet, diamondNames, facetNames, smart, smartEntry, encodeInterfaces } from "../T2G_Data";
 import { contractRecord, callbackType, rwType, menuRecord, Account, NULL_ADDRESS, regex, regex2, regex3 } from "../libraries/types";
-import { accountType, accountRefs, globalState, setState, addAccount, updateAccountBalance, assignAccounts } from "./states";
+import { globalState, setState } from "./states";
 import fs from 'fs';
 
 export const stateCallback : callbackType[] = [
