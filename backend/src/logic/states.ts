@@ -1,4 +1,3 @@
-const hre = require("hardhat");
 import { http, Address, getContract, createPublicClient, createWalletClient, parseEther, formatEther } from 'viem'
 import { mainnet, hardhat } from 'viem/chains'
 
@@ -105,23 +104,10 @@ export async function loadWallets() {
         transport: http('http://localhost:8545'), 
         })
 
-    console.log("createWalletClient", await globalState.wallets.getAddresses())
-
     globalState.clients = createPublicClient({
         chain: hardhat,
         transport: http('http://localhost:8545'), // L'adresse de votre nœud Hardhat
     });
-
-    for (const account of await globalState.wallets.getAddresses()) {
-
-        const balance = await globalState.clients.getBalance({
-            address: account,
-            });
-    
-        console.log(
-            `Balance of ${account}: ${formatEther(balance)} ETH`
-            );
-        }
     }
 
 export function functionState( level?: string ) {
@@ -141,10 +127,13 @@ export function setState( newState: menuState, item?: rwRecord) {
 
 
 export async function updateAccountBalance() {
-    var rank = 0;
-    type refKeys = keyof typeof accountRefs;
+
     for (const wallet of Object.entries(accountRefs)) {
-        accountRefs[<refKeys>wallet[0]].balance = await globalState.clients.getBalance({ address: wallet[1].address,});
+        accountRefs[<keyof typeof accountRefs>wallet[0]].balance = await globalState.clients.getBalance(
+            { 
+                address: wallet[1].address,
+            }
+            );
         }
     }
 
@@ -165,16 +154,22 @@ export const addAccount = async (rank: number, name: string, addr: Address, wall
 
 // Used
 export const assignAccounts = async () => {
-    // We get the list of available accounts from hardhat testnet
-    const accounts = await hre.ethers.getSigners();
 
     var rank = 0;
-    for (const wallet of accounts.toSpliced(10)) {
-        const balance = await globalState.clients.getBalance({ address: wallet.address,});
 
+    for (const wallet of globalState.wallets.getAddresses().toSpliced(10)) {
+
+        const balance = await globalState.clients.getBalance({
+            address: wallet,
+            });
+    
+        console.log(
+            `Balance of ${wallet}: ${formatEther(balance)} ETH`
+            );
+    
         accountRefs = Object.assign( accountRefs, Object.fromEntries(new Map([ [`@${rank}`, 
             {   name: `Wallet ${rank}`, 
-                address: wallet.address,
+                address: wallet,
                 balance: balance 
             } 
             ] ])));

@@ -34,8 +34,7 @@ app.listen(PORT, async () => {
 
   // Initialize wallet/accounts and their balance from hardhat node
   await loadWallets();
-  //await assignAccounts();
-  //await updateAccountBalance();
+  await assignAccounts();
 
   if (await readLastDiamondJSONfile()) {
 
