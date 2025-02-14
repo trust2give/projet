@@ -156,8 +156,11 @@ export const addAccount = async (rank: number, name: string, addr: Address, wall
 export const assignAccounts = async () => {
 
     var rank = 0;
+    const wallets = globalState.wallets.getAddresses();
 
-    for (const wallet of globalState.wallets.getAddresses().toSpliced(10)) {
+    console.log(wallets);
+
+    for (const wallet of wallets.toSpliced(10)) {
 
         const balance = await globalState.clients.getBalance({
             address: wallet,
