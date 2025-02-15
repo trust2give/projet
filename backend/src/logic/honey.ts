@@ -151,6 +151,8 @@ export const fundCallback : callbackType[] = [
         
         const toAccount = (<accountType>accountRefs[Account.AA]);
         
+        console.log( "fund set", inputs, typeof inputs[0].from )
+
         for ( const input of inputs) {
             var tx1 : typeof regex2 = NULL_HASH;
             var tx2 : typeof regex2 = NULL_HASH;
@@ -159,6 +161,8 @@ export const fundCallback : callbackType[] = [
             if (Object.keys(accountRefs).includes(<string>input.from)) {
 
                 const fromAccount = (<accountType>accountRefs[<keyof typeof accountRefs>input.from]);
+
+                console.log( "fund set", fromAccount )
     
                 tx1 = <typeof regex2>await writeStableContract( 
                     "transfer", 
