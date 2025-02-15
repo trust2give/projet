@@ -164,6 +164,8 @@ export const deployCallback : callbackType[] = [
       var inputArray = [];
 
       const constructor = ((<contractRecord>facet).abi.file.abi.filter((item: abiData) => item.type == "constructor"))
+      
+      console.log("constructor", constructor);
 
       const record = { 
         rwType: rwType.CONSTRUCTOR,
