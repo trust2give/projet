@@ -140,6 +140,8 @@ export const fundCallback : callbackType[] = [
     help: "fund | set [ { from: <Account>, value: <number>, rate: <number> }] -> Create a new fund and return the Id <hash>",
     callback: async ( inputs: Array<{ from?: Account, value?: number, rate?: number }> ) : Promise<Object[] | undefined> => {
 
+        console.log( "fund set", inputs, typeof inputs[0].from )
+
         if (inputs.length == 0) return undefined;
 
         var setList : Object[] = [];
@@ -151,7 +153,6 @@ export const fundCallback : callbackType[] = [
         
         const toAccount = (<accountType>accountRefs[Account.AA]);
         
-        console.log( "fund set", inputs, typeof inputs[0].from )
 
         for ( const input of inputs) {
             var tx1 : typeof regex2 = NULL_HASH;
