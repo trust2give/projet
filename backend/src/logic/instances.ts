@@ -130,18 +130,14 @@ export const getStableABI = () => {
     }
     
 export const writeStableContract = async ( name: string, args: Array<any>, account: any) : Promise<typeof regex2 | undefined> => {
-    const jsonStable = fs.readFileSync( 
-        contractSet[0].abi.path, 
-        'utf-8' 
-        );
-    
-    const stableABI : any = JSON.parse(jsonStable);
+
+    const stableABI = getStableABI();
 
     try {                                    
                 
         const { request } = await globalState.clients.simulateContract({
             address: contractSet[0].address,
-            abi: stableABI.abi.file.abi,
+            abi: stableABI.abi,
             functionName: name,
             args: args,
             account
