@@ -19,15 +19,27 @@ export async function deployContractInstance( contract: contractRecord, args: Ar
     //console.log("Contract ", contract.abi, contract.abi.file );
     
     const abi = contract.abi.file.abi;
+    var hashCut : any;
 
-    const hashCut = await globalState.wallets.deployContract(
-        {
-        abi,
-        account,
-        bytecode: contract.abi.file.bytecode,
-        args: args
+    if (args.length > 0) {
+        hashCut = await globalState.wallets.deployContract(
+            {
+            abi,
+            account,
+            bytecode: contract.abi.file.bytecode,
+            args: args
+            }
+            )
         }
-        )
+    else {
+        hashCut = await globalState.wallets.deployContract(
+            {
+            abi,
+            account,
+            bytecode: contract.abi.file.bytecode
+            }
+            )
+        }
     
     console.log("Waiting Transaction ", hashCut )
 
