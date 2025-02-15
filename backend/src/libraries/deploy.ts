@@ -16,10 +16,11 @@ export async function deployContractInstance( contract: contractRecord, args: Ar
         address: account,
         })    
 
-    //console.log("Contract ", contract.abi, contract.abi.file );
-    
+        
     const abi = contract.abi.file.abi;
     var hashCut : any;
+
+    console.log("Contract ", contract, abi, args );
 
     if (args.length > 0) {
         hashCut = await globalState.wallets.deployContract(
