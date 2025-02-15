@@ -117,7 +117,7 @@ export const entityCallback : callbackType[] = [
             tx = <typeof regex2>await encodeInputsAndSend( 
                 "T2G_EntityFacet", 
                 "setEntity", 
-                [...Object.values(ins) ], 
+                [[...Object.values(ins) ]], 
                 account 
                 );  
 
