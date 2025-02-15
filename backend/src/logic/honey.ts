@@ -169,7 +169,7 @@ export const fundCallback : callbackType[] = [
                     account 
                     )
 
-                console.log(tx1)
+                console.log(tx1, BigInt(<number>input.value))
     
                 tx2 = <typeof regex2>await writeStableContract( 
                     "transfer", 
@@ -180,7 +180,7 @@ export const fundCallback : callbackType[] = [
                     fromAccount.address 
                     )
                 
-                console.log(tx2)
+                console.log(tx2, BigInt(<number>input.value))
                 
                 tx3 = <typeof regex2>await encodeInputsAndSend( "T2G_HoneyFacet", "setFund", [[
                     setIndex( Statusoftoken, 'None' ),
