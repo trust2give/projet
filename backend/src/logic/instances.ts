@@ -194,7 +194,7 @@ export const encodeInputsAndSend = async ( contractName: string, fName: string, 
                     
                     const { request } = await globalState.clients.simulateContract({
                         address: diamondNames.Diamond.address,
-                        abi: getABI(contractName).abi.file.abi,
+                        abi: getABI(contractName).abi,
                         functionName: fName,
                         args: [ encodedData ],
                         account
