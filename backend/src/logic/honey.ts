@@ -140,7 +140,12 @@ export const fundCallback : callbackType[] = [
     help: "fund | set [ { from: <Account>, value: <number>, rate: <number> }] -> Create a new fund and return the Id <hash>",
     callback: async ( inputs: Array<{ from?: Account, value?: number, rate?: number }> ) : Promise<Object[] | undefined> => {
 
-        console.log( "fund set", inputs, typeof inputs[0].from, Object.keys(accountRefs) )
+        console.log( 
+            "fund set", 
+            inputs, 
+            typeof inputs[0].from, 
+            Object.keys(accountRefs) 
+            )
 
         if (inputs.length == 0) return undefined;
 
@@ -157,6 +162,12 @@ export const fundCallback : callbackType[] = [
             var tx1 : typeof regex2 = NULL_HASH;
             var tx2 : typeof regex2 = NULL_HASH;
             var tx3 : typeof regex2 = NULL_HASH;
+
+            console.log( 
+                "fund input", 
+                input.from,
+                Object.keys(accountRefs).includes(<string>input.from) 
+                )
 
             if (Object.keys(accountRefs).includes(<string>input.from)) {
 
