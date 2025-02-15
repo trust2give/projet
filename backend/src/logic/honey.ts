@@ -4,6 +4,7 @@ import { getGWEI, getABI, writeStableContract, encodeInputsAndSend, writeFacetCo
 import { Statusoftoken, dataDecodeABI, setIndex, honeyFeatures, pollenFeatures, TypeofUnit } from "../interface/types";
 import { contractRecord, callbackType, rwType, menuRecord, Account, NULL_ADDRESS, NULL_HASH, regex, regex2, regex3 } from "../libraries/types";
 import { accountType, accountRefs, globalState, setState } from "./states";
+import { colorOutput, parseReadValues } from "../libraries/format";
 
 export const honeyCallback : callbackType[] = [
     { 
@@ -202,9 +203,64 @@ export const fundCallback : callbackType[] = [
     },
     { 
     call: "fund",
+    tag: "get", 
+    help: "fund | get [ { hash: <regex2> }] -> Get the details of the fund with Id <hash>",
+    callback: async ( inputs: Array<{  hash: typeof regex2  }> ) : Promise< Array<Object> | undefined> => {
+
+        const fundABI : any = getABI("T2G_HoneyFacet");
+
+        var fundList : Object[] = [];
+        
+        for ( const input of inputs) {
+
+            var value : `0x${string}` = "0x0";
+        
+            if ("T2G_HoneyFacet" in encodeInterfaces) {
+                try {                                
+                    value = await globalState.clients.readContract({
+                            address: diamondNames.Diamond.address,
+                            abi: fundABI.abi,
+                            functionName: "fund",
+                            args: [ input.hash ]
+                            });
+                    }
+                catch (error) {
+                    return undefined;
+                    }      
+                
+                // decodeOutput get the name of "TokenEntitySpecificABI"
+                // 
+                const decodeOutput = encodeInterfaces[<keyof typeof encodeInterfaces>"T2G_HoneyFacet"].find(
+                    (item) => item.function == "fund"
+                    );
+                
+                // Get the ABI format to apply to the byte coded result in dataDecodeABI "TokenEntitySpecific"
+                // abiItem { component: [ abiData ], name: string, type: string }
+                // abiData { name, type, internalType }
+                
+                const obj = parseReadValues( 
+                    (decodeOutput != undefined) ? dataDecodeABI[<keyof typeof dataDecodeABI>decodeOutput?.output] : [], 
+                    value, 
+                    (decodeOutput != undefined) 
+                    );
+        
+                fundList.push(
+                    Object.assign( { 
+                        fund: obj
+                        }, 
+                        input
+                        )
+                    );        
+                }
+            }
+        return fundList;
+        }
+    },
+    { 
+    call: "fund",
     tag: "all",
     help: "fund | all [ ] -> Get the list of fund Ids that exists",
-    callback: async ( inputs?: Array<any> ) : Promise<Object[] | undefined> => {
+    callback: async ( inputs?: Array<any> ) : Promise<Array<string> | undefined> => {
         
         const honeyABI : any = getABI("T2G_HoneyFacet");
         
@@ -215,7 +271,7 @@ export const fundCallback : callbackType[] = [
         var fundIds : string[] = [];
 
         try {                                
-            fundIds = await globalState.clients.readContract({
+            return await globalState.clients.readContract({
                     address: diamondNames.Diamond.address,
                     abi: honeyABI.abi.file.abi,
                     functionName: "getFunds",
@@ -223,34 +279,8 @@ export const fundCallback : callbackType[] = [
                     });
             }
         catch (error) {
-            return undefined;
+            return fundIds;
             }      
-                    
-        try {                                        
-            var funds : Object[] = [];
-            for (const id of fundIds) {
-
-                const fundValue : {
-                    state: number,
-                    value: bigint,
-                    unit: number,
-                    hash0: string,
-                    rate: number
-                    }[] = await globalState.clients.readContract({
-                    address: diamondNames.Diamond.address,
-                    abi: honeyABI.abi.file.abi,
-                    functionName: "fund",
-                    args: [ id ]
-                    });
-                
-                funds.push(Object.assign({ id: id }, fundValue ));
-                }
-            return funds;
-            }
-        catch (error) {
-            console.log(error)
-            return undefined;
-            }
         }
     }
     ]
