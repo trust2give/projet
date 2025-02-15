@@ -29,7 +29,7 @@ export const entityCallback : callbackType[] = [
                 try {                                
                     value = await globalState.clients.readContract({
                             address: diamondNames.Diamond.address,
-                            abi: entityABI.abi.file.abi,
+                            abi: entityABI.abi,
                             functionName: "entity",
                             args: [ input.hash ]
                             });
