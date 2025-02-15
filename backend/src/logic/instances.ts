@@ -96,6 +96,8 @@ export const getGWEI = async () : Promise<Number | undefined> => {
         );
     
     const stableABI : any = JSON.parse(jsonStable);
+
+    console.log(stableABI)
     
     try {                                
         return await globalState.clients.readContract({
