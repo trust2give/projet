@@ -17,7 +17,8 @@ const callbacks : callbackType[] = [
   ...deployCallback, 
   ...stateCallback,
   ...instanceCallback,
-  ...rightCallback
+  ...rightCallback,
+  ...fundCallback
   ]; 
 
 // Route GET pour récupérer un utilisateur par ID
