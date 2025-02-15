@@ -205,7 +205,7 @@ export const deployCallback : callbackType[] = [
         Object.fromEntries(
           new Map( [ 
               [ 
-              `@${(<contractRecord>facet).name}`,  
+              `${(<contractRecord>facet).name}`,  
               (<cutRecord>cut.slice().pop()).facetAddress
               ] 
             ])
@@ -216,7 +216,7 @@ export const deployCallback : callbackType[] = [
 
     if (cutAction != FacetCutAction.Remove && isWallet) {
 
-      console.log( <string>(<contractRecord>facet).name, writeList, (<contractRecord>facet).wallet, cut);
+      console.log( <string>(<contractRecord>facet).name, writeList, writeList[<string>(<contractRecord>facet).name], (<contractRecord>facet).wallet, cut);
 
       const beacon = await globalState.clients.readContract({
         address: writeList[<string>(<contractRecord>facet).name],
