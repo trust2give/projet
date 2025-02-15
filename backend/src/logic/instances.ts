@@ -115,7 +115,7 @@ export const getGWEI = async () : Promise<Number | undefined> => {
                 console.error(errorName)
                 }
             }                           
-        //console.error(err);
+        console.error(err);
     }      
     return undefined;
 }
