@@ -162,39 +162,41 @@ export const deployCallback : callbackType[] = [
       (<contractRecord>facet).abi.file = JSON.parse(jsonFacet);
             
       var inputArray = [];
+      var record : any;
 
       const constructor = ((<contractRecord>facet).abi.file.abi.filter((item: abiData) => item.type == "constructor"))
       
       console.log("constructor", constructor);
-
-      const record = { 
-        rwType: rwType.CONSTRUCTOR,
-        contract: (<contractRecord>facet).name,
-        instance: (<contractRecord>facet).abi.file,
-        function: "Constructor", 
-        args: constructor.inputs,
-        values: [],
-        outcome: constructor.outputs,
-        events: undefined 
-        };      
-                
-      // the constructor of the smart contract requires inputs
-      if (record.instance.abi.length > 0) {
-        if ("inputs" in record.instance.abi[0]) {
-          inputArray = record.instance.abi[0].inputs.map((item: abiData) => {
-            // We fill in the input with the required address
-            
-            if (item.name == "_root" && item.type == "address") {
-              return diamondNames.Diamond.address;
-              }
-            else if (item.name == "_stableCoin" && item.type == "address") {
-              return contractSet[0].address ;
-              }
-            return;
-            });
+      if (constructor != undefined && constructor.length > 0) {
+        record = { 
+          rwType: rwType.CONSTRUCTOR,
+          contract: (<contractRecord>facet).name,
+          instance: (<contractRecord>facet).abi.file,
+          function: "Constructor", 
+          args: constructor.inputs,
+          values: [],
+          outcome: constructor.outputs,
+          events: undefined 
+          };      
+        
+        // the constructor of the smart contract requires inputs
+        if (record.instance.abi.length > 0) {
+          if ("inputs" in record.instance.abi[0]) {
+            inputArray = record.instance.abi[0].inputs.map((item: abiData) => {
+              // We fill in the input with the required address
+              
+              if (item.name == "_root" && item.type == "address") {
+                return diamondNames.Diamond.address;
+                }
+              else if (item.name == "_stableCoin" && item.type == "address") {
+                return contractSet[0].address ;
+                }
+              return;
+              });
+            }
           }
         }
-
+                
       cut = await deployFacets( 
         <string>(<contractRecord>facet).name, 
         <FacetCutAction>cutAction, 
