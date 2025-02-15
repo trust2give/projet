@@ -89,20 +89,13 @@ export const instanceCallback : callbackType[] = [
     ]
 
 export const getGWEI = async () : Promise<Number | undefined> => {
-
-    const jsonStable = fs.readFileSync( 
-        contractSet[0].abi.path, 
-        'utf-8' 
-        );
     
-    const stableABI : any = JSON.parse(jsonStable);
-
-    console.log(stableABI)
+    const stableABI = getStableABI();
     
     try {                                
         return await globalState.clients.readContract({
                 address: contractSet[0].address,
-                abi: stableABI.abi.file.abi,
+                abi: stableABI.abi,
                 functionName: "decimals",
                 args: [ ]
                 });
