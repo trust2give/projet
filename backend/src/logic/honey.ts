@@ -146,8 +146,8 @@ export const fundCallback : callbackType[] = [
                 
         const [account] = await globalState.wallets.getAddresses()
 
-        const gwei : Number | undefined = await getGWEI();
-        if (gwei == undefined) return undefined;
+        //const gwei : Number | undefined = await getGWEI();
+        //if (gwei == undefined) return undefined;
         
         const toAccount = (<accountType>accountRefs[Account.AA]);
 
@@ -164,20 +164,24 @@ export const fundCallback : callbackType[] = [
                     "transfer", 
                     [ 
                     fromAccount.address,
-                    BigInt(<number>input.value * (10 ** <number>gwei)),
+                    BigInt(<number>input.value), // * (10 ** <number>gwei)),
                     ],
                     account 
                     )
+
+                console.log(tx1)
     
                 tx2 = <typeof regex2>await writeStableContract( 
                     "transfer", 
                     [ 
                     toAccount.address,
-                    BigInt(<number>input.value * (10 ** <number>gwei)),
+                    BigInt(<number>input.value), // * (10 ** <number>gwei)),
                     ],
                     fromAccount.address 
                     )
-    
+                
+                console.log(tx2)
+                
                 tx3 = <typeof regex2>await encodeInputsAndSend( "T2G_HoneyFacet", "setFund", [[
                     setIndex( Statusoftoken, 'None' ),
                     input.value,
