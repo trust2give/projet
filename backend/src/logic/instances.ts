@@ -89,6 +89,7 @@ export const instanceCallback : callbackType[] = [
     ]
 
 export const getGWEI = async () : Promise<Number | undefined> => {
+
     const jsonStable = fs.readFileSync( 
         contractSet[0].abi.path, 
         'utf-8' 
@@ -104,9 +105,19 @@ export const getGWEI = async () : Promise<Number | undefined> => {
                 args: [ ]
                 });
         }
-    catch (error) {
-        return undefined;
-        }      
+    catch (err) {
+        console.log( "Error >> " )
+        if (err instanceof BaseError) {
+            const revertError = err.walk(err => err instanceof ContractFunctionRevertedError)
+            if (revertError instanceof ContractFunctionRevertedError) {
+                const errorName = revertError.data?.errorName ?? ''
+                // do something with `errorName`
+                console.error(errorName)
+                }
+            }                           
+        //console.error(err);
+    }      
+    return undefined;
 }
 
 export const getABI = ( name: string ) => {
