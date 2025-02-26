@@ -335,7 +335,7 @@ export const encodeInputsAndSend = async (
     
         if (contractName in encodeInterfaces) {
 
-        const encodeInput = encodeInterfaces[<keyof typeof encodeInterfaces>contractName].find((item) => item.function == fName);
+        const encodeInput = encodeInterfaces[<keyof typeof encodeInterfaces>contractName].find((item) => item.function == functionName);
         
         if (encodeInput != undefined) {
             if ("_data" in encodeInput) {
