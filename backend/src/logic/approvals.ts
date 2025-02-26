@@ -142,7 +142,7 @@ export const approveCallback : callbackType[] = [
                         BigInt(10**32) 
                         ], 
                         fromAddress
-                        );
+                        )
                         }
                     );                        
                 }
