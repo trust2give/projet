@@ -10,6 +10,57 @@ import { setIndex, dataDecodeABI, TypeCountries,
     TypeofEntityType, 
     Statusoftoken } from "../interface/types";
 
+/***************************************************************************************\
+* Author: Franck Dervillez <franck.dervillez@trust2give.fr>, Github: @fdervillez
+* rights.ts
+*
+* Library of Typescript functions to interact with smart contract instances
+* deployed on the blockchain : T2G_EntityFacet
+* 
+* Mains functions:
+* - entityCallback: Array of callback functions called through the web service interactions
+*   - entity | all : get the list of enitites' hash 
+*   - entity | get : get the features for the given entity <hash>
+*   - entity | set : create a new entity
+* 
+* Version
+* 1.0.1 : Creation of the file
+/**************************************************************************************/
+
+/************************************************************************************** 
+ * Array entityCallback[]
+ * 
+ * Array of objects { call, tag, help, callback } that contains the callback functions
+ * that are performed when <call | tag> is passed through the web service interface
+ * 
+ * Inputs : arguments depends on the callback functions:
+ *   - entity | get : [{ hash <Hash> }]
+ *   - entity | set : [{ person <Boolean>, inputs <Object> }]
+ *   - entity | all : no arguments 
+ * 
+ * For the set function, person is a flag that defines whether entity is to be created
+ * as a physical person (true) or an entity. 
+ * 
+ * Object features to set or get depends on entity type (person or entity)
+ * 
+ *        name: string - name of the entity (both)
+ *        uid?: string - uid of the entity (entity)
+ *        email: string - email of the entity (both)
+ *        postal: string - postal address of the entity (both)
+ *        entity?: string - entity type (both)
+ *        sector?: string - sector value (entity)
+ *        unitType?: string - unitType of the entity (entity)
+ *        unitSize?: string - unit size of the entity (entity)
+ *        country: string - Country code of the entity (both)
+ * 
+ * Returned values : depends on the callback functions :
+ *   - entity | get : list of { entity <Object>, hash: <Hash> } read entities 
+ *   - entity | set : list of { inputs <Object>, tx: <Hash> } created entities 
+ *                    with transaction hash
+ *   - entity | all : list of enitites' hash 
+ *
+***************************************************************************************/
+
 export const entityCallback : callbackType[] = [
     { 
     call: "entity",

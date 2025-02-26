@@ -4,7 +4,8 @@ import { stateCallback } from "../logic/beacons";
 import { approveCallback } from "../logic/approvals";
 import { rightCallback } from "../logic/rights";
 import { entityCallback } from "../logic/entity";
-import { honeyCallback, fundCallback } from "../logic/honey";
+import { honeyCallback } from "../logic/honey";
+import { fundCallback } from "../logic/funds";
 import { deployCallback } from "../logic/DeployContracts";
 import { contractRecord, callbackType, rwType, menuRecord, Account, NULL_ADDRESS, regex, regex2, regex3 } from "../libraries/types";
 
