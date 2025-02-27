@@ -98,29 +98,34 @@ export const approveCallback : callbackType[] = [
       
             var account : { 
                 wallet: Address, 
-                value: bigint 
+                value: string 
                 }[] = []; 
-                            
+            
+            const balance1 = BigInt(await globalState.clients.readContract({
+                address: contractSet[0].address,
+                abi: stableABI.abi,
+                functionName: "balanceOf",
+                args: [ accountRefs[input.from].address ]
+                }))
+
             account.push( { 
                 wallet: accountRefs[input.from].address,
-                value: await globalState.clients.readContract({
-                    address: contractSet[0].address,
-                    abi: stableABI.abi,
-                    functionName: "balanceOf",
-                    args: [ accountRefs[input.from].address ]
-                    })
+                value: balance1.toString()
                 })   
             
             if (accountRefs[input.from].wallet != undefined && accountRefs[input.from].wallet != NULL_ADDRESS) {
                 console.log(input.from, accountRefs[input.from].wallet)
+
+                const balance2 = BigInt(await globalState.clients.readContract({
+                    address: contractSet[0].address,
+                    abi: stableABI.abi,
+                    functionName: "balanceOf",
+                    args: [ accountRefs[input.from].wallet ]
+                    }))
+    
                 account.push( { 
                     wallet: <Address>accountRefs[input.from].wallet,
-                    value: await globalState.clients.readContract({
-                        address: contractSet[0].address,
-                        abi: stableABI.abi,
-                        functionName: "balanceOf",
-                        args: [ accountRefs[input.from].wallet ]
-                        })
+                    value: balance2.toString()
                     })   
                 }
             
