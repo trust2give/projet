@@ -2,6 +2,7 @@ import { contractSet, diamondNames, facetNames, smart, encodeInterfaces, getWall
 import { accountType, accountRefs, globalState, setState, addAccount, updateAccountBalance, assignAccounts } from "./states";
 import { getGWEI, getABI, getStableABI, writeStableContract, encodeInputsAndSend, writeFacetContract } from "../logic/instances";
 import { contractRecord, callbackType, rwType, menuRecord, Account, NULL_ADDRESS, NULL_HASH, regex, regex2, regex3 } from "../libraries/types";
+import { Address } from "viem";
 
 /***************************************************************************************\
 * Author: Franck Dervillez <franck.dervillez@trust2give.fr>, Github: @fdervillez
@@ -79,6 +80,55 @@ export const approveCallback : callbackType[] = [
             decimals: await getGWEI(),
             supply: supply.toString()
             }
+        }        
+    },
+    { 
+    call: "stable",
+    tag: "balance",
+    help: "stable | balance [ { from: <Account> }] -> Get the balance for the given account <from>",
+    callback: async ( inputs: Array<{ from: Account }> ) => {
+
+        if (inputs.length == 0) return [];
+
+        const stableABI : any = getStableABI();
+        
+        var list : Object[] = [];
+
+        for ( const input of inputs) {
+      
+            var account : { 
+                wallet: Address, 
+                value: bigint 
+                }[] = []; 
+                            
+            account.push( { 
+                wallet: accountRefs[input.from].address,
+                value: await globalState.clients.readContract({
+                    address: contractSet[0].address,
+                    abi: stableABI.abi,
+                    functionName: "balanceOf",
+                    args: [ accountRefs[input.from].address ]
+                    })
+                })   
+            
+            if (accountRefs[input.from].wallet != NULL_ADDRESS) {
+                account.push( { 
+                    wallet: <Address>accountRefs[input.from].wallet,
+                    value: await globalState.clients.readContract({
+                        address: contractSet[0].address,
+                        abi: stableABI.abi,
+                        functionName: "balanceOf",
+                        args: [ accountRefs[input.from].wallet ]
+                        })
+                    })   
+                }
+            
+            list.push( { 
+                account: input.from, 
+                balance: account
+                });                    
+            }
+        return list;
         }        
     },
     { 
