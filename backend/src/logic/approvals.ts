@@ -12,9 +12,9 @@ import { contractRecord, callbackType, rwType, menuRecord, Account, NULL_ADDRESS
 * 
 * Mains functions:
 * - approveCallback: Array of callback functions called through the web service interactions
-*   - approve | get : Get the approval state fot the given account <from>
-*   - approve | update : Update approval for all of the accounts to transfer on behalf of
-*   - approve | set :  Approve to <account> to manage transfer on behalf of from <Account>"
+*   - stable | get : Get the approval state fot the given account <from>
+*   - stable | update : Update approval for all of the accounts to transfer on behalf of
+*   - stable | set :  Approve to <account> to manage transfer on behalf of from <Account>"
 * 
 * Version
 * 1.0.1 : Creation of the file
@@ -36,22 +36,53 @@ type approval = {
  * that are performed when <call | tag> is passed through the web service interface
  * 
  * Inputs : arguments depends on the callback functions:
- *   - approve | get : [ { from <Account> }]
- *   - approve | update : no arguments
- *   - approve | set : 
+ *   - stable | get : [ { from <Account> }]
+ *   - stable | update : no arguments
+ *   - stable | set : [ { from <Account>, to <Account> }]
  * 
  * Returned values : depends on the callback functions : TO BE UPDATED
- *   - approve | get : returns the list of { name <string>, type <string>, state <string>, inputs { <string> } }
- *   - approve | update : returns the list of { tag <Account>, name <string>, address <Address>, wallet <Address> }
- *   - approve | set : returns the list of smartContract [ names <string> ]
+ *   - stable | get : returns the list of { name <string>, type <string>, state <string>, inputs { <string> } }
+ *   - stable | update : returns the list of { tag <Account>, name <string>, address <Address>, wallet <Address> }
+ *   - stable | set : returns the list of smartContract [ names <string> ]
  *
 ***************************************************************************************/
 
 export const approveCallback : callbackType[] = [
     { 
-    call: "approve",
+    call: "stable",
+    tag: "info",
+    help: "stable | info [] -> Get the name, symbol, decimal and total supply of Stablecoin contract",
+    callback: async ( inputs?: any ) => {
+
+        const stableABI : any = getStableABI();
+                        
+        return { 
+            name: await globalState.clients.readContract({
+                address: contractSet[0].address,
+                abi: stableABI.abi,
+                functionName: "name",
+                args: []
+                }),
+            symbol: await globalState.clients.readContract({
+                address: contractSet[0].address,
+                abi: stableABI.abi,
+                functionName: "symbol",
+                args: []
+                }),
+            decimals: await getGWEI(),
+            supply: await globalState.clients.readContract({
+                address: contractSet[0].address,
+                abi: stableABI.abi,
+                functionName: "totalSupply",
+                args: []
+                }),
+            }
+        }        
+    },
+    { 
+    call: "stable",
     tag: "get",
-    help: "approve | get [ { from: <Account> }] -> Get the approval state fot the given account <from>",
+    help: "stable | get [ { from: <Account> }] -> Get the approval state fot the given account <from>",
     callback: async ( inputs: Array<{ from?: Account | accountType | accountType[] }> ) => {
 
         if (inputs.length == 0) return [];
@@ -99,9 +130,9 @@ export const approveCallback : callbackType[] = [
         }        
     },
     { 
-    call: "approve",
+    call: "stable",
     tag: "update", 
-    help: "approve | update [ ] -> Update approval for all of the accounts to transfer on behalf of",
+    help: "stable | update [ ] -> Update approval for all of the accounts to transfer on behalf of",
     callback: async () : Promise<approval[]> => {
                 
         const accounts = [ Account.A0, Account.AA, Account.AE, Account.AF, Account.AG ];
@@ -155,9 +186,9 @@ export const approveCallback : callbackType[] = [
         }
     },
     { 
-    call: "approve",
+    call: "stable",
     tag: "set",
-    help: "approve | set [ { from: <Account>, to: <Accoun> }] -> Approve to <account> to manage transfer on behalf of from <Account>",
+    help: "stable | set [ { from: <Account>, to: <Accoun> }] -> Approve to <account> to manage transfer on behalf of from <Account>",
     callback: async (  inputs: Array< { from: Account, to: Account }> ) => {
 
         const stableABI : any = getStableABI();
