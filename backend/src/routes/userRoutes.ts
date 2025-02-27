@@ -47,6 +47,7 @@ router.get('/', async (req : any, res : any) => {
     return;
     }
   const result = await callback.callback( jsonData.inputs );
+  console.log( "Callback function =>", result );
   res.status(201).json( result );
   });
   
