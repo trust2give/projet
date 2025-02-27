@@ -245,6 +245,47 @@ export const approveCallback : callbackType[] = [
     },
     { 
     call: "stable",
+    tag: "transfer",
+    help: "stable | transfer [ { to: <Accoun>, value <bigint> }] -> Transfer <value> to <account> from <Wallet 0>",
+    callback: async (  inputs: Array< { to: Account, value: string }> ) => {
+
+        var transferList : Object[] = [];
+
+        for (const input of inputs ) {
+
+            var tx : typeof regex2 | undefined = NULL_HASH;
+
+            if (Object.keys(accountRefs).includes(<Account>input.to)) {
+    
+                const toAccount = (<accountType>accountRefs[<Account>input.to]);                
+                const toAddress = ((toAccount.wallet != undefined) && (toAccount.wallet != NULL_ADDRESS)) ? toAccount.wallet : toAccount.address;
+    
+                const [account] = await globalState.wallets.getAddresses()
+                                                
+                tx = await writeStableContract( 
+                    "transfer", 
+                    [ 
+                    toAddress,
+                    input.value 
+                    ], 
+                    account
+                    );
+
+                transferList.push(
+                    Object.assign( { 
+                        tx: tx
+                        }, 
+                        input
+                        )
+                    );        
+                }
+            }
+
+        return transferList;
+        }    
+    },
+    { 
+    call: "stable",
     tag: "set",
     help: "stable | set [ { from: <Account>, to: <Accoun> }] -> Approve to <account> to manage transfer on behalf of from <Account>",
     callback: async (  inputs: Array< { from: Account, to: Account }> ) => {
