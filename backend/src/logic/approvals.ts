@@ -112,6 +112,7 @@ export const approveCallback : callbackType[] = [
                 })   
             
             if (accountRefs[input.from].wallet != NULL_ADDRESS) {
+                console.log(input.from, accountRefs[input.from].wallet)
                 account.push( { 
                     wallet: <Address>accountRefs[input.from].wallet,
                     value: await globalState.clients.readContract({
