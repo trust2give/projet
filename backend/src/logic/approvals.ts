@@ -55,7 +55,14 @@ export const approveCallback : callbackType[] = [
     callback: async ( inputs?: any ) => {
 
         const stableABI : any = getStableABI();
-                        
+
+        const supply = BigInt(await globalState.clients.readContract({
+            address: contractSet[0].address,
+            abi: stableABI.abi,
+            functionName: "totalSupply",
+            args: []
+            }));
+
         return { 
             name: await globalState.clients.readContract({
                 address: contractSet[0].address,
@@ -70,12 +77,7 @@ export const approveCallback : callbackType[] = [
                 args: []
                 }),
             decimals: await getGWEI(),
-            supply: await globalState.clients.readContract({
-                address: contractSet[0].address,
-                abi: stableABI.abi,
-                functionName: "totalSupply",
-                args: []
-                }),
+            supply: supply.toString()
             }
         }        
     },
