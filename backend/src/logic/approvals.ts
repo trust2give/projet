@@ -188,11 +188,12 @@ export const approveCallback : callbackType[] = [
                     value: balance1.toString()
                     })   
     
-                    list.push( { 
-                        owner: fromAddress, 
-                        spender: senderList
-                    });                    
                 }
+
+            list.push( { 
+                owner: fromAddress, 
+                spender: senderList
+                });                    
             }
         return list;
         }        
