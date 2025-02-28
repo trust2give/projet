@@ -365,7 +365,7 @@ export const approveCallback : callbackType[] = [
                 const balance = Number(
                     await globalState.clients.readContract({
                         address: contractSet[0].address,
-                        abi: stableABI.abi.file.abi,
+                        abi: stableABI.abi,
                         functionName: "balanceOf",
                         args: [ fromAddress ],
                         account
