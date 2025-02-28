@@ -225,7 +225,7 @@ export const approveCallback : callbackType[] = [
                 approve.spender.push(
                     {
                     wallet: toAddress,
-                    value : BigInt(10**32),
+                    value : BigInt(10**32).toString(),
                     tx : await writeStableContract( 
                         "approve", 
                         [ 
