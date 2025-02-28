@@ -29,7 +29,7 @@ type approval = {
     owner: Address, 
     spender: { 
         wallet: Address, 
-        value: bigint,
+        value: bigint | string,
         tx?: typeof regex2
         }[] 
     }
@@ -173,19 +173,20 @@ export const approveCallback : callbackType[] = [
             
             for ( var spender of spenders ) {
                 
+                const balance1 = BigInt(await globalState.clients.readContract({
+                    address: contractSet[0].address,
+                    abi: stableABI.abi,
+                    functionName: "allowance",
+                    args: [ 
+                        fromAddress, 
+                        spender 
+                        ]
+                        }))
+    
                 senderList.push( { 
                     wallet: spender,
-    
-                    value: await globalState.clients.readContract({
-                        address: contractSet[0].address,
-                        abi: stableABI.abi,
-                        functionName: "allowance",
-                        args: [ 
-                            fromAddress, 
-                            spender 
-                            ]
-                            })
-                        })   
+                    value: balance1.toString()
+                    })   
     
                     list.push( { 
                         owner: fromAddress, 
