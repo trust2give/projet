@@ -29,7 +29,7 @@ type approval = {
     owner: Address, 
     spender: { 
         wallet: Address, 
-        value: bigint | string,
+        value: string,
         tx?: typeof regex2
         }[] 
     }
@@ -166,7 +166,7 @@ export const approveCallback : callbackType[] = [
                 return NULL_ADDRESS;
                 });
                 
-            var senderList : { wallet: Address, value: bigint }[] = []; 
+            var senderList : { wallet: Address, value: string }[] = []; 
 
             const fromAccount = (<accountType>accountRefs[input.owner]);
             const fromAddress = ((fromAccount.wallet != undefined) && (fromAccount.wallet != NULL_ADDRESS)) ? fromAccount.wallet : fromAccount.address;
