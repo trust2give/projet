@@ -311,7 +311,7 @@ export const approveCallback : callbackType[] = [
                 const toAccount = (<accountType>accountRefs[<Account>input.to]);                
                 const toAddress = ((toAccount.wallet != undefined) && (toAccount.wallet != NULL_ADDRESS)) ? toAccount.wallet : toAccount.address;
 
-                const actAccount = (<accountType>accountRefs[<Account>input.value]);                
+                const actAccount = (<accountType>accountRefs[<Account>input.actor]);                
                 const actAddress = ((actAccount.wallet != undefined) && (actAccount.wallet != NULL_ADDRESS)) ? actAccount.wallet : actAccount.address;
 
                 tx = await writeStableContract( 
