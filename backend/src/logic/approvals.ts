@@ -13,18 +13,22 @@ import { Address } from "viem";
 * 
 * Mains functions:
 * - approveCallback: Array of callback functions called through the web service interactions
-*   - stable | get : Get the approval state fot the given account <from>
-*   - stable | update : Update approval for all of the accounts to transfer on behalf of
-*   - stable | set :  Approve to <account> to manage transfer on behalf of from <Account>"
+*   - stable | info : Get main features of the stable coin mock up contract
+*   - stable | balance : get the balance of a specific wallet
+*   - stable | allowance :  get all the allowances granted for a given account
+*   - stable | update :  update all the approvals between T2G wallets
+*   - stable | transfer :  transfer a stable coin amount to a wallet
+*   - stable | transferFrom :  transfer a stable coin amount from a wallet to another, by an approved third party wallet
+*   - stable | approve :  Approve to <account> to manage transfer on behalf of from <Account>"
 * 
 * Version
 * 1.0.1 : Creation of the file
 /**************************************************************************************/
 
 type approval = { 
-    owner: accountType, 
+    owner: Address, 
     spender: { 
-        wallet: accountType, 
+        wallet: Address, 
         value: bigint,
         tx?: typeof regex2
         }[] 
@@ -37,9 +41,13 @@ type approval = {
  * that are performed when <call | tag> is passed through the web service interface
  * 
  * Inputs : arguments depends on the callback functions:
- *   - stable | get : [ { from <Account> }]
- *   - stable | update : no arguments
- *   - stable | set : [ { from <Account>, to <Account> }]
+ *   - stable | info : no arguments
+ *   - stable | balance : [ { from <Account> }]
+ *   - stable | allowance : [ { from <Account>, to <Account> }]
+ *   - stable | update :  no arguments
+ *   - stable | transfer :  [ { from <Account>, to <Account>, value <BigInt> }]
+ *   - stable | transferFrom :  [ { from <Account>, to <Account>, actor <Account>, value <BigInt> }]
+ *   - stable | approve :  [ { from <Account>, to <Account> }]
  * 
  * Returned values : depends on the callback functions : TO BE UPDATED
  *   - stable | get : returns the list of { name <string>, type <string>, state <string>, inputs { <string> } }
@@ -139,9 +147,9 @@ export const approveCallback : callbackType[] = [
     },
     { 
     call: "stable",
-    tag: "get",
-    help: "stable | get [ { from: <Account> }] -> Get the approval state fot the given account <from>",
-    callback: async ( inputs: Array<{ from?: Account | accountType | accountType[] }> ) => {
+    tag: "allowance",
+    help: "stable | allowance [ { owner: <Account> }] -> Get the approval state for the given account <from>",
+    callback: async ( inputs: Array<{ owner: Account }> ) => {
 
         if (inputs.length == 0) return [];
 
@@ -151,37 +159,38 @@ export const approveCallback : callbackType[] = [
 
         for ( const input of inputs) {
 
-            var Owners : accountType[] = (Array.isArray(input.from) ? <accountType[]>input.from : [ <accountType>input.from ]).map((item: accountType) => {
-        
-                item.address = ((item.wallet != undefined) && (item.wallet != NULL_ADDRESS)) ? NULL_ADDRESS : item.address;
-                item.wallet = ((item.wallet != undefined) && (item.wallet != NULL_ADDRESS)) ? item.wallet : NULL_ADDRESS;
-        
-                return item;
-                });
-        
-            for ( var owner of Owners ) {
-        
-                var senderList : { wallet: accountType, value: bigint }[] = []; 
-                
-                for ( var spender of Owners ) {
-                    
-                    senderList.push( { 
-                        wallet: spender,
-        
-                        value: await globalState.clients.readContract({
-                            address: contractSet[0].address,
-                            abi: stableABI.abi,
-                            functionName: "allowance",
-                            args: [ (owner.wallet != NULL_ADDRESS) ? owner.wallet : owner.address, 
-                                (spender.wallet != NULL_ADDRESS) ? spender.wallet : spender.address ]
-                                })
-                            })   
-        
-                        list.push( { 
-                            owner: owner, 
-                            spender: senderList
-                        });                    
+            var spenders : Address[] = Object.entries(accountRefs).map((item: Array<any>) => {
+                if (item[0] != input.owner) {
+                    return ((item[1].wallet != undefined) && (item[1].wallet != NULL_ADDRESS)) ? item[1].wallet : item[1].address;
                     }
+                return NULL_ADDRESS;
+                });
+                
+            var senderList : { wallet: Address, value: bigint }[] = []; 
+
+            const fromAccount = (<accountType>accountRefs[input.owner]);
+            const fromAddress = ((fromAccount.wallet != undefined) && (fromAccount.wallet != NULL_ADDRESS)) ? fromAccount.wallet : fromAccount.address;
+            
+            for ( var spender of spenders ) {
+                
+                senderList.push( { 
+                    wallet: spender,
+    
+                    value: await globalState.clients.readContract({
+                        address: contractSet[0].address,
+                        abi: stableABI.abi,
+                        functionName: "allowance",
+                        args: [ 
+                            fromAddress, 
+                            spender 
+                            ]
+                            })
+                        })   
+    
+                    list.push( { 
+                        owner: fromAddress, 
+                        spender: senderList
+                    });                    
                 }
             }
         return list;
@@ -203,11 +212,7 @@ export const approveCallback : callbackType[] = [
             const fromAddress = ((fromAccount.wallet != undefined) && (fromAccount.wallet != NULL_ADDRESS)) ? fromAccount.wallet : fromAccount.address;
 
             var approve : approval = {
-                owner: { 
-                    name: fromAccount.name,
-                    address: fromAccount.address,
-                    wallet: fromAccount.wallet 
-                    },
+                owner: fromAddress,
                 spender: []
                 }
 
@@ -218,11 +223,7 @@ export const approveCallback : callbackType[] = [
 
                 approve.spender.push(
                     {
-                    wallet: {
-                        name: toAccount.name,
-                        address: toAccount.address,
-                        wallet: toAccount.wallet   
-                        },
+                    wallet: toAddress,
                     value : BigInt(10**32),
                     tx : await writeStableContract( 
                         "approve", 
@@ -247,7 +248,7 @@ export const approveCallback : callbackType[] = [
     call: "stable",
     tag: "transfer",
     help: "stable | transfer [ { to: <Accoun>, value <bigint> }] -> Transfer <value> to <account> from <Wallet 0>",
-    callback: async (  inputs: Array< { to: Account, value: string }> ) => {
+    callback: async (  inputs: Array< { from: Account, to: Account, value: string }> ) => {
 
         var transferList : Object[] = [];
 
@@ -255,20 +256,22 @@ export const approveCallback : callbackType[] = [
 
             var tx : typeof regex2 | undefined = NULL_HASH;
 
-            if (Object.keys(accountRefs).includes(<Account>input.to)) {
+            if (Object.keys(accountRefs).includes(<Account>input.from)
+                && Object.keys(accountRefs).includes(<Account>input.to)) {
+
+                const fromAccount = (<accountType>accountRefs[<Account>input.from]);                
+                const fromAddress = ((fromAccount.wallet != undefined) && (fromAccount.wallet != NULL_ADDRESS)) ? fromAccount.wallet : fromAccount.address;
     
                 const toAccount = (<accountType>accountRefs[<Account>input.to]);                
                 const toAddress = ((toAccount.wallet != undefined) && (toAccount.wallet != NULL_ADDRESS)) ? toAccount.wallet : toAccount.address;
     
-                const [account] = await globalState.wallets.getAddresses()
-                                                
                 tx = await writeStableContract( 
                     "transfer", 
                     [ 
                     toAddress,
                     input.value 
                     ], 
-                    account
+                    fromAddress
                     );
 
                 transferList.push(
@@ -286,8 +289,56 @@ export const approveCallback : callbackType[] = [
     },
     { 
     call: "stable",
-    tag: "set",
-    help: "stable | set [ { from: <Account>, to: <Accoun> }] -> Approve to <account> to manage transfer on behalf of from <Account>",
+    tag: "transferFrom",
+    help: "stable | transferFrom [ { from <Account>, to: <Accoun>, actor: <Account>, value <bigint> }] -> Transfer <value> to <account> from <Wallet 0>",
+    callback: async (  inputs: Array< { from: Account, to: Account, actor: Account, value: string }> ) => {
+
+        var transferList : Object[] = [];
+
+        for (const input of inputs ) {
+
+            var tx : typeof regex2 | undefined = NULL_HASH;
+
+            if (Object.keys(accountRefs).includes(<Account>input.from)
+                && Object.keys(accountRefs).includes(<Account>input.to)
+                && Object.keys(accountRefs).includes(<Account>input.actor)) {
+
+                const fromAccount = (<accountType>accountRefs[<Account>input.from]);                
+                const fromAddress = ((fromAccount.wallet != undefined) && (fromAccount.wallet != NULL_ADDRESS)) ? fromAccount.wallet : fromAccount.address;
+
+                const toAccount = (<accountType>accountRefs[<Account>input.to]);                
+                const toAddress = ((toAccount.wallet != undefined) && (toAccount.wallet != NULL_ADDRESS)) ? toAccount.wallet : toAccount.address;
+
+                const actAccount = (<accountType>accountRefs[<Account>input.value]);                
+                const actAddress = ((actAccount.wallet != undefined) && (actAccount.wallet != NULL_ADDRESS)) ? actAccount.wallet : actAccount.address;
+
+                tx = await writeStableContract( 
+                    "transferFrom", 
+                    [ 
+                    fromAddress,
+                    toAddress,
+                    input.value 
+                    ], 
+                    actAddress
+                    );
+
+                transferList.push(
+                    Object.assign( { 
+                        tx: tx
+                        }, 
+                        input
+                        )
+                    );        
+                }
+            }
+
+        return transferList;
+        }    
+    },
+    { 
+    call: "stable",
+    tag: "approve",
+    help: "stable | approve [ { from: <Account>, to: <Account> }] -> Approve to <account> to manage transfer on behalf of from <Account>",
     callback: async (  inputs: Array< { from: Account, to: Account }> ) => {
 
         const stableABI : any = getStableABI();
