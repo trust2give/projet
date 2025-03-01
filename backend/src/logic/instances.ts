@@ -4,7 +4,48 @@ import { contractRecord, callbackType, rwType, menuRecord, Account, NULL_ADDRESS
 import { contractSet, diamondNames, facetNames, smart, encodeInterfaces } from "../T2G_Data";
 import { accountType, accountRefs, globalState, setState, addAccount, updateAccountBalance, assignAccounts } from "./states";
 import fs from 'fs';
-import { colorOutput } from '../libraries/format';
+
+/***************************************************************************************\
+* Author: Franck Dervillez <franck.dervillez@trust2give.fr>, Github: @fdervillez
+* Instance.ts
+*
+* Library of Typescript functions to interact with smart contract instances
+* depkoyed on the blockchain
+* 
+* Mains functions:
+* - instanceCallback: Array of callback functions called through the web service interactions
+*   - state | instance : return the specs of a given smartcontract
+*   - state | accounts : returns the list of account wallets <accountsRef>
+*   - state | contracts : returns the list of smartContract names
+* - getGWEI: read the number of decimals for a GWEI 
+* - getABI: fetch then json object of a contract
+* - getStableABI:  fetch the json object of the stablecoin mockup contract
+* - writeStableContract : calls a write function of the stablecoin mockup contract
+* - writeFacetContract : calls a write function of a given facet contract
+* - encodeInputsAndSend : calls a write function with encoded inputs
+* 
+* Version
+* 1.0.1 : Creation of the file
+/**************************************************************************************/
+
+
+/************************************************************************************** 
+ * Array instanceCallback[]
+ * 
+ * Array of objects { call, tag, help, callback } that contains the callback functions
+ * that are performed when <call | tag> is passed through the web service interface
+ * 
+ * Inputs : arguments depends on the callback functions:
+ *   - state | instance : [ { name <string> }]
+ *   - state | accounts : no arguments
+ *   - state | contracts : no arguments
+ * 
+ * Returned values : depends on the callback functions :
+ *   - state | instance : returns the list of { name <string>, type <string>, state <string>, inputs { <string> } }
+ *   - state | accounts : returns the list of { tag <Account>, name <string>, address <Address>, wallet <Address> }
+ *   - state | contracts : returns the list of smartContract [ names <string> ]
+ *
+***************************************************************************************/
 
 export const instanceCallback : callbackType[] = [
     { 
@@ -88,6 +129,17 @@ export const instanceCallback : callbackType[] = [
     }    
     ]
 
+/************************************************************************************** 
+ * Function getGWEI
+ * 
+ * Calls the function <decimals> of the EUR stablecoin mockup smartContract and
+ * returns the number of digits that represents a GWEI
+ * 
+ * Return value is a promise for either a <number> 
+ * or <undefined> when call failed or error in the processing of aruments passed.
+ *
+***************************************************************************************/
+
 export const getGWEI = async () : Promise<Number | undefined> => {
     
     const stableABI = getStableABI();
@@ -115,6 +167,19 @@ export const getGWEI = async () : Promise<Number | undefined> => {
     return undefined;
 }
 
+/************************************************************************************** 
+ * Function getABI
+ * 
+ * returns the json object for the compiled <name> smartContract, which is a facet
+ * of the diamond architecture
+ * 
+ * Condition:
+ * <facetNames> object set up with the <name> smart contract and its json file path
+ * 
+ * Return value is a json object that at least contains <abi> item
+ *
+***************************************************************************************/
+
 export const getABI = ( name: string ) => {
     return JSON.parse(fs.readFileSync( 
         (<contractRecord>facetNames.find( (item) => item.name == name )).abi.path, 
@@ -122,14 +187,48 @@ export const getABI = ( name: string ) => {
         ));
     }
 
+/************************************************************************************** 
+ * Function getStableABI
+ * 
+ * returns the json object for the compiled EUR stablecoin mockup smartContract
+ * 
+ * Condition:
+ * <contractSet> object set up with EUR stablecoin mockup contract and json file path
+ * 
+ * Return value is a json object that at least contains <abi> item
+ *
+***************************************************************************************/
+
 export const getStableABI = () => {
     return JSON.parse(fs.readFileSync( 
         contractSet[0].abi.path, 
         'utf-8' 
         ));
     }
-    
-export const writeStableContract = async ( name: string, args: Array<any>, account: any) : Promise<typeof regex2 | undefined> => {
+
+/************************************************************************************** 
+ * Function writeStableContract
+ * 
+ * Send a writeContract call to a EUR StableCoin Mochup instance, for the <functionName>
+ * Arguments passed are <args>, an array of values (any type)
+ * The <account> represents the sender wallet to use for the call
+ * 
+ * Condition:
+ * <functionName> are to be function in its ABI
+ * 
+ * Return value is a promise for etheir the <transaction hash> result of the call
+ * or <undefined> when call failed or error in the processing of aruments passed.
+ * Reasons for such an error:
+ * - wrong <functionName>
+ * - writeCall returns an errror
+ *
+***************************************************************************************/
+
+export const writeStableContract = async ( 
+    functionName: string, 
+    args: Array<any>, 
+    account: any
+    ) : Promise<typeof regex2 | undefined> => {
 
     const stableABI = getStableABI();
 
@@ -138,7 +237,7 @@ export const writeStableContract = async ( name: string, args: Array<any>, accou
         const { request } = await globalState.clients.simulateContract({
             address: contractSet[0].address,
             abi: stableABI.abi,
-            functionName: name,
+            functionName: functionName,
             args: args,
             account
         })
@@ -151,7 +250,31 @@ export const writeStableContract = async ( name: string, args: Array<any>, accou
     return undefined;
     }
 
-export const writeFacetContract = async ( contractName: string, fName: string, args: Array<any>, account: any) : Promise<typeof regex2 | undefined> => {
+/************************************************************************************** 
+ * Function writeFacetContract
+ * 
+ * Send a writeContract call to a <contractName> instance, for the <functionName>
+ * when the contractName represents a Facet of the Diamond Architecture
+ * Arguments passed are <args>, an array of values (any type)
+ * The <account> represents the sender wallet to use for the call
+ * 
+ * Condition:
+ * <contractName> & <functionName> are to be facet contracts & function in its ABI
+ * 
+ * Return value is a promise for etheir the <transaction hash> result of the call
+ * or <undefined> when call failed or error in the processing of aruments passed.
+ * Reasons for such an error:
+ * - wrong <contractName> or <functionName>
+ * - writeCall returns an errror
+ *
+***************************************************************************************/
+
+export const writeFacetContract = async ( 
+    contractName: string, 
+    functionName: string, 
+    args: Array<any>, 
+    account: any
+    ) : Promise<typeof regex2 | undefined> => {
 
     const facetABI : any = getABI(contractName);
 
@@ -160,7 +283,7 @@ export const writeFacetContract = async ( contractName: string, fName: string, a
         const { request } = await globalState.clients.simulateContract({
             address: diamondNames.Diamond.address,
             abi: facetABI.abi,
-            functionName: fName,
+            functionName: functionName,
             args: args,
             account
         })
@@ -182,10 +305,37 @@ export const writeFacetContract = async ( contractName: string, fName: string, a
     return undefined;
     }
 
-export const encodeInputsAndSend = async ( contractName: string, fName: string, args: Array<any>, account: any) : Promise<typeof regex2 | undefined> => {
+/************************************************************************************** 
+ * Function encodeInputsAndSend
+ * 
+ * Send a writeContract call to a <contractName> instance, for the <functionName>
+ * when the function has a single input "_data" with encoded value, and values to
+ * pass are <args> array of values (any type)
+ * The <account> represents the sender wallet to use for the call
+ * 
+ * Condition:
+ * <contractName> & <functionName> are to be presents in <encodeInterface> objects
+ * "_data" inputs to be present also in <encodeInterface> objects
+ * 
+ * Return value is a promise for etheir the <transaction hash> result of the call
+ * or <NULL_HASH> when call failed or error in the processing of aruments passed.
+ * Reasons for such an error:
+ * - no <contractName> or <functionName> in <encodeInterface>
+ * - no "_data" input declared in <encodeInterface>
+ * - writeCall returns an errror
+ *
+***************************************************************************************/
+
+export const encodeInputsAndSend = async ( 
+    contractName: string, 
+    functionName: string, 
+    args: Array<any>, 
+    account: any
+    ) : Promise<typeof regex2 | undefined> => {
+    
         if (contractName in encodeInterfaces) {
 
-        const encodeInput = encodeInterfaces[<keyof typeof encodeInterfaces>contractName].find((item) => item.function == fName);
+        const encodeInput = encodeInterfaces[<keyof typeof encodeInterfaces>contractName].find((item) => item.function == functionName);
         
         if (encodeInput != undefined) {
             if ("_data" in encodeInput) {
@@ -197,7 +347,7 @@ export const encodeInputsAndSend = async ( contractName: string, fName: string, 
                     const { request } = await globalState.clients.simulateContract({
                         address: diamondNames.Diamond.address,
                         abi: getABI(contractName).abi,
-                        functionName: fName,
+                        functionName: functionName,
                         args: [ encodedData ],
                         account
                     })
