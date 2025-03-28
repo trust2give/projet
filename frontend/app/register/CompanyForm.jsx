@@ -1,3 +1,4 @@
+'use client'
 import React, {useState} from 'react';
 
 const CompanyForm = ({ formData, handleChange }) => {
@@ -12,7 +13,7 @@ const CompanyForm = ({ formData, handleChange }) => {
                                name="name"
                                value={formData.name}
                                onChange={handleChange}
-                               className="input-text p-2 w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" />
+                               className="p-2 w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" />
                     </div>
 
                     <div className="mt-4">
@@ -21,7 +22,7 @@ const CompanyForm = ({ formData, handleChange }) => {
                                name="siren"
                                value={formData.siren}
                                onChange={handleChange}
-                               className="input-text p-2 w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" />
+                               className="p-2 w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" />
                     </div>
                     <div className="mt-4">
                         <label className="block text-sm font-medium mb-1">Email</label>
@@ -29,7 +30,7 @@ const CompanyForm = ({ formData, handleChange }) => {
                                name="email"
                                value={formData.email}
                                onChange={handleChange}
-                               className="input-text p-2 w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" />
+                               className="p-2 w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" />
                     </div>
 
                     <div className="mt-4">
@@ -39,7 +40,7 @@ const CompanyForm = ({ formData, handleChange }) => {
                                    name="address_1"
                                    value={formData.address_1}
                                    onChange={handleChange}
-                                   className="input-text p-2 w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" />
+                                   className="p-2 w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" />
                         </div>
                         <div className="mt-4">
                             <label className="block text-sm font-medium mb-1">Complément d'adresse</label>
@@ -47,7 +48,7 @@ const CompanyForm = ({ formData, handleChange }) => {
                                    name="address_2"
                                    value={formData.address_2}
                                    onChange={handleChange}
-                                   className="input-text p-2 w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" />
+                                   className="p-2 w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" />
                         </div>
                         <div className="mt-4">
                             <label className="block text-sm font-medium mb-1">Code Postal</label>
@@ -55,7 +56,7 @@ const CompanyForm = ({ formData, handleChange }) => {
                                    name="postcode"
                                    value={formData.postcode}
                                    onChange={handleChange}
-                                   className="input-text p-2 w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" />
+                                   className="p-2 w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" />
                         </div>
                         <div className="mt-4">
                             <label className="block text-sm font-medium mb-1">Ville</label>
@@ -63,7 +64,7 @@ const CompanyForm = ({ formData, handleChange }) => {
                                    name="city"
                                    value={formData.city}
                                    onChange={handleChange}
-                                   className="input-text p-2 w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" />
+                                   className="p-2 w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" />
                         </div>
                         <div className="mt-4">
                             <label className="block text-sm font-medium mb-1">Pays</label>
@@ -71,7 +72,7 @@ const CompanyForm = ({ formData, handleChange }) => {
                                 name="country"
                                 value="FRANCE"
                                 onChange={handleChange}
-                                className="input-text p-2 w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+                                className="p-2 w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
                             >
                                 <option value="GERMANY">Allemagne</option>
                                 <option value="BELGIUM">Belgique</option>
@@ -97,19 +98,6 @@ const CompanyForm = ({ formData, handleChange }) => {
                             </select>
                         </div>
                     </div>
-
-
-
-
-
-                    {/*ajouter le champ secteur voir types.ts
-                    [ "NONE", "TRANSPORT", "AUTOMOTIVE", "AEROSPACE", "SERVICES", "SOFTWARE", "ITINDUSTRY", "HIGHTECH", "LUXURY", "BUILDINGS", "SUPPLYCHAIN", "FOOD", "HEALTHCARE" ]
-                    */}
-                    {/*ajouter un champ unitType
-                    [ "NONE", "ENTREPRISE", "ASSOCIATION", "FONDATION", "PLATEFORME", "COLLECTIVITE", "EPICS", "ETAT" ]
-                    */}
-
-
                 </div>
                 <div className="md:w-1/2">
                     <div className="mt-4">
@@ -117,7 +105,7 @@ const CompanyForm = ({ formData, handleChange }) => {
                         <select
                             name="entity"
                             onChange={handleChange}
-                            className="input-text p-2 w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+                            className="p-2 w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
                         >
                             <option value="NONE">Aucun</option>
                             <option value="ENTITY">Entité</option>
@@ -130,7 +118,7 @@ const CompanyForm = ({ formData, handleChange }) => {
                         <select
                             name="entityType"
                             onChange={handleChange}
-                            className="input-text p-2 w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+                            className="p-2 w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
                         >
                             <option value="NONE">Aucun</option>
                             <option value="ENTREPRISE">Entreprise</option>
@@ -147,7 +135,7 @@ const CompanyForm = ({ formData, handleChange }) => {
                         <select
                             name="entitySize"
                             onChange={handleChange}
-                            className="input-text p-2 w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+                            className="p-2 w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
                         >
                             <option value="NONE">Aucun</option>
                             <option value="SOLE">Indépendant</option>
@@ -155,6 +143,28 @@ const CompanyForm = ({ formData, handleChange }) => {
                             <option value="PME">Petite et moyenne entreprise</option>
                             <option value="ETI">ETI ?</option>
                             <option value="GE">GE ?</option>
+                        </select>
+                    </div>
+                    <div className="mt-4">
+                        <label className="block text-sm font-medium mb-1">Secteur</label>
+                        <select
+                            name="sector"
+                            onChange={handleChange}
+                            className="p-2 w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+                        >
+                            <option value="NONE">Aucun</option>
+                            <option value="TRANSPORT">Transport</option>
+                            <option value="AUTOMOTIVE">Automobile</option>
+                            <option value="AEROSPACE">Aerospatial</option>
+                            <option value="SERVICES">Services</option>
+                            <option value="SOFTWARE">Logiciel</option>
+                            <option value="ITINDUSTRY">Informatique</option>
+                            <option value="HIGHTECH">High tech</option>
+                            <option value="LUXURY">Luxe</option>
+                            <option value="BUILDINGS">Bâtiment</option>
+                            <option value="SUPPLYCHAIN">Supply chain</option>
+                            <option value="FOOD">Alimentaire</option>
+                            <option value="HEALTHCARE">Santé</option>
                         </select>
                     </div>
                 </div>

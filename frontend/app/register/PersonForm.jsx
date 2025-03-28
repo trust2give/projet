@@ -1,3 +1,4 @@
+'use client'
 import React from 'react';
 
 const PersonForm = ({ formData, handleChange }) => {
@@ -11,7 +12,7 @@ const PersonForm = ({ formData, handleChange }) => {
                                name="name"
                                value={formData.name}
                                onChange={handleChange}
-                               className="input-text p-2 w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" />
+                               className="p-2 w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" />
                     </div>
                     <div className="mt-4">
                         <label className="block text-sm font-medium mb-1">Prénom</label>
@@ -19,7 +20,7 @@ const PersonForm = ({ formData, handleChange }) => {
                                name="firstname"
                                value={formData.firstname}
                                onChange={handleChange}
-                               className="input-text p-2 w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" />
+                               className="p-2 w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" />
                     </div>
                     <div className="mt-4">
                         <label className="block text-sm font-medium mb-1">Email</label>
@@ -27,7 +28,7 @@ const PersonForm = ({ formData, handleChange }) => {
                                name="email"
                                value={formData.email}
                                onChange={handleChange}
-                               className="input-text p-2 w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" />
+                               className="p-2 w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" />
                     </div>
                 </div>
                 <div className="md:w-1/2">
@@ -37,7 +38,7 @@ const PersonForm = ({ formData, handleChange }) => {
                                name="address_1"
                                value={formData.address_1}
                                onChange={handleChange}
-                               className="input-text p-2 w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" />
+                               className="p-2 w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" />
                     </div>
                     <div className="mt-4">
                         <label className="block text-sm font-medium mb-1">Complément d'adresse</label>
@@ -45,7 +46,7 @@ const PersonForm = ({ formData, handleChange }) => {
                                name="address_2"
                                value={formData.address_2}
                                onChange={handleChange}
-                               className="input-text p-2 w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" />
+                               className="p-2 w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" />
                     </div>
                     <div className="mt-4">
                         <label className="block text-sm font-medium mb-1">Code Postal</label>
@@ -53,7 +54,7 @@ const PersonForm = ({ formData, handleChange }) => {
                                name="postcode"
                                value={formData.postcode}
                                onChange={handleChange}
-                               className="input-text p-2 w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" />
+                               className="p-2 w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" />
                     </div>
                     <div className="mt-4">
                         <label className="block text-sm font-medium mb-1">Ville</label>
@@ -61,7 +62,7 @@ const PersonForm = ({ formData, handleChange }) => {
                                name="city"
                                value={formData.city}
                                onChange={handleChange}
-                               className="input-text p-2 w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" />
+                               className="p-2 w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" />
                     </div>
                     <div className="mt-4">
                         <label className="block text-sm font-medium mb-1">Pays</label>
@@ -69,7 +70,7 @@ const PersonForm = ({ formData, handleChange }) => {
                             name="country"
                             value="FRANCE"
                             onChange={handleChange}
-                            className="input-text p-2 w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+                            className="p-2 w-full h-12 rounded-xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
                         >
                             <option value="GERMANY">Allemagne</option>
                             <option value="BELGIUM">Belgique</option>

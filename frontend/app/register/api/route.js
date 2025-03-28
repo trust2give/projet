@@ -40,20 +40,21 @@ export async function POST(request) {
     }
 }
 
-// export async function GET(request, { params }) {
+export async function GET(request) {
+    const url = new URL(request.url);
+    const address = url.searchParams.get('address');
 
-    // try {
-    //     const { id } = params;
-    //     const donor = await prisma.donator.findUnique({
-    //         where: { id }
-    //     });
-    //
-    //     if (!donor) {
-    //         return NextResponse.json({ error: 'Donor not found' }, { status: 404 });
-    //     }
-    //
-    //     return NextResponse.json(donor);
-    // } catch (error) {
-    //     return NextResponse.json({ error: error.message }, { status: 500 });
-    // }
-// }
+    try {
+        const donor = await prisma.donator.findUnique({
+            where: { address }
+        });
+
+        if (!donor) {
+            return NextResponse.json({ error: 'Donor not found' }, { status: 404 });
+        }
+
+        return NextResponse.json(donor);
+    } catch (error) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+}

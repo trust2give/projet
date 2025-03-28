@@ -1,64 +1,35 @@
 'use client'
 
-import React, {useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useAccount } from 'wagmi'
 import Link from "next/link";
 
 export default function Header() {
     const { address, isConnected } = useAccount();
-    let user = null
-    let isRegistered = false
+    let [isRegistered, setIsRegistered] = useState(false)
+    let [hash, setHash] = useState('')
 
     useEffect(() => {
-        if (isConnected) {
-            //check pour savoir si on a un compte sur la bc
-            const jsonString = JSON.stringify({ call: 'all', inputs: [] });
-            const encodedJsonString = encodeURIComponent(jsonString);
 
-            // fetch('http://46.226.107.26:8080/T2G'.concat(`?call=rights&inputs=${encodedJsonString}`))
-            //     .then(response => {
-            //         if (!response.ok) {
-            //             throw new Error('Erreur réseau');
-            //         }
-            //         return response.json();
-            //     })
-            //     .then(data => {
-            //         //console.log(data)
-            //         user = data.filter((user) => {
-            //             return user.wallet === address
-            //         })
-            //
-            //         if (user) {
-            //             isRegistered = user[0].isRegistered
-            //         }
+        const checkRegistration = async () => {
+            if (isConnected && address) {
+                try {
+                    const response = await fetch(`/register/api?address=${address}`);
+                    const donnor = await response.json();
 
-                    // const jsonString = JSON.stringify({ call: 'get', inputs: [/*{hash: <valeur>}*/] });
-                    // const encodedJsonString = encodeURIComponent(jsonString);
-                    // fetch('http://46.226.107.26:8080/T2G'.concat(`?call=entity&inputs=${encodedJsonString}`))
-                    //     .then(response => {
-                    //         if (!response.ok) {
-                    //             throw new Error('Erreur réseau');
-                    //         }
-                    //         return response.json();
-                    //     })
-                    //     .then(data => {
-                    //         console.log('test', data)
-                    //     })
-
-                    //ici check si on est connu dans la bc
-                    //on récupère
-                    //{wallet: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8", rights: 7, isRegistered: true, isBanned: false}
-                    //si isRegistered on affiche pas le nom prénom etc dans le formulaire de don
-                    //si connu et interdit = pas de don
-                    //si enregistré et connu on vient chercher le hash stocké, getEntity
-                    //const jsonString = JSON.stringify({ call: 'get', inputs: [] });
-                    //const encodedJsonString = encodeURIComponent(jsonString);
-                    //fetch('http://46.226.107.26:8080/T2G'.concat(`?call=entity&inputs=${encodedJsonString}`))
-                    //si nouveau setEntity contenu dans la page de don
-                    //via le hash on pourra récupérer nom prénom mail de la personne
-                // })
+                    if (donnor.id) {
+                        setIsRegistered(true);
+                        setHash(donnor.hash);
+                    }
+                } catch (error) {
+                    console.error('Erreur lors de la vérification de l\'adresse:', error);
+                }
+            }
         }
+
+        checkRegistration();
+        
     }, [isConnected])
 
     return (
@@ -90,6 +61,7 @@ export default function Header() {
                             <ConnectButton className="hidden lg:inline-block py-2 px-6 border-solid border-2 border-white text-white font-bold rounded-xl transition duration-200"/>
                         </>
                     ) : '' }
+                    
                     {!isRegistered ? (
                         <>
                             <Link className="hidden lg:inline-block lg:ml-auto lg:mr-3 py-2 border-2 px-6 bg-indigo-500 hover:bg-indigo-400 text-white font-bold rounded-xl transition duration-200"
